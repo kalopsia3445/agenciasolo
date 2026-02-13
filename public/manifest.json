@@ -1,0 +1,16 @@
+{
+  "name": "SoloReels AI",
+  "short_name": "SoloReels",
+  "description": "Gere roteiros para Instagram com IA — feito para MEI solo",
+  "start_url": "/app/generate",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#e8501a",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
