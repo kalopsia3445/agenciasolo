@@ -44,7 +44,7 @@ export default function Generate() {
 
     const apiKey = import.meta.env.VITE_GROQ_API_KEY;
     if (!apiKey) {
-      toast({ title: "VITE_GROQ_API_KEY não configurada", description: "Adicione a chave no .env", variant: "destructive" });
+      toast({ title: "VITE_GROQ_API_KEY não configurada", description: "Adicione a chave nos Secrets do projeto (Settings → Secrets)", variant: "destructive" });
       return;
     }
 
