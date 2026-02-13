@@ -54,8 +54,8 @@ export default function Onboarding() {
     form.setValue(field, current.filter((v) => v !== value) as any);
   }
 
-  function TagInput({ field, label, placeholder }: { field: keyof BrandKit; label: string; placeholder: string }) {
-    const values = (form.watch(field) as string[]) || [];
+  function renderTagInput(field: keyof BrandKit, label: string, placeholder: string) {
+    const values = (form.getValues(field) as string[]) || [];
     return (
       <div className="space-y-2">
         <label className="text-sm font-medium">{label}</label>
@@ -120,11 +120,11 @@ export default function Onboarding() {
                 <FormField control={form.control} name="city" render={({ field }) => (
                   <FormItem><FormLabel>Cidade (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: São Paulo - SP" /></FormControl><FormMessage /></FormItem>
                 )} />
-                <TagInput field="toneAdjectives" label="Tom de voz (adjetivos)" placeholder="Ex: profissional, acolhedor" />
-                <TagInput field="differentiators" label="Diferenciais" placeholder="Ex: 10 anos de experiência" />
-                <TagInput field="proofs" label="Provas sociais" placeholder="Ex: +500 clientes atendidos" />
-                <TagInput field="commonObjections" label="Objeções comuns" placeholder="Ex: É muito caro" />
-                <TagInput field="forbiddenWords" label="Palavras proibidas" placeholder="Ex: barato, milagre" />
+                {renderTagInput("toneAdjectives", "Tom de voz (adjetivos)", "Ex: profissional, acolhedor")}
+                {renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos de experiência")}
+                {renderTagInput("proofs", "Provas sociais", "Ex: +500 clientes atendidos")}
+                {renderTagInput("commonObjections", "Objeções comuns", "Ex: É muito caro")}
+                {renderTagInput("forbiddenWords", "Palavras proibidas", "Ex: barato, milagre")}
                 <FormField control={form.control} name="ctaPreference" render={({ field }) => (
                   <FormItem><FormLabel>CTA preferido (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: Agende agora pelo WhatsApp" /></FormControl><FormMessage /></FormItem>
                 )} />
