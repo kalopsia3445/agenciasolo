@@ -14,6 +14,11 @@ export const brandKitSchema = z.object({
   proofs: z.array(z.string()).default([]),
   commonObjections: z.array(z.string()).default([]),
   ctaPreference: z.string().optional().default(""),
+  colorPalette: z.array(z.string()).default([]),
+  logoUrls: z.array(z.string()).default([]),
+  referenceImageUrls: z.array(z.string()).default([]),
+  referenceVideoUrls: z.array(z.string()).default([]),
+  visualStyleDescription: z.string().optional().default(""),
 });
 export type BrandKit = z.infer<typeof brandKitSchema>;
 

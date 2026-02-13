@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { brandKitSchema, type BrandKit } from "@/types/schema";
@@ -14,6 +13,8 @@ import { NICHES } from "@/data/niches";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
 import { saveBrandKit, setOnboardingDone } from "@/lib/demo-store";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
+import { ColorPalettePicker } from "@/components/ui/color-palette-picker";
+import { FileUpload, type UploadedFile } from "@/components/ui/file-upload";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -21,21 +22,18 @@ export default function Onboarding() {
   const [selectedNiche, setSelectedNiche] = useState("");
   const [selectedPack, setSelectedPack] = useState("");
   const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
+  const [logoFiles, setLogoFiles] = useState<UploadedFile[]>([]);
+  const [refImageFiles, setRefImageFiles] = useState<UploadedFile[]>([]);
+  const [refVideoFiles, setRefVideoFiles] = useState<UploadedFile[]>([]);
 
   const form = useForm<BrandKit>({
     resolver: zodResolver(brandKitSchema),
     defaultValues: {
-      businessName: "",
-      niche: "",
-      offer: "",
-      targetAudience: "",
-      city: "",
-      toneAdjectives: [],
-      forbiddenWords: [],
-      differentiators: [],
-      proofs: [],
-      commonObjections: [],
-      ctaPreference: "",
+      businessName: "", niche: "", offer: "", targetAudience: "", city: "",
+      toneAdjectives: [], forbiddenWords: [], differentiators: [], proofs: [],
+      commonObjections: [], ctaPreference: "", colorPalette: [],
+      logoUrls: [], referenceImageUrls: [], referenceVideoUrls: [],
+      visualStyleDescription: "",
     },
   });
 
@@ -88,15 +86,28 @@ export default function Onboarding() {
   }
 
   function handleFinish(data: BrandKit) {
-    saveBrandKit({ ...data, niche: selectedNiche || data.niche });
+    // In demo mode, store file URLs as object URLs (temporary)
+    const logoUrls = logoFiles.map((f) => f.url);
+    const refImgUrls = refImageFiles.map((f) => f.url);
+    const refVidUrls = refVideoFiles.map((f) => f.url);
+
+    saveBrandKit({
+      ...data,
+      niche: selectedNiche || data.niche,
+      logoUrls,
+      referenceImageUrls: refImgUrls,
+      referenceVideoUrls: refVidUrls,
+    });
     setOnboardingDone();
     navigate("/app/generate");
   }
 
+  const totalSteps = 4; // 0=brand, 1=visual, 2=niche, 3=pack
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        {[0, 1, 2].map((s) => (
+        {Array.from({ length: totalSteps }).map((_, s) => (
           <div key={s} className={`h-1.5 flex-1 rounded-full ${s <= step ? "gradient-primary" : "bg-muted"}`} />
         ))}
       </div>
@@ -135,6 +146,57 @@ export default function Onboarding() {
 
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Identidade Visual</h2>
+            <p className="mb-4 text-sm text-muted-foreground">Configure as cores, logos e referências visuais da sua marca.</p>
+            <div className="space-y-6">
+              <ColorPalettePicker
+                colors={form.watch("colorPalette") || []}
+                onChange={(colors) => form.setValue("colorPalette", colors)}
+              />
+
+              <FileUpload
+                files={logoFiles}
+                onChange={setLogoFiles}
+                accept="image/png,image/jpeg,image/webp"
+                maxFiles={3}
+                label="Logos da marca"
+                description="Adicione até 3 logos (PNG ou JPG)"
+              />
+
+              <FileUpload
+                files={refImageFiles}
+                onChange={setRefImageFiles}
+                accept="image/png,image/jpeg,image/webp"
+                maxFiles={10}
+                label="Imagens de referência"
+                description="Imagens que representam o estilo visual da sua marca"
+              />
+
+              <FileUpload
+                files={refVideoFiles}
+                onChange={setRefVideoFiles}
+                accept="video/mp4,video/quicktime,video/webm"
+                maxFiles={5}
+                label="Vídeos de referência (opcional)"
+                description="Vídeos curtos para a IA aprender seu estilo"
+              />
+
+              <FormField control={form.control} name="visualStyleDescription" render={({ field }) => (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Descreva seu estilo visual (opcional)</label>
+                  <textarea
+                    {...field}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder="Ex: Fotos claras e limpas, fundo branco, tipografia moderna, tons pastéis..."
+                  />
+                </div>
+              )} />
+            </div>
+          </motion.div>
+        )}
+
+        {step === 2 && (
+          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Seu nicho</h2>
             <p className="mb-4 text-sm text-muted-foreground">Selecione o nicho mais próximo do seu negócio.</p>
             <div className="grid grid-cols-2 gap-3">
@@ -154,8 +216,8 @@ export default function Onboarding() {
           </motion.div>
         )}
 
-        {step === 2 && (
-          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+        {step === 3 && (
+          <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Pack de Estilo</h2>
             <p className="mb-4 text-sm text-muted-foreground">Escolha o estilo padrão dos seus roteiros.</p>
             <div className="space-y-3">
@@ -182,7 +244,7 @@ export default function Onboarding() {
             <ChevronLeft className="mr-1 h-4 w-4" /> Voltar
           </Button>
         )}
-        {step < 2 ? (
+        {step < totalSteps - 1 ? (
           <Button className="flex-1 gradient-primary border-0" onClick={() => setStep(step + 1)}>
             Próximo <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
