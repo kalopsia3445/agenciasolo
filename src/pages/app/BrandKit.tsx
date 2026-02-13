@@ -9,17 +9,25 @@ import { getBrandKit, saveBrandKit } from "@/lib/demo-store";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import { useState } from "react";
+import { ColorPalettePicker } from "@/components/ui/color-palette-picker";
+import { FileUpload, type UploadedFile } from "@/components/ui/file-upload";
 
 export default function BrandKitPage() {
   const { toast } = useToast();
   const existing = getBrandKit();
   const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
+  const [logoFiles, setLogoFiles] = useState<UploadedFile[]>([]);
+  const [refImageFiles, setRefImageFiles] = useState<UploadedFile[]>([]);
+  const [refVideoFiles, setRefVideoFiles] = useState<UploadedFile[]>([]);
 
   const form = useForm<BrandKit>({
     resolver: zodResolver(brandKitSchema),
     defaultValues: existing || {
       businessName: "", niche: "", offer: "", targetAudience: "", city: "",
-      toneAdjectives: [], forbiddenWords: [], differentiators: [], proofs: [], commonObjections: [], ctaPreference: "",
+      toneAdjectives: [], forbiddenWords: [], differentiators: [], proofs: [],
+      commonObjections: [], ctaPreference: "", colorPalette: [],
+      logoUrls: [], referenceImageUrls: [], referenceVideoUrls: [],
+      visualStyleDescription: "",
     },
   });
 
@@ -36,7 +44,7 @@ export default function BrandKitPage() {
     form.setValue(field, current.filter((v) => v !== value) as any);
   }
 
-  function TagInput({ field, label, placeholder }: { field: keyof BrandKit; label: string; placeholder: string }) {
+  function renderTagInput(field: keyof BrandKit, label: string, placeholder: string) {
     const values = (form.watch(field) as string[]) || [];
     return (
       <div className="space-y-2">
@@ -60,7 +68,11 @@ export default function BrandKitPage() {
   }
 
   function onSubmit(data: BrandKit) {
-    saveBrandKit(data);
+    const logoUrls = logoFiles.length > 0 ? logoFiles.map((f) => f.url) : data.logoUrls;
+    const refImgUrls = refImageFiles.length > 0 ? refImageFiles.map((f) => f.url) : data.referenceImageUrls;
+    const refVidUrls = refVideoFiles.length > 0 ? refVideoFiles.map((f) => f.url) : data.referenceVideoUrls;
+
+    saveBrandKit({ ...data, logoUrls, referenceImageUrls: refImgUrls, referenceVideoUrls: refVidUrls });
     toast({ title: "Kit da Marca salvo! ✅" });
   }
 
@@ -84,14 +96,63 @@ export default function BrandKitPage() {
           <FormField control={form.control} name="city" render={({ field }) => (
             <FormItem><FormLabel>Cidade</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />
-          <TagInput field="toneAdjectives" label="Tom de voz" placeholder="Ex: profissional" />
-          <TagInput field="differentiators" label="Diferenciais" placeholder="Ex: 10 anos" />
-          <TagInput field="proofs" label="Provas sociais" placeholder="Ex: +500 clientes" />
-          <TagInput field="commonObjections" label="Objeções comuns" placeholder="Ex: É caro" />
-          <TagInput field="forbiddenWords" label="Palavras proibidas" placeholder="Ex: barato" />
+
+          <ColorPalettePicker
+            colors={form.watch("colorPalette") || []}
+            onChange={(colors) => form.setValue("colorPalette", colors)}
+          />
+
+          <FileUpload
+            files={logoFiles}
+            onChange={setLogoFiles}
+            accept="image/png,image/jpeg,image/webp"
+            maxFiles={3}
+            label="Logos da marca"
+            description="Adicione até 3 logos (PNG ou JPG)"
+          />
+
+          <FileUpload
+            files={refImageFiles}
+            onChange={setRefImageFiles}
+            accept="image/png,image/jpeg,image/webp"
+            maxFiles={10}
+            label="Imagens de referência"
+            description="Imagens que representam o estilo visual da sua marca"
+          />
+
+          <FileUpload
+            files={refVideoFiles}
+            onChange={setRefVideoFiles}
+            accept="video/mp4,video/quicktime,video/webm"
+            maxFiles={5}
+            label="Vídeos de referência"
+            description="Vídeos curtos para a IA aprender seu estilo"
+          />
+
+          {renderTagInput("toneAdjectives", "Tom de voz", "Ex: profissional")}
+          {renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos")}
+          {renderTagInput("proofs", "Provas sociais", "Ex: +500 clientes")}
+          {renderTagInput("commonObjections", "Objeções comuns", "Ex: É caro")}
+          {renderTagInput("forbiddenWords", "Palavras proibidas", "Ex: barato")}
+
           <FormField control={form.control} name="ctaPreference" render={({ field }) => (
             <FormItem><FormLabel>CTA preferido</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />
+
+          <FormField control={form.control} name="visualStyleDescription" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição do estilo visual</FormLabel>
+              <FormControl>
+                <textarea
+                  {...field}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  placeholder="Ex: Fotos claras, fundo branco, tipografia moderna..."
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
           <Button type="submit" className="w-full gradient-primary border-0"><Save className="mr-2 h-4 w-4" /> Salvar</Button>
         </form>
       </Form>
