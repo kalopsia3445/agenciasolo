@@ -22,6 +22,7 @@ export default function Generate() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SavedScript | null>(null);
   const [favIds, setFavIds] = useState<Set<string>>(getFavoriteIds());
+  const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY || "");
 
   const brandKit = getBrandKit();
   const allPacks = [...OFFICIAL_PACKS, ...getCustomPacks()];
@@ -42,9 +43,9 @@ export default function Generate() {
       return;
     }
 
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = groqKey;
     if (!apiKey) {
-      toast({ title: "VITE_GROQ_API_KEY não configurada", description: "Adicione a chave nos Secrets do projeto (Settings → Secrets)", variant: "destructive" });
+      toast({ title: "Chave Groq não configurada", description: "Cole sua API key no campo abaixo do formulário.", variant: "destructive" });
       return;
     }
 
@@ -230,6 +231,24 @@ export default function Generate() {
           </Button>
         </form>
       </Form>
+
+      {!import.meta.env.VITE_GROQ_API_KEY && (
+        <div className="space-y-2 rounded-xl border border-dashed border-muted-foreground/30 p-4">
+          <label className="text-xs font-medium text-muted-foreground">🔑 Chave API do Groq (Demo Mode)</label>
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              placeholder="gsk_..."
+              value={groqKey}
+              onChange={(e) => {
+                setGroqKey(e.target.value);
+                localStorage.setItem("soloreels_groq_key", e.target.value);
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Pegue sua chave em <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline text-primary">console.groq.com/keys</a></p>
+        </div>
+      )}
     </div>
   );
 }
