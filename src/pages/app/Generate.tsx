@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { generateFormSchema, type GenerateFormData, type SavedScript, FORMATS, OBJECTIVES, DAILY_LIMIT } from "@/types/schema";
+import { generateFormSchema, type GenerateFormData, type SavedScript, type BrandKit, type StylePack, FORMATS, OBJECTIVES, DAILY_LIMIT } from "@/types/schema";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
-import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getDailyUsage, toggleFavorite, getFavoriteIds } from "@/lib/demo-store";
+import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite } from "@/lib/data-service";
 import { generateWithGroq } from "@/lib/groq";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Copy, Heart, Video, Loader2 } from "lucide-react";
@@ -21,11 +21,22 @@ export default function Generate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SavedScript | null>(null);
-  const [favIds, setFavIds] = useState<Set<string>>(getFavoriteIds());
+  const [favIds, setFavIds] = useState<Set<string>>(new Set());
+  const [brandKit, setBrandKit] = useState<BrandKit | null>(null);
+  const [customPacks, setCustomPacks] = useState<StylePack[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY || "");
 
-  const brandKit = getBrandKit();
-  const allPacks = [...OFFICIAL_PACKS, ...getCustomPacks()];
+  useEffect(() => {
+    Promise.all([getBrandKit(), getCustomPacks(), getFavoriteIds()]).then(([bk, cp, fi]) => {
+      setBrandKit(bk);
+      setCustomPacks(cp);
+      setFavIds(fi);
+      setDataLoading(false);
+    });
+  }, []);
+
+  const allPacks = [...OFFICIAL_PACKS, ...customPacks];
 
   const form = useForm<GenerateFormData>({
     resolver: zodResolver(generateFormSchema),
@@ -38,7 +49,8 @@ export default function Generate() {
       navigate("/app/onboarding");
       return;
     }
-    if (!canGenerate()) {
+    const allowed = await canGenerate();
+    if (!allowed) {
       toast({ title: `Limite diário atingido (${DAILY_LIMIT}/dia)`, description: "Volte amanhã!", variant: "destructive" });
       return;
     }
@@ -66,8 +78,8 @@ export default function Generate() {
         resultJson: aiResponse,
         createdAt: new Date().toISOString(),
       };
-      saveScript(script);
-      incrementUsage();
+      await saveScript(script);
+      await incrementUsage();
       setResult(script);
       toast({ title: "Roteiro gerado com sucesso! 🎉" });
     } catch (err: any) {
@@ -82,10 +94,15 @@ export default function Generate() {
     toast({ title: "Copiado! 📋" });
   }
 
-  function handleFav(scriptId: string) {
-    const isFav = toggleFavorite(scriptId);
-    setFavIds(getFavoriteIds());
+  async function handleFav(scriptId: string) {
+    const isFav = await toggleFavorite(scriptId);
+    const newFavs = await getFavoriteIds();
+    setFavIds(newFavs);
     toast({ title: isFav ? "Adicionado aos favoritos ⭐" : "Removido dos favoritos" });
+  }
+
+  if (dataLoading) {
+    return <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
   if (result) {
@@ -101,11 +118,9 @@ export default function Generate() {
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold">{v.title}</h3>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFav(result.id)}>
-                      <Heart className={`h-4 w-4 ${favIds.has(result.id) ? "fill-primary text-primary" : ""}`} />
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFav(result.id)}>
+                    <Heart className={`h-4 w-4 ${favIds.has(result.id) ? "fill-primary text-primary" : ""}`} />
+                  </Button>
                 </div>
                 <div className="rounded-lg bg-muted p-3">
                   <p className="text-xs font-medium text-muted-foreground mb-1">🎣 Gancho</p>
@@ -132,9 +147,7 @@ export default function Generate() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">🎬 Shot List</p>
                   <ul className="space-y-1">
-                    {v.shotList.map((s, j) => (
-                      <li key={j} className="text-xs">• {s}</li>
-                    ))}
+                    {v.shotList.map((s, j) => <li key={j} className="text-xs">• {s}</li>)}
                   </ul>
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -142,9 +155,7 @@ export default function Generate() {
                     <span key={h} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{h}</span>
                   ))}
                 </div>
-                {v.disclaimer && (
-                  <p className="text-xs text-muted-foreground italic">⚠️ {v.disclaimer}</p>
-                )}
+                {v.disclaimer && <p className="text-xs text-muted-foreground italic">⚠️ {v.disclaimer}</p>}
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" variant="outline" className="flex-1" onClick={() => handleCopy(`${v.hook}\n\n${v.script}\n\n${v.captionLong}\n\n${v.hashtags.join(" ")}`)}>
                     <Copy className="mr-1 h-3 w-3" /> Copiar tudo
@@ -175,14 +186,8 @@ export default function Generate() {
               <FormLabel>Formato</FormLabel>
               <div className="grid grid-cols-3 gap-2">
                 {FORMATS.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => field.onChange(f.value)}
-                    className={`rounded-xl border p-3 text-center transition-all ${
-                      field.value === f.value ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card"
-                    }`}
-                  >
+                  <button key={f.value} type="button" onClick={() => field.onChange(f.value)}
+                    className={`rounded-xl border p-3 text-center transition-all ${field.value === f.value ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card"}`}>
                     <span className="text-xl">{f.icon}</span>
                     <p className="mt-1 text-xs font-medium">{f.label}</p>
                   </button>
@@ -236,15 +241,8 @@ export default function Generate() {
         <div className="space-y-2 rounded-xl border border-dashed border-muted-foreground/30 p-4">
           <label className="text-xs font-medium text-muted-foreground">🔑 Chave API do Groq (Demo Mode)</label>
           <div className="flex gap-2">
-            <Input
-              type="password"
-              placeholder="gsk_..."
-              value={groqKey}
-              onChange={(e) => {
-                setGroqKey(e.target.value);
-                localStorage.setItem("soloreels_groq_key", e.target.value);
-              }}
-            />
+            <Input type="password" placeholder="gsk_..." value={groqKey}
+              onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
           </div>
           <p className="text-xs text-muted-foreground">Pegue sua chave em <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline text-primary">console.groq.com/keys</a></p>
         </div>
