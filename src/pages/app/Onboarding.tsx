@@ -11,13 +11,15 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { brandKitSchema, type BrandKit } from "@/types/schema";
 import { NICHES } from "@/data/niches";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
-import { saveBrandKit, setOnboardingDone } from "@/lib/demo-store";
+import { saveBrandKit, setOnboardingDone } from "@/lib/data-service";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { ColorPalettePicker } from "@/components/ui/color-palette-picker";
 import { FileUpload, type UploadedFile } from "@/components/ui/file-upload";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [selectedNiche, setSelectedNiche] = useState("");
   const [selectedPack, setSelectedPack] = useState("");
@@ -25,6 +27,7 @@ export default function Onboarding() {
   const [logoFiles, setLogoFiles] = useState<UploadedFile[]>([]);
   const [refImageFiles, setRefImageFiles] = useState<UploadedFile[]>([]);
   const [refVideoFiles, setRefVideoFiles] = useState<UploadedFile[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const form = useForm<BrandKit>({
     resolver: zodResolver(brandKitSchema),
@@ -41,9 +44,7 @@ export default function Onboarding() {
     const trimmed = value.trim();
     if (!trimmed) return;
     const current = form.getValues(field) as string[];
-    if (!current.includes(trimmed)) {
-      form.setValue(field, [...current, trimmed] as any);
-    }
+    if (!current.includes(trimmed)) form.setValue(field, [...current, trimmed] as any);
     setTagInputs((prev) => ({ ...prev, [field]: "" }));
   }
 
@@ -58,51 +59,45 @@ export default function Onboarding() {
       <div className="space-y-2">
         <label className="text-sm font-medium">{label}</label>
         <div className="flex gap-2">
-          <Input
-            placeholder={placeholder}
-            value={tagInputs[field] || ""}
+          <Input placeholder={placeholder} value={tagInputs[field] || ""}
             onChange={(e) => setTagInputs((p) => ({ ...p, [field]: e.target.value }))}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag(field, tagInputs[field] || "");
-              }
-            }}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={() => addTag(field, tagInputs[field] || "")}>
-            +
-          </Button>
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(field, tagInputs[field] || ""); } }} />
+          <Button type="button" variant="outline" size="sm" onClick={() => addTag(field, tagInputs[field] || "")}>+</Button>
         </div>
         <div className="flex flex-wrap gap-1">
           {values.map((v) => (
-            <Badge key={v} variant="secondary" className="gap-1">
-              {v}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(field, v)} />
-            </Badge>
+            <Badge key={v} variant="secondary" className="gap-1">{v}<X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(field, v)} /></Badge>
           ))}
         </div>
       </div>
     );
   }
 
-  function handleFinish(data: BrandKit) {
-    // In demo mode, store file URLs as object URLs (temporary)
-    const logoUrls = logoFiles.map((f) => f.url);
-    const refImgUrls = refImageFiles.map((f) => f.url);
-    const refVidUrls = refVideoFiles.map((f) => f.url);
+  async function handleFinish(data: BrandKit) {
+    setSaving(true);
+    try {
+      const logoUrls = logoFiles.map((f) => f.url);
+      const refImgUrls = refImageFiles.map((f) => f.url);
+      const refVidUrls = refVideoFiles.map((f) => f.url);
 
-    saveBrandKit({
-      ...data,
-      niche: selectedNiche || data.niche,
-      logoUrls,
-      referenceImageUrls: refImgUrls,
-      referenceVideoUrls: refVidUrls,
-    });
-    setOnboardingDone();
-    navigate("/app/generate");
+      await saveBrandKit({
+        ...data,
+        niche: selectedNiche || data.niche,
+        logoUrls,
+        referenceImageUrls: refImgUrls,
+        referenceVideoUrls: refVidUrls,
+      });
+      await setOnboardingDone();
+      toast({ title: "Kit da Marca salvo! 🎉" });
+      navigate("/app/generate");
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const totalSteps = 4; // 0=brand, 1=visual, 2=niche, 3=pack
+  const totalSteps = 4;
 
   return (
     <div className="space-y-6">
@@ -149,46 +144,14 @@ export default function Onboarding() {
             <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Identidade Visual</h2>
             <p className="mb-4 text-sm text-muted-foreground">Configure as cores, logos e referências visuais da sua marca.</p>
             <div className="space-y-6">
-              <ColorPalettePicker
-                colors={form.watch("colorPalette") || []}
-                onChange={(colors) => form.setValue("colorPalette", colors)}
-              />
-
-              <FileUpload
-                files={logoFiles}
-                onChange={setLogoFiles}
-                accept="image/png,image/jpeg,image/webp"
-                maxFiles={3}
-                label="Logos da marca"
-                description="Adicione até 3 logos (PNG ou JPG)"
-              />
-
-              <FileUpload
-                files={refImageFiles}
-                onChange={setRefImageFiles}
-                accept="image/png,image/jpeg,image/webp"
-                maxFiles={10}
-                label="Imagens de referência"
-                description="Imagens que representam o estilo visual da sua marca"
-              />
-
-              <FileUpload
-                files={refVideoFiles}
-                onChange={setRefVideoFiles}
-                accept="video/mp4,video/quicktime,video/webm"
-                maxFiles={5}
-                label="Vídeos de referência (opcional)"
-                description="Vídeos curtos para a IA aprender seu estilo"
-              />
-
+              <ColorPalettePicker colors={form.watch("colorPalette") || []} onChange={(colors) => form.setValue("colorPalette", colors)} />
+              <FileUpload files={logoFiles} onChange={setLogoFiles} accept="image/png,image/jpeg,image/webp" maxFiles={3} label="Logos da marca" description="Adicione até 3 logos (PNG ou JPG)" />
+              <FileUpload files={refImageFiles} onChange={setRefImageFiles} accept="image/png,image/jpeg,image/webp" maxFiles={10} label="Imagens de referência" description="Imagens que representam o estilo visual da sua marca" />
+              <FileUpload files={refVideoFiles} onChange={setRefVideoFiles} accept="video/mp4,video/quicktime,video/webm" maxFiles={5} label="Vídeos de referência (opcional)" description="Vídeos curtos para a IA aprender seu estilo" />
               <FormField control={form.control} name="visualStyleDescription" render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Descreva seu estilo visual (opcional)</label>
-                  <textarea
-                    {...field}
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    placeholder="Ex: Fotos claras e limpas, fundo branco, tipografia moderna, tons pastéis..."
-                  />
+                  <textarea {...field} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Ex: Fotos claras e limpas, fundo branco, tipografia moderna, tons pastéis..." />
                 </div>
               )} />
             </div>
@@ -201,13 +164,8 @@ export default function Onboarding() {
             <p className="mb-4 text-sm text-muted-foreground">Selecione o nicho mais próximo do seu negócio.</p>
             <div className="grid grid-cols-2 gap-3">
               {NICHES.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => { setSelectedNiche(n.id); form.setValue("niche", n.id); }}
-                  className={`rounded-xl border p-4 text-left transition-all ${
-                    selectedNiche === n.id ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card hover:border-primary/50"
-                  }`}
-                >
+                <button key={n.id} onClick={() => { setSelectedNiche(n.id); form.setValue("niche", n.id); }}
+                  className={`rounded-xl border p-4 text-left transition-all ${selectedNiche === n.id ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card hover:border-primary/50"}`}>
                   <span className="text-2xl">{n.emoji}</span>
                   <p className="mt-1 text-sm font-medium">{n.label}</p>
                 </button>
@@ -222,13 +180,8 @@ export default function Onboarding() {
             <p className="mb-4 text-sm text-muted-foreground">Escolha o estilo padrão dos seus roteiros.</p>
             <div className="space-y-3">
               {OFFICIAL_PACKS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPack(p.id)}
-                  className={`w-full rounded-xl border p-4 text-left transition-all ${
-                    selectedPack === p.id ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card hover:border-primary/50"
-                  }`}
-                >
+                <button key={p.id} onClick={() => setSelectedPack(p.id)}
+                  className={`w-full rounded-xl border p-4 text-left transition-all ${selectedPack === p.id ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card hover:border-primary/50"}`}>
                   <p className="font-semibold">{p.name}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{p.description}</p>
                 </button>
@@ -249,12 +202,9 @@ export default function Onboarding() {
             Próximo <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         ) : (
-          <Button
-            className="flex-1 gradient-primary border-0"
-            disabled={!selectedPack}
-            onClick={() => form.handleSubmit(handleFinish)()}
-          >
-            Começar a gerar! <Sparkles className="ml-1 h-4 w-4" />
+          <Button className="flex-1 gradient-primary border-0" disabled={!selectedPack || saving}
+            onClick={() => form.handleSubmit(handleFinish)()}>
+            {saving ? "Salvando..." : "Começar a gerar!"} <Sparkles className="ml-1 h-4 w-4" />
           </Button>
         )}
       </div>

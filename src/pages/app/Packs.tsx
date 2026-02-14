@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,16 +6,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
-import { getCustomPacks, saveCustomPack, deleteCustomPack } from "@/lib/demo-store";
+import { getCustomPacks, saveCustomPack, deleteCustomPack } from "@/lib/data-service";
 import type { StylePack } from "@/types/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 
 export default function Packs() {
   const { toast } = useToast();
-  const [customPacks, setCustomPacks] = useState<StylePack[]>(getCustomPacks());
+  const [customPacks, setCustomPacks] = useState<StylePack[]>([]);
   const [editing, setEditing] = useState<StylePack | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCustomPacks().then((p) => { setCustomPacks(p); setLoading(false); });
+  }, []);
+
+  async function refreshPacks() {
+    setCustomPacks(await getCustomPacks());
+  }
 
   function PackCard({ pack, editable }: { pack: StylePack; editable?: boolean }) {
     return (
@@ -31,9 +40,9 @@ export default function Packs() {
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditing(pack); setDialogOpen(true); }}>
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
-                  deleteCustomPack(pack.id);
-                  setCustomPacks(getCustomPacks());
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={async () => {
+                  await deleteCustomPack(pack.id);
+                  await refreshPacks();
                   toast({ title: "Pack removido" });
                 }}>
                   <Trash2 className="h-3 w-3" />
@@ -51,6 +60,10 @@ export default function Packs() {
     );
   }
 
+  if (loading) {
+    return <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,16 +74,13 @@ export default function Packs() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{editing ? "Editar Pack" : "Novo Pack"}</DialogTitle></DialogHeader>
-            <PackForm
-              initial={editing}
-              onSave={(pack) => {
-                saveCustomPack(pack);
-                setCustomPacks(getCustomPacks());
-                setDialogOpen(false);
-                setEditing(null);
-                toast({ title: "Pack salvo! ✅" });
-              }}
-            />
+            <PackForm initial={editing} onSave={async (pack) => {
+              await saveCustomPack(pack);
+              await refreshPacks();
+              setDialogOpen(false);
+              setEditing(null);
+              toast({ title: "Pack salvo! ✅" });
+            }} />
           </DialogContent>
         </Dialog>
       </div>
