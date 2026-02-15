@@ -1,8 +1,11 @@
-import { Sparkles, BookOpen, Palette, PenTool } from "lucide-react";
+import { Sparkles, BookOpen, Palette, PenTool, BarChart3 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
-const items = [
+const ADMIN_EMAILS = ["kalopsia3445@gmail.com"];
+
+const baseItems = [
   { to: "/app/generate", label: "Gerar", icon: Sparkles },
   { to: "/app/library", label: "Biblioteca", icon: BookOpen },
   { to: "/app/brand-kit", label: "Marca", icon: PenTool },
@@ -11,6 +14,12 @@ const items = [
 
 export function BottomNav() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user && ADMIN_EMAILS.includes(user.email || "");
+
+  const items = isAdmin
+    ? [...baseItems, { to: "/app/admin", label: "Admin", icon: BarChart3 }]
+    : baseItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md safe-bottom">
