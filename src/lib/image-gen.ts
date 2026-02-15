@@ -10,38 +10,48 @@ export interface ImageGenOptions {
   visualStyle?: string;
 }
 
-function buildImagePrompt(opts: ImageGenOptions): string {
-  const style = opts.visualStyle
-    ? `, estilo visual: ${opts.visualStyle}`
-    : ", estilo profissional, moderno, clean";
-
-  return `Instagram post image for ${opts.niche} business "${opts.businessName || ""}". ${opts.inputSummary}. Hook: ${opts.hook}. Objective: ${opts.objective}. Professional social media design, vibrant colors, high quality, no text overlay${style}`;
-}
-
-function getDimensions(format: "reels" | "stories" | "carousel"): { width: number; height: number } {
+function getAspectLabel(format: "reels" | "stories" | "carousel"): string {
   switch (format) {
     case "reels":
     case "stories":
-      return { width: 1080, height: 1920 };
+      return "vertical 9:16 portrait";
     case "carousel":
-      return { width: 1080, height: 1080 };
+      return "square 1:1";
   }
 }
 
+function buildImagePrompt(opts: ImageGenOptions, seed: number): string {
+  const aspect = getAspectLabel(opts.format);
+  const style = opts.visualStyle || "professional, modern, clean";
+
+  // Keep prompt short and English-only for best results
+  const parts = [
+    `Instagram ${opts.format} cover image`,
+    `${aspect} composition`,
+    opts.niche,
+    opts.inputSummary.slice(0, 80),
+    `style: ${style}`,
+    "vibrant colors, high quality, social media design, no text",
+    `seed:${seed}`,
+  ];
+
+  return parts.join(", ");
+}
+
 export function generateImageUrl(opts: ImageGenOptions, seed?: number): { url: string; prompt: string } {
-  const prompt = buildImagePrompt(opts);
-  const { width, height } = getDimensions(opts.format);
-  const seedParam = seed ?? Math.floor(Math.random() * 999999);
+  const s = seed ?? Math.floor(Math.random() * 999999);
+  const prompt = buildImagePrompt(opts, s);
   const encoded = encodeURIComponent(prompt);
-  const url = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&model=flux&seed=${seedParam}`;
+  const url = `https://image.pollinations.ai/prompt/${encoded}`;
   return { url, prompt };
 }
 
-export function regenerateImageUrl(prompt: string, format: "reels" | "stories" | "carousel"): string {
-  const { width, height } = getDimensions(format);
-  const seed = Math.floor(Math.random() * 999999);
-  const encoded = encodeURIComponent(prompt);
-  return `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&model=flux&seed=${seed}`;
+export function regenerateImageUrl(prompt: string, _format: "reels" | "stories" | "carousel"): string {
+  // Replace the seed in the prompt to get a different image
+  const newSeed = Math.floor(Math.random() * 999999);
+  const newPrompt = prompt.replace(/seed:\d+/, `seed:${newSeed}`);
+  const encoded = encodeURIComponent(newPrompt);
+  return `https://image.pollinations.ai/prompt/${encoded}`;
 }
 
 export async function downloadImage(url: string, filename: string): Promise<void> {

@@ -36,7 +36,19 @@ export default function BrandKitPage() {
 
   useEffect(() => {
     getBrandKit().then((existing) => {
-      if (existing) form.reset(existing);
+      if (existing) {
+        form.reset(existing);
+        // Restaurar arquivos já salvos
+        if (existing.logoUrls?.length) {
+          setLogoFiles(existing.logoUrls.map((url) => ({ id: crypto.randomUUID(), name: url.split("/").pop() || "logo", url, type: "image" as const })));
+        }
+        if (existing.referenceImageUrls?.length) {
+          setRefImageFiles(existing.referenceImageUrls.map((url) => ({ id: crypto.randomUUID(), name: url.split("/").pop() || "ref", url, type: "image" as const })));
+        }
+        if (existing.referenceVideoUrls?.length) {
+          setRefVideoFiles(existing.referenceVideoUrls.map((url) => ({ id: crypto.randomUUID(), name: url.split("/").pop() || "video", url, type: "video" as const })));
+        }
+      }
       setLoading(false);
     });
   }, []);
