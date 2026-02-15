@@ -1,4 +1,5 @@
 import { aiResponseSchema, type AIResponse, type BrandKit, type GenerateFormData, type StylePack } from "@/types/schema";
+import { supabase, isDemoMode } from "@/lib/supabase";
 
 function buildPrompt(brandKit: BrandKit, pack: StylePack, form: GenerateFormData): string {
   return `Você é um especialista em conteúdo para Instagram voltado para MEI solo.
@@ -40,16 +41,31 @@ Responda APENAS com JSON válido no formato:
 {"variants": [{ ... }, { ... }, { ... }]}`;
 }
 
-export async function generateWithGroq(
-  brandKit: BrandKit,
-  pack: StylePack,
-  form: GenerateFormData,
-  apiKey: string,
-  baseUrl = "https://api.groq.com/openai/v1"
-): Promise<AIResponse> {
-  const prompt = buildPrompt(brandKit, pack, form);
+// Chamada via Supabase Edge Function (produção)
+async function generateViaEdgeFunction(prompt: string): Promise<AIResponse> {
+  if (!supabase) throw new Error("Supabase não configurado");
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Usuário não autenticado");
+
+  const response = await supabase.functions.invoke("generate-script", {
+    body: { prompt },
+  });
+
+  if (response.error) {
+    throw new Error(response.error.message || "Erro na Edge Function");
+  }
+
+  const parsed = response.data;
+  const result = aiResponseSchema.safeParse(parsed);
+  if (result.success) return result.data;
+
+  throw new Error("A IA não conseguiu gerar um roteiro válido. Tente novamente.");
+}
+
+// Chamada direta ao Groq (demo mode local)
+async function generateDirectGroq(prompt: string, apiKey: string): Promise<AIResponse> {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -80,12 +96,11 @@ export async function generateWithGroq(
     throw new Error("A IA retornou JSON inválido");
   }
 
-  // Validate
   const result = aiResponseSchema.safeParse(parsed);
   if (result.success) return result.data;
 
   // Repair pass
-  const repairResponse = await fetch(`${baseUrl}/chat/completions`, {
+  const repairResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -118,4 +133,22 @@ export async function generateWithGroq(
   if (repairResult.success) return repairResult.data;
 
   throw new Error("A IA não conseguiu gerar um roteiro válido. Tente novamente.");
+}
+
+export async function generateWithGroq(
+  brandKit: BrandKit,
+  pack: StylePack,
+  form: GenerateFormData,
+  apiKey?: string,
+): Promise<AIResponse> {
+  const prompt = buildPrompt(brandKit, pack, form);
+
+  // Produção: usa Edge Function (key fica no servidor)
+  if (!isDemoMode && supabase) {
+    return generateViaEdgeFunction(prompt);
+  }
+
+  // Demo mode: chamada direta (precisa de key local)
+  if (!apiKey) throw new Error("Chave Groq não configurada");
+  return generateDirectGroq(prompt, apiKey);
 }

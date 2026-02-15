@@ -14,6 +14,7 @@ import { OFFICIAL_PACKS } from "@/data/style-packs";
 import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite } from "@/lib/data-service";
 import { generateWithGroq } from "@/lib/groq";
 import { generateImageUrl, regenerateImageUrl, downloadImage } from "@/lib/image-gen";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Copy, Heart, Video, Loader2, ImageIcon, Download, RefreshCw } from "lucide-react";
 
@@ -26,7 +27,8 @@ export default function Generate() {
   const [brandKit, setBrandKit] = useState<BrandKit | null>(null);
   const [customPacks, setCustomPacks] = useState<StylePack[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY || "");
+  const { isDemoMode: isDemo } = useAuth();
+  const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || "");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagesLoading, setImagesLoading] = useState<boolean[]>([]);
 
@@ -108,7 +110,7 @@ export default function Generate() {
     }
 
     const apiKey = groqKey;
-    if (!apiKey) {
+    if (isDemo && !apiKey) {
       toast({ title: "Chave Groq não configurada", description: "Cole sua API key no campo abaixo do formulário.", variant: "destructive" });
       return;
     }
@@ -118,7 +120,7 @@ export default function Generate() {
 
     setLoading(true);
     try {
-      const aiResponse = await generateWithGroq(brandKit, pack, data, apiKey);
+      const aiResponse = await generateWithGroq(brandKit, pack, data, isDemo ? apiKey : undefined);
       const script: SavedScript = {
         id: crypto.randomUUID(),
         stylePackId: data.stylePackId,
@@ -324,7 +326,7 @@ export default function Generate() {
         </form>
       </Form>
 
-      {!import.meta.env.VITE_GROQ_API_KEY && (
+      {isDemo && (
         <div className="space-y-2 rounded-xl border border-dashed border-muted-foreground/30 p-4">
           <label className="text-xs font-medium text-muted-foreground">🔑 Chave API do Groq (Demo Mode)</label>
           <div className="flex gap-2">
