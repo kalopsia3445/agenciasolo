@@ -15,6 +15,7 @@ import TeleprompterPage from "./pages/app/Teleprompter";
 import Library from "./pages/app/Library";
 import BrandKit from "./pages/app/BrandKit";
 import Packs from "./pages/app/Packs";
+import AdminDashboard from "./pages/app/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="library" element={<Library />} />
               <Route path="brand-kit" element={<BrandKit />} />
               <Route path="packs" element={<Packs />} />
+              <Route path="admin" element={<AdminDashboard />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
