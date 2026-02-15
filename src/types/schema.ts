@@ -45,6 +45,8 @@ export const scriptVariantSchema = z.object({
   cta: z.string(),
   hashtags: z.array(z.string()),
   disclaimer: z.string(),
+  imageUrl: z.string().optional(),
+  imagePrompt: z.string().optional(),
 });
 export type ScriptVariant = z.infer<typeof scriptVariantSchema>;
 

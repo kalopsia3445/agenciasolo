@@ -1,12 +1,14 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Image, Film } from "lucide-react";
+import { Upload, X, Film, Loader2 } from "lucide-react";
+import { supabase, isDemoMode } from "@/lib/supabase";
+import { useState } from "react";
 
 export interface UploadedFile {
   id: string;
   name: string;
-  url: string; // object URL for preview
-  file: File;
+  url: string;
+  file?: File;
   type: "image" | "video";
 }
 
@@ -17,31 +19,62 @@ interface FileUploadProps {
   maxFiles?: number;
   label: string;
   description?: string;
+  userId?: string;
 }
 
-export function FileUpload({ files, onChange, accept, maxFiles = 5, label, description }: FileUploadProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+async function uploadToSupabase(file: File, userId: string): Promise<string> {
+  if (!supabase) throw new Error("Supabase not configured");
+  const ext = file.name.split(".").pop();
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("brand-assets")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from("brand-assets").getPublicUrl(path);
+  return data.publicUrl;
+}
 
-  function handleFiles(fileList: FileList | null) {
+export function FileUpload({ files, onChange, accept, maxFiles = 5, label, description, userId }: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFiles(fileList: FileList | null) {
     if (!fileList) return;
     const newFiles: UploadedFile[] = [];
-    for (let i = 0; i < fileList.length && files.length + newFiles.length < maxFiles; i++) {
-      const f = fileList[i];
-      const isVideo = f.type.startsWith("video/");
-      newFiles.push({
-        id: crypto.randomUUID(),
-        name: f.name,
-        url: URL.createObjectURL(f),
-        file: f,
-        type: isVideo ? "video" : "image",
-      });
+    setUploading(true);
+
+    try {
+      for (let i = 0; i < fileList.length && files.length + newFiles.length < maxFiles; i++) {
+        const f = fileList[i];
+        const isVideo = f.type.startsWith("video/");
+        let url: string;
+
+        if (!isDemoMode && supabase && userId) {
+          url = await uploadToSupabase(f, userId);
+        } else {
+          url = URL.createObjectURL(f);
+        }
+
+        newFiles.push({
+          id: crypto.randomUUID(),
+          name: f.name,
+          url,
+          file: isDemoMode ? f : undefined,
+          type: isVideo ? "video" : "image",
+        });
+      }
+      onChange([...files, ...newFiles]);
+    } catch (err) {
+      console.error("Upload error:", err);
+    } finally {
+      setUploading(false);
     }
-    onChange([...files, ...newFiles]);
   }
 
   function removeFile(id: string) {
     const file = files.find((f) => f.id === id);
-    if (file) URL.revokeObjectURL(file.url);
+    if (file?.file) URL.revokeObjectURL(file.url);
+    // TODO: also delete from Supabase storage if needed
     onChange(files.filter((f) => f.id !== id));
   }
 
@@ -75,11 +108,18 @@ export function FileUpload({ files, onChange, accept, maxFiles = 5, label, descr
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 transition-colors hover:border-primary/50"
+            disabled={uploading}
+            className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 transition-colors hover:border-primary/50 disabled:opacity-50"
           >
             <div className="text-center">
-              <Upload className="mx-auto h-5 w-5 text-muted-foreground" />
-              <span className="mt-1 block text-xs text-muted-foreground">Adicionar</span>
+              {uploading ? (
+                <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="mx-auto h-5 w-5 text-muted-foreground" />
+              )}
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {uploading ? "Enviando..." : "Adicionar"}
+              </span>
             </div>
           </button>
         )}

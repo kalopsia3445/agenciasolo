@@ -46,18 +46,25 @@ export default function Library() {
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{v.title}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {script.format} • {script.objective} • {new Date(script.createdAt).toLocaleDateString("pt-BR")}
-              </p>
+          <div className="flex gap-3">
+            {v.imageUrl && (
+              <img src={v.imageUrl} alt={v.title} className="h-20 w-20 flex-shrink-0 rounded-lg object-cover" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{v.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {script.format} • {script.objective} • {new Date(script.createdAt).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => handleFav(script.id)}>
+                  <Heart className={`h-4 w-4 ${favIds.has(script.id) ? "fill-primary text-primary" : ""}`} />
+                </Button>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{v.hook}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFav(script.id)}>
-              <Heart className={`h-4 w-4 ${favIds.has(script.id) ? "fill-primary text-primary" : ""}`} />
-            </Button>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{v.hook}</p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => {
               navigator.clipboard.writeText(`${v.hook}\n\n${v.script}\n\n${v.captionLong}\n\n${v.hashtags.join(" ")}`);

@@ -13,8 +13,9 @@ import { generateFormSchema, type GenerateFormData, type SavedScript, type Brand
 import { OFFICIAL_PACKS } from "@/data/style-packs";
 import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite } from "@/lib/data-service";
 import { generateWithGroq } from "@/lib/groq";
+import { generateImageUrl, regenerateImageUrl, downloadImage } from "@/lib/image-gen";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Copy, Heart, Video, Loader2 } from "lucide-react";
+import { Sparkles, Copy, Heart, Video, Loader2, ImageIcon, Download, RefreshCw } from "lucide-react";
 
 export default function Generate() {
   const { toast } = useToast();
@@ -26,6 +27,8 @@ export default function Generate() {
   const [customPacks, setCustomPacks] = useState<StylePack[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY || "");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imagesLoading, setImagesLoading] = useState<boolean[]>([]);
 
   useEffect(() => {
     Promise.all([getBrandKit(), getCustomPacks(), getFavoriteIds()]).then(([bk, cp, fi]) => {
@@ -42,6 +45,55 @@ export default function Generate() {
     resolver: zodResolver(generateFormSchema),
     defaultValues: { format: "reels", objective: "", inputSummary: "", stylePackId: "" },
   });
+
+  function generateImages(script: SavedScript, bk: BrandKit) {
+    const urls: string[] = [];
+    const loadingState = [true, true, true];
+    setImagesLoading(loadingState);
+
+    script.resultJson.variants.forEach((v, i) => {
+      const { url, prompt } = generateImageUrl({
+        hook: v.hook,
+        inputSummary: script.inputSummary,
+        niche: bk.niche,
+        format: script.format,
+        objective: script.objective,
+        businessName: bk.businessName,
+        visualStyle: bk.visualStyleDescription,
+      });
+      urls[i] = url;
+      // Salvar prompt na variação
+      v.imageUrl = url;
+      v.imagePrompt = prompt;
+    });
+    setImageUrls(urls);
+  }
+
+  function handleImageLoad(idx: number) {
+    setImagesLoading((prev) => {
+      const next = [...prev];
+      next[idx] = false;
+      return next;
+    });
+  }
+
+  function handleRegenImage(idx: number) {
+    if (!result || !brandKit) return;
+    const v = result.resultJson.variants[idx];
+    if (!v.imagePrompt) return;
+    const newUrl = regenerateImageUrl(v.imagePrompt, result.format);
+    v.imageUrl = newUrl;
+    setImageUrls((prev) => {
+      const next = [...prev];
+      next[idx] = newUrl;
+      return next;
+    });
+    setImagesLoading((prev) => {
+      const next = [...prev];
+      next[idx] = true;
+      return next;
+    });
+  }
 
   async function onSubmit(data: GenerateFormData) {
     if (!brandKit) {
@@ -78,6 +130,10 @@ export default function Generate() {
         resultJson: aiResponse,
         createdAt: new Date().toISOString(),
       };
+
+      // Gerar imagens em paralelo
+      generateImages(script, brandKit);
+
       await saveScript(script);
       await incrementUsage();
       setResult(script);
@@ -95,10 +151,10 @@ export default function Generate() {
   }
 
   async function handleFav(scriptId: string) {
-    const isFav = await toggleFavorite(scriptId);
+    await toggleFavorite(scriptId);
     const newFavs = await getFavoriteIds();
     setFavIds(newFavs);
-    toast({ title: isFav ? "Adicionado aos favoritos ⭐" : "Removido dos favoritos" });
+    toast({ title: favIds.has(scriptId) ? "Removido dos favoritos" : "Adicionado aos favoritos ⭐" });
   }
 
   if (dataLoading) {
@@ -110,12 +166,43 @@ export default function Generate() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold font-[Space_Grotesk]">3 Variações</h2>
-          <Button variant="outline" size="sm" onClick={() => setResult(null)}>Nova geração</Button>
+          <Button variant="outline" size="sm" onClick={() => { setResult(null); setImageUrls([]); }}>Nova geração</Button>
         </div>
         {result.resultJson.variants.map((v, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card>
               <CardContent className="space-y-3 p-4">
+                {/* Imagem gerada */}
+                <div className="relative overflow-hidden rounded-lg bg-muted">
+                  {imagesLoading[i] && (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="text-center">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+                        <p className="mt-2 text-xs text-muted-foreground">Gerando imagem...</p>
+                      </div>
+                    </div>
+                  )}
+                  {imageUrls[i] && (
+                    <img
+                      src={imageUrls[i]}
+                      alt={v.title}
+                      className={`w-full object-cover ${result.format === "carousel" ? "aspect-square" : "aspect-[9/16] max-h-[400px]"} ${imagesLoading[i] ? "hidden" : ""}`}
+                      onLoad={() => handleImageLoad(i)}
+                      onError={() => handleImageLoad(i)}
+                    />
+                  )}
+                  {!imagesLoading[i] && imageUrls[i] && (
+                    <div className="absolute bottom-2 right-2 flex gap-1">
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white border-0" onClick={() => handleRegenImage(i)}>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white border-0" onClick={() => downloadImage(imageUrls[i], `soloreels-${v.title.replace(/\s+/g, "-")}.png`)}>
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold">{v.title}</h3>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFav(result.id)}>
@@ -176,7 +263,7 @@ export default function Generate() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold font-[Space_Grotesk]">Gerar Roteiro</h2>
-        <p className="text-sm text-muted-foreground">Preencha os dados e a IA cria 3 variações.</p>
+        <p className="text-sm text-muted-foreground">Preencha os dados e a IA cria 3 variações com imagens.</p>
       </div>
 
       <Form {...form}>

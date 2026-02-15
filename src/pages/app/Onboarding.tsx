@@ -16,8 +16,10 @@ import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { ColorPalettePicker } from "@/components/ui/color-palette-picker";
 import { FileUpload, type UploadedFile } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Onboarding() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
@@ -145,9 +147,9 @@ export default function Onboarding() {
             <p className="mb-4 text-sm text-muted-foreground">Configure as cores, logos e referências visuais da sua marca.</p>
             <div className="space-y-6">
               <ColorPalettePicker colors={form.watch("colorPalette") || []} onChange={(colors) => form.setValue("colorPalette", colors)} />
-              <FileUpload files={logoFiles} onChange={setLogoFiles} accept="image/png,image/jpeg,image/webp" maxFiles={3} label="Logos da marca" description="Adicione até 3 logos (PNG ou JPG)" />
-              <FileUpload files={refImageFiles} onChange={setRefImageFiles} accept="image/png,image/jpeg,image/webp" maxFiles={10} label="Imagens de referência" description="Imagens que representam o estilo visual da sua marca" />
-              <FileUpload files={refVideoFiles} onChange={setRefVideoFiles} accept="video/mp4,video/quicktime,video/webm" maxFiles={5} label="Vídeos de referência (opcional)" description="Vídeos curtos para a IA aprender seu estilo" />
+              <FileUpload files={logoFiles} onChange={setLogoFiles} accept="image/png,image/jpeg,image/webp" maxFiles={3} label="Logos da marca" description="Adicione até 3 logos (PNG ou JPG)" userId={user?.id} />
+              <FileUpload files={refImageFiles} onChange={setRefImageFiles} accept="image/png,image/jpeg,image/webp" maxFiles={10} label="Imagens de referência" description="Imagens que representam o estilo visual da sua marca" userId={user?.id} />
+              <FileUpload files={refVideoFiles} onChange={setRefVideoFiles} accept="video/mp4,video/quicktime,video/webm" maxFiles={5} label="Vídeos de referência (opcional)" description="Vídeos curtos para a IA aprender seu estilo" userId={user?.id} />
               <FormField control={form.control} name="visualStyleDescription" render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Descreva seu estilo visual (opcional)</label>

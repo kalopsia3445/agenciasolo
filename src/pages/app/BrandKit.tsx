@@ -11,8 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, X, Loader2 } from "lucide-react";
 import { ColorPalettePicker } from "@/components/ui/color-palette-picker";
 import { FileUpload, type UploadedFile } from "@/components/ui/file-upload";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BrandKitPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
   const [logoFiles, setLogoFiles] = useState<UploadedFile[]>([]);
@@ -112,9 +114,9 @@ export default function BrandKitPage() {
             <FormItem><FormLabel>Cidade</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />
           <ColorPalettePicker colors={form.watch("colorPalette") || []} onChange={(colors) => form.setValue("colorPalette", colors)} />
-          <FileUpload files={logoFiles} onChange={setLogoFiles} accept="image/png,image/jpeg,image/webp" maxFiles={3} label="Logos da marca" description="Adicione até 3 logos (PNG ou JPG)" />
-          <FileUpload files={refImageFiles} onChange={setRefImageFiles} accept="image/png,image/jpeg,image/webp" maxFiles={10} label="Imagens de referência" description="Imagens que representam o estilo visual da sua marca" />
-          <FileUpload files={refVideoFiles} onChange={setRefVideoFiles} accept="video/mp4,video/quicktime,video/webm" maxFiles={5} label="Vídeos de referência" description="Vídeos curtos para a IA aprender seu estilo" />
+          <FileUpload files={logoFiles} onChange={setLogoFiles} accept="image/png,image/jpeg,image/webp" maxFiles={3} label="Logos da marca" description="Adicione até 3 logos (PNG ou JPG)" userId={user?.id} />
+          <FileUpload files={refImageFiles} onChange={setRefImageFiles} accept="image/png,image/jpeg,image/webp" maxFiles={10} label="Imagens de referência" description="Imagens que representam o estilo visual da sua marca" userId={user?.id} />
+          <FileUpload files={refVideoFiles} onChange={setRefVideoFiles} accept="video/mp4,video/quicktime,video/webm" maxFiles={5} label="Vídeos de referência" description="Vídeos curtos para a IA aprender seu estilo" userId={user?.id} />
           {renderTagInput("toneAdjectives", "Tom de voz", "Ex: profissional")}
           {renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos")}
           {renderTagInput("proofs", "Provas sociais", "Ex: +500 clientes")}
