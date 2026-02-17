@@ -194,8 +194,16 @@ export default function InstagramAnalysis() {
                     <Card className="border-primary/50 bg-primary/5 overflow-hidden">
                         <CardHeader className="pb-2">
                             <div className="flex items-start gap-4">
-                                <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0">
-                                    <img src={profilePreview.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                                <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0 shadow-lg relative">
+                                    <img
+                                        src={profilePreview.avatarUrl}
+                                        alt="Avatar"
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = `https://ui-avatars.com/api/?name=${form.getValues().handle}&background=0D8ABC&color=fff&size=128`;
+                                        }}
+                                    />
                                 </div>
                                 <div className="space-y-1 mt-1">
                                     <h3 className="text-lg font-bold font-[Space_Grotesk] leading-none">{profilePreview.name}</h3>
