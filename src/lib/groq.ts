@@ -373,14 +373,18 @@ export async function fetchInstagramProfile(
   const prompt = `
     Você é um assistente de pesquisa. 
     Dê informações sobre o perfil do Instagram @${handle}.
-    IMPORTANTE: Se você não tiver certeza sobre os dados reais (por ser um perfil pequeno), NÃO invente dados de pessoas famosas. 
-    Analise o texto do handle "@${handle}" para deduzir o nicho. Ex: "agenciasolo" -> Marketing/Branding. "pizzariasolo" -> Gastronomia.
+    
+    INSTRUÇÕES CRÍTICAS:
+    1. Se o perfil não for EXTREMAMENTE famoso (Celebridades, Marcas Globais), NÃO invente um nome completo ou biografia detalhada.
+    2. Se houver incerteza, use o próprio handle "@${handle}" como o nome e "Perfil do Instagram" como a bio.
+    3. Tente deduzir o nicho apenas se o handle for óbvio (ex: "pizzaria_", "marketing_").
+    4. NÃO invente nomes como "Carlos" ou "João" baseados apenas em siglas.
     
     Responda APENAS em JSON:
     {
-      "name": "Nome provável do perfil",
-      "bio": "Bio curta e profissional condizente com o handle",
-      "avatarUrl": "https://ui-avatars.com/api/?name=${handle}&background=000&color=fff&size=128"
+      "name": "Nome (ou @handle se incerto)",
+      "bio": "Bio curta (ou 'Perfil do Instagram' se incerto)",
+      "avatarUrl": "https://ui-avatars.com/api/?name=${handle}&background=0D8ABC&color=fff&size=256"
     }
   `;
 

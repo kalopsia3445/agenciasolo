@@ -35,6 +35,7 @@ export default function InstagramAnalysis() {
     const [status, setStatus] = useState("");
     const [result, setResult] = useState<AnalysisResult | null>(null);
     const [profilePreview, setProfilePreview] = useState<{ name: string; bio: string; avatarUrl: string } | null>(null);
+    const [avatarError, setAvatarError] = useState(false);
 
     const isEnterprise = profile?.subscription_status === "enterprise";
 
@@ -52,6 +53,7 @@ export default function InstagramAnalysis() {
         setLoading(true);
         try {
             setStatus("Buscando informações do perfil...");
+            setAvatarError(false);
             const apiKey = localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY;
             if (!apiKey) throw new Error("Chave Groq não configurada");
 
@@ -194,16 +196,19 @@ export default function InstagramAnalysis() {
                     <Card className="border-primary/50 bg-primary/5 overflow-hidden">
                         <CardHeader className="pb-2">
                             <div className="flex items-start gap-4">
-                                <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0 shadow-lg relative">
-                                    <img
-                                        src={profilePreview.avatarUrl}
-                                        alt="Avatar"
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.src = `https://ui-avatars.com/api/?name=${form.getValues().handle}&background=0D8ABC&color=fff&size=128`;
-                                        }}
-                                    />
+                                <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0 shadow-lg relative flex items-center justify-center">
+                                    {!avatarError ? (
+                                        <img
+                                            src={profilePreview.avatarUrl}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                            onError={() => setAvatarError(true)}
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl">
+                                            {form.getValues().handle.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-1 mt-1">
                                     <h3 className="text-lg font-bold font-[Space_Grotesk] leading-none">{profilePreview.name}</h3>
