@@ -20,11 +20,14 @@ const formSchema = z.object({
 
 type AnalysisResult = {
     niche: string;
-    visualStyle: string;
+    offer: string;
     targetAudience: string;
+    toneAdjectives: string[];
+    visualStyle: string;
+    colorPalette: string[];
     trends: string[];
     suggestions: string[];
-    tone: string;
+    differentiators: string[];
 };
 
 export default function InstagramAnalysis() {
@@ -81,10 +84,10 @@ export default function InstagramAnalysis() {
 
             if (!apiKey) throw new Error("Chave API do Groq não configurada.");
 
-            setStatus("Analizando posts e engajamento...");
-            await new Promise(r => setTimeout(r, 1500));
+            setStatus("Cruzando dados com seu Brand Kit...");
+            await new Promise(r => setTimeout(r, 1200));
 
-            setStatus("Pesquisando tendências de mercado...");
+            setStatus("Identificando tendências de mercado para 2024/2025...");
             const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit, apiKey);
 
             setResult(analysisResult);
@@ -102,13 +105,26 @@ export default function InstagramAnalysis() {
 
         try {
             const current = await getBrandKit();
-            if (!current) return;
 
             const updated = {
-                ...current,
-                visualStyleDescription: `${current.visualStyleDescription}\n\n[Atualização IA]: ${result.visualStyle}`,
-                toneAdjectives: [...new Set([...current.toneAdjectives, result.tone])],
-                targetAudience: result.targetAudience
+                ...(current || {
+                    businessName: "Meu Negócio",
+                    city: "",
+                    forbiddenWords: [],
+                    logoUrls: [],
+                    referenceImageUrls: [],
+                    referenceVideoUrls: [],
+                    ctaPreference: "",
+                    proofs: [],
+                    commonObjections: []
+                }),
+                niche: result.niche,
+                offer: result.offer,
+                targetAudience: result.targetAudience,
+                toneAdjectives: result.toneAdjectives,
+                visualStyleDescription: result.visualStyle,
+                colorPalette: result.colorPalette,
+                differentiators: result.differentiators
             };
 
             await saveBrandKit(updated);
@@ -261,12 +277,24 @@ export default function InstagramAnalysis() {
                             <CardContent className="space-y-6">
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-primary uppercase">Estilo Visual Sugerido</p>
+                                        <p className="text-[10px] font-bold text-primary uppercase">Nicho Detectado</p>
+                                        <p className="text-sm font-medium">{result.niche}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-primary uppercase">Oferta Sugerida</p>
+                                        <p className="text-sm font-medium">{result.offer}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-primary uppercase">Estilo Visual 2027</p>
                                         <p className="text-sm font-medium">{result.visualStyle}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-primary uppercase">Tom de Voz</p>
-                                        <p className="text-sm font-medium">{result.tone}</p>
+                                        <p className="text-[10px] font-bold text-primary uppercase">Cores Sugeridas</p>
+                                        <div className="flex gap-1 mt-1">
+                                            {result.colorPalette.map((c, i) => (
+                                                <div key={i} className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: c }} />
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 

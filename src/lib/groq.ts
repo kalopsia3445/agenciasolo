@@ -371,14 +371,14 @@ export async function fetchInstagramProfile(
   apiKey: string
 ): Promise<{ name: string; bio: string; avatarUrl: string }> {
   const prompt = `
-    Você é um assistente de pesquisa. 
-    Dê informações sobre o perfil do Instagram @${handle}.
+    Você é um assistente de pesquisa especializado em mídias sociais em 2026. 
+    Sua missão é dar informações reais sobre o perfil do Instagram @${handle}.
     
     INSTRUÇÕES CRÍTICAS:
-    1. Se o perfil não for EXTREMAMENTE famoso (Celebridades, Marcas Globais), NÃO invente um nome completo ou biografia detalhada.
-    2. Se houver incerteza, use o próprio handle "@${handle}" como o nome e "Perfil do Instagram" como a bio.
-    3. Tente deduzir o nicho apenas se o handle for óbvio (ex: "pizzaria_", "marketing_").
-    4. NÃO invente nomes como "Carlos" ou "João" baseados apenas em siglas.
+    1. Se o perfil for de uma pessoa ou marca real, identifique o Nome e Bio reais.
+    2. Se você não tiver certeza (perfil pequeno), NÃO invente nomes genéricos.
+    3. Se houver incerteza, use o próprio handle "@${handle}" como o nome e "Perfil do Instagram" como a bio.
+    4. NÃO halluncine dados biográficos se não tiver certeza.
     
     Responda APENAS em JSON:
     {
@@ -397,7 +397,7 @@ export async function fetchInstagramProfile(
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.5,
+      temperature: 0.2, // Lower temp for factual fetch
       max_tokens: 500,
       response_format: { type: "json_object" },
     }),
@@ -415,34 +415,28 @@ export async function analyzeMarketWithGroq(
   apiKey: string
 ): Promise<any> {
   const prompt = `
-    Aja como o CCO (Chief Content Officer) da Agência Solo e um Estrategista de Elite em Branding.
-    Sua missão é realizar um diagnóstico profundo do perfil @${handle}, cruzando dados do mercado com o Brand Kit do usuário.
+    Aja como o CCO (Chief Content Officer) da Agência Solo e o maior estrategista de Branding do Brasil em 2026. 
+    Sua missão é analisar o perfil @${handle} para CRIAR uma Identidade de Marca (Brand Kit) completa.
     
-    CONTEXTO DO BRAND KIT (DADOS REAIS DO NEGÓCIO):
-    Nome do Negócio: ${brandKit?.businessName || "Não definido"}
-    Nicho: ${brandKit?.niche || "Não definido"}
-    Oferta Principal: ${brandKit?.offer || "Não definido"}
-    Público-Alvo: ${brandKit?.targetAudience || "Não definido"}
-    Cidade/Região: ${brandKit?.city || "Brasil"}
-    Tons da Marca: ${brandKit?.toneAdjectives?.join(", ") || "Profissional"}
-    Diferenciais: ${brandKit?.differentiators?.join(", ") || "Não definidos"}
-    Estilo Visual Atual: ${brandKit?.visualStyleDescription || "Não definido"}
-    Cores da Marca: ${brandKit?.colorPalette?.join(", ") || "Não definidas"}
+    OBJETIVO: Extrair/Sugerir dados para preencher um Brand Kit profissional de alto nível.
     
-    INSTRUÇÕES CRÍTICAS PARA O DIAGNÓSTICO:
-    1. NÃO HALLUCINE DADOS PESSOAIS. Se não tiver certeza sobre o @${handle}, foque na análise estratégica baseada no NICHO e no BRAND KIT.
-    2. Identifique 3 tendências de mercado REAIS para 2024/2025 para o setor de ${brandKit?.niche}.
-    3. Sugira uma evolução da Estética Visual que combine as Cores da Marca mencionadas com uma tendência moderna.
-    4. Proponha 3 sugestões estratégicas para este perfil dominar o mercado local (${brandKit?.city}).
+    INSTRUÇÕES PARA 2026/2027:
+    1. Identifique o NICHO real com base no @${handle}.
+    2. Sugira uma OFERTA PRINCIPAL irresistível focada em conversão digital.
+    3. Sugira uma ESTRATÉGIA VISUAL (Cores e Estilo) coerente com o mercado brasileiro em 2027.
+    4. Defina o PÚBLICO-ALVO ideal e o TOM DE VOZ que gera conexão imediata.
     
     Responda APENAS em JSON com o formato:
     {
-      "niche": "string",
-      "visualStyle": "string",
-      "targetAudience": "string",
+      "niche": "string (ex: Engenharia Florestal)",
+      "offer": "string (Oferta sugerida)",
+      "targetAudience": "string (Público-alvo detalhado)",
+      "toneAdjectives": ["string", "string", "string"],
+      "visualStyle": "string (Descrição do estilo)",
+      "colorPalette": ["#hex1", "#hex2", "#hex3"],
       "trends": ["string", "string", "string"],
       "suggestions": ["string", "string", "string"],
-      "tone": "string"
+      "differentiators": ["string", "string", "string"]
     }
   `;
 
