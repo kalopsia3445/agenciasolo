@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { getScriptById } from "@/lib/data-service";
-import { Play, Pause, RotateCcw, FlipHorizontal, Minus, Plus, ArrowLeft, Eye, Loader2 } from "lucide-react";
+import { Play, Pause, RotateCcw, FlipHorizontal, Minus, Plus, ArrowLeft, Eye, Loader2, ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Teleprompter() {
@@ -13,12 +13,14 @@ export default function Teleprompter() {
   const variantIdx = parseInt(searchParams.get("variant") || "0");
 
   const [text, setText] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(50);
   const [fontSize, setFontSize] = useState(28);
   const [mirrored, setMirrored] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const [showImage, setShowImage] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
@@ -26,7 +28,9 @@ export default function Teleprompter() {
   useEffect(() => {
     if (!scriptId) { setLoading(false); return; }
     getScriptById(scriptId).then((script) => {
-      setText(script?.resultJson.variants[variantIdx]?.teleprompterText || "Nenhum texto encontrado.");
+      const variant = script?.resultJson.variants[variantIdx];
+      setText(variant?.teleprompterText || "Nenhum texto encontrado.");
+      setImageUrl(variant?.imageUrl);
       setLoading(false);
     });
   }, [scriptId, variantIdx]);
@@ -63,8 +67,18 @@ export default function Teleprompter() {
         <span className="text-sm font-medium">Teleprompter</span>
         <div className="w-16" />
       </div>
-      <div ref={scrollRef} className="relative flex-1 overflow-y-auto px-6 py-16" style={{ transform: mirrored ? "scaleX(-1)" : undefined }}>
+      <div ref={scrollRef} className="relative flex-1 overflow-y-auto px-6 py-8" style={{ transform: mirrored ? "scaleX(-1)" : undefined }}>
         {showGuide && <div className="pointer-events-none absolute left-0 right-0 top-1/3 h-px bg-primary/50" />}
+        {showImage && imageUrl && (
+          <div className="mx-auto mb-6 max-w-md overflow-hidden rounded-xl">
+            <img
+              src={imageUrl}
+              alt="Imagem do roteiro"
+              className="w-full rounded-xl object-cover"
+              style={{ maxHeight: "300px" }}
+            />
+          </div>
+        )}
         <p className="mx-auto max-w-md whitespace-pre-wrap leading-relaxed text-foreground" style={{ fontSize: `${fontSize}px`, lineHeight: 1.8 }}>{text}</p>
         <div className="h-[60vh]" />
       </div>
@@ -85,6 +99,9 @@ export default function Teleprompter() {
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMirrored(!mirrored)}><FlipHorizontal className={`h-4 w-4 ${mirrored ? "text-primary" : ""}`} /></Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowGuide(!showGuide)}><Eye className={`h-4 w-4 ${showGuide ? "text-primary" : ""}`} /></Button>
+          {imageUrl && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowImage(!showImage)}><ImageIcon className={`h-4 w-4 ${showImage ? "text-primary" : ""}`} /></Button>
+          )}
         </div>
       </div>
     </div>

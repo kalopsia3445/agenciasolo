@@ -19,10 +19,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Onboarding() {
-  const { user } = useAuth();
+  const { user, profile, isDemo } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
+  const isFree = isDemo;
   const [selectedNiche, setSelectedNiche] = useState("");
   const [selectedPack, setSelectedPack] = useState("");
   const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
@@ -112,29 +113,50 @@ export default function Onboarding() {
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            {isFree && (
+              <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20">
+                <p className="text-sm font-bold text-primary flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> Modo Demonstração (Agência Solo)
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No plano gratuito, você testará a IA usando os dados da Agência Solo.
+                  Para usar sua própria marca, faça upgrade!
+                </p>
+                <Button variant="link" size="sm" className="h-auto p-0 mt-2 text-xs" onClick={() => navigate("/app/checkout")}>
+                  Ver Planos de Upgrade →
+                </Button>
+              </div>
+            )}
             <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Kit da Marca</h2>
             <p className="mb-4 text-sm text-muted-foreground">Preencha os dados da sua marca para roteiros personalizados.</p>
             <Form {...form}>
               <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                 <FormField control={form.control} name="businessName" render={({ field }) => (
-                  <FormItem><FormLabel>Nome do negócio</FormLabel><FormControl><Input {...field} placeholder="Ex: Studio Ana Beleza" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Nome do negócio</FormLabel><FormControl><Input {...field} placeholder="Ex: Studio Ana Beleza" disabled={isFree} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="offer" render={({ field }) => (
-                  <FormItem><FormLabel>Oferta principal</FormLabel><FormControl><Input {...field} placeholder="Ex: Design de sobrancelhas" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Oferta principal</FormLabel><FormControl><Input {...field} placeholder="Ex: Design de sobrancelhas" disabled={isFree} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="targetAudience" render={({ field }) => (
-                  <FormItem><FormLabel>Público-alvo</FormLabel><FormControl><Input {...field} placeholder="Ex: Mulheres 25-45 anos" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Público-alvo</FormLabel><FormControl><Input {...field} placeholder="Ex: Mulheres 25-45 anos" disabled={isFree} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem><FormLabel>Cidade (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: São Paulo - SP" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Cidade (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: São Paulo - SP" disabled={isFree} /></FormControl><FormMessage /></FormItem>
                 )} />
-                {renderTagInput("toneAdjectives", "Tom de voz (adjetivos)", "Ex: profissional, acolhedor")}
-                {renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos de experiência")}
-                {renderTagInput("proofs", "Provas sociais", "Ex: +500 clientes atendidos")}
-                {renderTagInput("commonObjections", "Objeções comuns", "Ex: É muito caro")}
-                {renderTagInput("forbiddenWords", "Palavras proibidas", "Ex: barato, milagre")}
+                {isFree ? (
+                  <div className="space-y-2 opacity-50 grayscale pointer-events-none">
+                    {renderTagInput("toneAdjectives", "Tom de voz (adjetivos)", "Ex: profissional, acolhedor")}
+                  </div>
+                ) : renderTagInput("toneAdjectives", "Tom de voz (adjetivos)", "Ex: profissional, acolhedor")}
+
+                {isFree ? (
+                  <div className="space-y-2 opacity-50 grayscale pointer-events-none">
+                    {renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos de experiência")}
+                  </div>
+                ) : renderTagInput("differentiators", "Diferenciais", "Ex: 10 anos de experiência")}
+
                 <FormField control={form.control} name="ctaPreference" render={({ field }) => (
-                  <FormItem><FormLabel>CTA preferido (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: Agende agora pelo WhatsApp" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>CTA preferido (opcional)</FormLabel><FormControl><Input {...field} placeholder="Ex: Agende agora pelo WhatsApp" disabled={isFree} /></FormControl><FormMessage /></FormItem>
                 )} />
               </form>
             </Form>
@@ -142,7 +164,7 @@ export default function Onboarding() {
         )}
 
         {step === 1 && (
-          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className={isFree ? "opacity-60 pointer-events-none" : ""}>
             <h2 className="mb-1 text-xl font-bold font-[Space_Grotesk]">Identidade Visual</h2>
             <p className="mb-4 text-sm text-muted-foreground">Configure as cores, logos e referências visuais da sua marca.</p>
             <div className="space-y-6">
@@ -153,7 +175,7 @@ export default function Onboarding() {
               <FormField control={form.control} name="visualStyleDescription" render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Descreva seu estilo visual (opcional)</label>
-                  <textarea {...field} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Ex: Fotos claras e limpas, fundo branco, tipografia moderna, tons pastéis..." />
+                  <textarea {...field} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Ex: Fotos claras e limpas, fundo branco, tipografia moderna, tones pastéis..." />
                 </div>
               )} />
             </div>

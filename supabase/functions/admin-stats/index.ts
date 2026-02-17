@@ -5,16 +5,18 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const ADMIN_EMAILS = ["kalopsia3445@gmail.com"];
+const ADMIN_EMAILS = ["kalopsia3445@gmail.com", "frds3445@gmail.com"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -54,49 +56,75 @@ Deno.serve(async (req) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    // Total de usuários
-    const { data: { users: allUsers }, error: usersError } = await admin.auth.admin.listUsers({
+    // Total de usuários (excluindo admins)
+    const { data: { users: allUsersRaw }, error: usersError } = await admin.auth.admin.listUsers({
       perPage: 1000,
     });
 
-    const totalUsers = allUsers?.length || 0;
+    const allUsers = (allUsersRaw || []).filter(u => !ADMIN_EMAILS.includes(u.email || ""));
+    const adminIds = (allUsersRaw || []).filter(u => ADMIN_EMAILS.includes(u.email || "")).map(u => u.id);
+
+    const totalUsers = allUsers.length;
 
     // Usuários novos últimos 7 dias
-    const newUsersWeek = allUsers?.filter((u) => u.created_at >= sevenDaysAgo).length || 0;
+    const newUsersWeek = allUsers.filter((u) => u.created_at >= sevenDaysAgo).length || 0;
 
     // Usuários novos últimos 30 dias
-    const newUsersMonth = allUsers?.filter((u) => u.created_at >= thirtyDaysAgo).length || 0;
+    const newUsersMonth = allUsers.filter((u) => u.created_at >= thirtyDaysAgo).length || 0;
 
-    // Total de scripts gerados
+    // Total de scripts gerados (excluindo admins)
     const { count: totalScripts } = await admin
       .from("scripts")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .not("user_id", "in", `(${adminIds.join(",")})`);
 
     // Scripts gerados hoje
     const { count: scriptsToday } = await admin
       .from("scripts")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", `${today}T00:00:00`);
+      .gte("created_at", `${today}T00:00:00`)
+      .not("user_id", "in", `(${adminIds.join(",")})`);
 
     // Scripts últimos 7 dias
     const { count: scriptsWeek } = await admin
       .from("scripts")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", `${sevenDaysAgo}T00:00:00`);
+      .gte("created_at", `${sevenDaysAgo}T00:00:00`)
+      .not("user_id", "in", `(${adminIds.join(",")})`);
 
     // Total de brand kits (= usuários que completaram onboarding)
     const { count: totalBrandKits } = await admin
       .from("brand_kits")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .not("user_id", "in", `(${adminIds.join(",")})`);
 
     // Uso diário hoje
     const { data: usageToday } = await admin
       .from("daily_usage")
       .select("count")
-      .eq("usage_date", today);
+      .eq("usage_date", today)
+      .not("user_id", "in", `(${adminIds.join(",")})`);
 
     const totalGenerationsToday = usageToday?.reduce((sum: number, u: any) => sum + (u.count || 0), 0) || 0;
     const activeUsersToday = usageToday?.length || 0;
+
+    // Estatísticas de Assinatura
+    const { data: profileStats } = await admin
+      .from("profiles")
+      .select("id, subscription_status")
+      .not("id", "in", `(${adminIds.join(",")})`);
+
+    const subsCount = { free: 0, basic: 0, pro: 0, enterprise: 0 };
+    profileStats?.forEach((p: any) => {
+      const s = (p.subscription_status || 'free') as keyof typeof subsCount;
+      if (subsCount.hasOwnProperty(s)) {
+        subsCount[s]++;
+      } else {
+        subsCount.free++;
+      }
+    });
+
+    const mrr = (subsCount.basic * 37) + (subsCount.pro * 67) + (subsCount.enterprise * 127);
 
     // Top nichos
     const { data: nicheData } = await admin
@@ -112,16 +140,20 @@ Deno.serve(async (req) => {
       .slice(0, 10)
       .map(([niche, count]) => ({ niche, count }));
 
-    // Últimos usuários cadastrados
+    // Últimos usuários cadastrados + status
     const recentUsers = allUsers
       ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 20)
-      .map((u) => ({
-        id: u.id,
-        email: u.email,
-        createdAt: u.created_at,
-        lastSignIn: u.last_sign_in_at,
-      }));
+      .map((u) => {
+        const profile = profileStats?.find((p: any) => p.id === u.id);
+        return {
+          id: u.id,
+          email: u.email,
+          createdAt: u.created_at,
+          lastSignIn: u.last_sign_in_at,
+          subscriptionStatus: profile?.subscription_status || 'free'
+        };
+      });
 
     // Scripts por dia (últimos 30 dias)
     const { data: scriptsRaw } = await admin
@@ -149,6 +181,8 @@ Deno.serve(async (req) => {
         generationsToday: totalGenerationsToday,
       },
       brandKits: totalBrandKits || 0,
+      subscriptions: subsCount,
+      mrr,
       topNiches,
       recentUsers,
       scriptsByDay,

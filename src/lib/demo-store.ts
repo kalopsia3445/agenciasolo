@@ -1,5 +1,5 @@
-import type { BrandKit, SavedScript, DailyUsage, StylePack } from "@/types/schema";
-import { DAILY_LIMIT } from "@/types/schema";
+import type { BrandKit, SavedScript, StylePack } from "@/types/schema";
+import { WEEKLY_LIMITS } from "@/types/schema";
 
 const KEYS = {
   brandKit: "soloreels_brand_kit",
@@ -9,6 +9,11 @@ const KEYS = {
   customPacks: "soloreels_custom_packs",
   onboardingDone: "soloreels_onboarding_done",
 } as const;
+
+interface DemoDailyUsage {
+  date: string;
+  count: number;
+}
 
 function get<T>(key: string, fallback: T): T {
   try {
@@ -40,6 +45,9 @@ export function saveScript(script: SavedScript) {
   scripts.unshift(script);
   set(KEYS.scripts, scripts);
 }
+export function deleteScript(id: string) {
+  set(KEYS.scripts, getScripts().filter((s) => s.id !== id));
+}
 
 // ── Favorites ──
 export function getFavoriteIds(): Set<string> {
@@ -60,20 +68,21 @@ export function toggleFavorite(scriptId: string): boolean {
 }
 
 // ── Daily Usage ──
-export function getDailyUsage(): DailyUsage {
+export function getDailyUsage(): DemoDailyUsage {
   const today = new Date().toISOString().split("T")[0];
-  const usage = get<DailyUsage>(KEYS.dailyUsage, { date: today, count: 0 });
+  const usage = get<DemoDailyUsage>(KEYS.dailyUsage, { date: today, count: 0 });
   if (usage.date !== today) return { date: today, count: 0 };
   return usage;
 }
-export function incrementUsage(): DailyUsage {
+export function incrementUsage(): DemoDailyUsage {
   const usage = getDailyUsage();
   usage.count += 1;
   set(KEYS.dailyUsage, usage);
   return usage;
 }
 export function canGenerate(): boolean {
-  return getDailyUsage().count < DAILY_LIMIT;
+  // In demo mode, we use the free limit by default
+  return getDailyUsage().count < WEEKLY_LIMITS.free;
 }
 
 // ── Custom Packs ──

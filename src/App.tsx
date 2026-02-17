@@ -16,6 +16,9 @@ import Library from "./pages/app/Library";
 import BrandKit from "./pages/app/BrandKit";
 import Packs from "./pages/app/Packs";
 import AdminDashboard from "./pages/app/AdminDashboard";
+import Checkout from "./pages/app/Checkout";
+import Profile from "./pages/app/Profile";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route index element={<Navigate to="/app/generate" replace />} />
               <Route path="onboarding" element={<Onboarding />} />
@@ -38,6 +42,8 @@ const App = () => (
               <Route path="brand-kit" element={<BrandKit />} />
               <Route path="packs" element={<Packs />} />
               <Route path="admin" element={<AdminDashboard />} />
+              <Route path="checkout" element={<Checkout />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

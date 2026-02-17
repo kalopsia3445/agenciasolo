@@ -120,6 +120,15 @@ values (
   array['image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm']
 ) on conflict (id) do nothing;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'generated_images',
+  'generated_images',
+  true,
+  10485760, -- 10MB
+  array['image/png', 'image/jpeg', 'image/webp']
+) on conflict (id) do nothing;
+
 -- Storage policies
 create policy "Users can upload own assets"
   on storage.objects for insert

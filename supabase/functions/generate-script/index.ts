@@ -8,11 +8,20 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
+const WEEKLY_LIMITS = {
+  free: 1,
+  basic: 3,
+  pro: 6,
+  enterprise: 12,
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -37,17 +46,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verificar limite diário
-    const today = new Date().toISOString().split("T")[0];
-    const { data: usage } = await supabase
+    // Pegar o perfil para ver o tier
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const tier = (profile?.subscription_status || 'free') as keyof typeof WEEKLY_LIMITS;
+    const limit = WEEKLY_LIMITS[tier] || WEEKLY_LIMITS.free;
+
+    // Verificar limite semanal
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    const weekStart = monday.toISOString().split("T")[0];
+
+    const { data: usageData } = await supabase
       .from("daily_usage")
       .select("count")
       .eq("user_id", user.id)
-      .eq("usage_date", today)
-      .maybeSingle();
+      .gte("usage_date", weekStart);
 
-    if (usage && usage.count >= 3) {
-      return new Response(JSON.stringify({ error: "Limite diário atingido (3/dia)" }), {
+    const weeklyTotal = (usageData || []).reduce((sum: number, d: any) => sum + (d.count || 0), 0);
+
+    if (weeklyTotal >= limit) {
+      return new Response(JSON.stringify({
+        error: `Limite semanal atingido (${limit}/semana)`,
+        tier
+      }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

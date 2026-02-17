@@ -47,6 +47,9 @@ export const scriptVariantSchema = z.object({
   disclaimer: z.string(),
   imageUrl: z.string().optional(),
   imagePrompt: z.string().optional(),
+  imageUrls: z.array(z.string()).optional(),
+  imagePrompts: z.array(z.string()).optional(),
+  detailedContent: z.string().optional(),
 });
 export type ScriptVariant = z.infer<typeof scriptVariantSchema>;
 
@@ -55,7 +58,7 @@ export const aiResponseSchema = z.object({
 });
 export type AIResponse = z.infer<typeof aiResponseSchema>;
 
-// ── Saved Script ──
+// ── saved Script ──
 export interface SavedScript {
   id: string;
   brandKitId?: string;
@@ -79,19 +82,26 @@ export const generateFormSchema = z.object({
 });
 export type GenerateFormData = z.infer<typeof generateFormSchema>;
 
-// ── Daily Usage ──
-export interface DailyUsage {
-  date: string;
+export interface WeeklyUsage {
+  weekStart: string;
   count: number;
 }
 
-export const DAILY_LIMIT = 3;
+export type SubscriptionTier = "free" | "basic" | "pro" | "enterprise";
+
+export const WEEKLY_LIMITS: Record<SubscriptionTier, number> = {
+  free: 1,
+  basic: 3,
+  pro: 6,
+  enterprise: 12,
+};
 
 export const FORMATS = [
   { value: "reels" as const, label: "Reels", icon: "🎬" },
   { value: "stories" as const, label: "Stories", icon: "📱" },
   { value: "carousel" as const, label: "Carrossel", icon: "📸" },
 ];
+
 
 export const OBJECTIVES = [
   "Atrair novos seguidores",
@@ -103,3 +113,20 @@ export const OBJECTIVES = [
   "Humanizar a marca",
   "Divulgar promoção",
 ];
+
+export const SOLOREELS_DEMO_KIT: BrandKit = {
+  businessName: "Agência Solo",
+  niche: "Consultoria de Marketing Digital",
+  offer: "Gestão estratégica de Redes Sociais e Inteligência Artificial",
+  targetAudience: "Empresários, Profissionais Liberais e Criadores de Conteúdo",
+  city: "Brasil",
+  toneAdjectives: ["Profissional", "Inovador", "Direto", "Autoritário"],
+  forbiddenWords: ["barato", "fácil", "milagre", "estou tentando"],
+  differentiators: ["Pioneiros em IA para Reels", "Foco em conversão real", "Estratégia personalizada"],
+  proofs: ["+100 clientes satisfeitos", "Especialistas em viralização"],
+  commonObjections: ["IA tira o lado humano", "Não tenho tempo para gravar"],
+  ctaPreference: "Me envie um Direct para decolar seu perfil",
+  colorPalette: ["#e8501a", "#ffffff", "#0d1117"],
+  logoUrls: ["/logo-agencia-solo.png"],
+  visualStyleDescription: "Cores vibrantes (Laranja Solo), contraste alto, tipografia moderna e elementos que remetem à velocidade e tecnologia.",
+};

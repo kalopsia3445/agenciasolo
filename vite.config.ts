@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/replicate-api": {
+        target: "https://api.replicate.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/replicate-api/, ""),
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

@@ -1,7 +1,7 @@
 import { supabase, isDemoMode } from "./supabase";
 import * as demo from "./demo-store";
-import type { BrandKit, SavedScript, DailyUsage, StylePack } from "@/types/schema";
-import { DAILY_LIMIT } from "@/types/schema";
+import type { BrandKit, SavedScript, WeeklyUsage, StylePack, SubscriptionTier } from "@/types/schema";
+import { WEEKLY_LIMITS, SOLOREELS_DEMO_KIT } from "@/types/schema";
 
 // Helper to get current user id
 async function getUserId(): Promise<string | null> {
@@ -10,12 +10,56 @@ async function getUserId(): Promise<string | null> {
   return data.user?.id ?? null;
 }
 
+export async function uploadImage(blob: Blob, path: string): Promise<string> {
+  if (isDemoMode || !supabase) return URL.createObjectURL(blob);
+
+  const { data, error } = await supabase.storage
+    .from("generated_images")
+    .upload(path, blob, {
+      contentType: blob.type,
+      upsert: true
+    });
+
+  if (error) {
+    console.error("Storage upload error:", error);
+    return URL.createObjectURL(blob); // Fallback to temp URL if upload fails
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("generated_images")
+    .getPublicUrl(data.path);
+
+  return publicUrl;
+}
+
+export const ADMIN_EMAILS = ["kalopsia3445@gmail.com", "frds3445@gmail.com"];
+const TEST_EMAILS = ["relacionamento.c8negocios@gmail.com"];
+
+export async function isUserAdmin(): Promise<boolean> {
+  if (isDemoMode || !supabase) return false;
+  const { data } = await supabase.auth.getUser();
+  const email = data.user?.email;
+  return !!email && ADMIN_EMAILS.includes(email);
+}
+
+export async function isDemoUser(): Promise<boolean> {
+  if (await isUserAdmin()) return false;
+  const profile = await getProfile();
+  // Se não tem perfil ou o status é 'free', é demo
+  return !profile || profile.subscription_status === 'free';
+}
+
 // ── Brand Kit ──
 export async function getBrandKit(): Promise<BrandKit | null> {
   if (isDemoMode || !supabase) return demo.getBrandKit();
 
   const userId = await getUserId();
   if (!userId) return null;
+
+  // Check if it's a demo user (Admin bypass included)
+  if (await isDemoUser()) {
+    return SOLOREELS_DEMO_KIT;
+  }
 
   const { data, error } = await supabase
     .from("brand_kits")
@@ -54,6 +98,11 @@ export async function saveBrandKit(kit: BrandKit): Promise<void> {
 
   const userId = await getUserId();
   if (!userId) throw new Error("Usuário não autenticado");
+
+  // Prevent saving for demo users (admins allowed to save)
+  if (await isDemoUser()) {
+    throw new Error("Personalização bloqueada no plano gratuito. Faça upgrade para salvar sua marca!");
+  }
 
   const row = {
     user_id: userId,
@@ -128,7 +177,7 @@ export async function saveScript(script: SavedScript): Promise<void> {
   const userId = await getUserId();
   if (!userId) throw new Error("Usuário não autenticado");
 
-  await supabase.from("scripts").insert({
+  await supabase.from("scripts").upsert({
     id: script.id,
     user_id: userId,
     brand_kit_id: script.brandKitId || null,
@@ -169,8 +218,19 @@ export async function getScriptById(id: string): Promise<SavedScript | undefined
     inputSummary: data.input_summary,
     resultJson: data.result_json,
     createdAt: data.created_at,
-    isFavorite: data.is_favorite || false,
   };
+}
+
+export async function deleteScript(id: string): Promise<void> {
+  if (isDemoMode || !supabase) {
+    demo.deleteScript(id);
+    return;
+  }
+
+  const userId = await getUserId();
+  if (!userId) return;
+
+  await supabase.from("scripts").delete().eq("id", id).eq("user_id", userId);
 }
 
 // ── Favorites ──
@@ -212,30 +272,36 @@ export async function getFavoriteIds(): Promise<Set<string>> {
   return new Set((data || []).map((d: any) => d.id));
 }
 
-// ── Daily Usage ──
-export async function getDailyUsage(): Promise<DailyUsage> {
-  const today = new Date().toISOString().split("T")[0];
-  if (isDemoMode || !supabase) return demo.getDailyUsage();
+// ── Weekly Usage ──
+export async function getWeeklyUsage(): Promise<WeeklyUsage> {
+  const now = new Date();
+  const day = now.getDay(); // 0 (Dom) a 6 (Sab)
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Ajuste para Segunda-feira
+  const monday = new Date(now.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  const weekStart = monday.toISOString().split("T")[0];
+
+  if (isDemoMode || !supabase) return { weekStart, count: 0 };
 
   const userId = await getUserId();
-  if (!userId) return { date: today, count: 0 };
+  if (!userId) return { weekStart, count: 0 };
 
   const { data } = await supabase
     .from("daily_usage")
-    .select("*")
+    .select("count")
     .eq("user_id", userId)
-    .eq("usage_date", today)
-    .maybeSingle();
+    .gte("usage_date", weekStart);
 
-  return { date: today, count: data?.count || 0 };
+  const total = (data || []).reduce((sum, d) => sum + (d.count || 0), 0);
+  return { weekStart, count: total };
 }
 
-export async function incrementUsage(): Promise<DailyUsage> {
-  if (isDemoMode || !supabase) return demo.incrementUsage();
+export async function incrementUsage(): Promise<void> {
+  if (isDemoMode || !supabase) return;
 
   const userId = await getUserId();
   const today = new Date().toISOString().split("T")[0];
-  if (!userId) return { date: today, count: 0 };
+  if (!userId) return;
 
   const { data: existing } = await supabase
     .from("daily_usage")
@@ -245,23 +311,49 @@ export async function incrementUsage(): Promise<DailyUsage> {
     .maybeSingle();
 
   if (existing) {
-    const newCount = (existing.count || 0) + 1;
     await supabase
       .from("daily_usage")
-      .update({ count: newCount })
+      .update({ count: (existing.count || 0) + 1 })
       .eq("id", existing.id);
-    return { date: today, count: newCount };
   } else {
     await supabase
       .from("daily_usage")
       .insert({ user_id: userId, usage_date: today, count: 1 });
-    return { date: today, count: 1 };
   }
 }
 
+// ── Profiles & Subscriptions ──
+export async function getProfile() {
+  if (isDemoMode || !supabase) return { subscription_status: 'free' };
+  const userId = await getUserId();
+  if (!userId) return null;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return data;
+}
+
+async function isMasterAccount(): Promise<boolean> {
+  return isUserAdmin();
+}
+
 export async function canGenerate(): Promise<boolean> {
-  const usage = await getDailyUsage();
-  return usage.count < DAILY_LIMIT;
+  if (await isMasterAccount()) return true;
+
+  const { data: { user } } = await supabase!.auth.getUser();
+  if (user?.email && TEST_EMAILS.includes(user.email)) return true;
+
+  // Check subscription
+  const profile = await getProfile();
+  const tier = (profile?.subscription_status || "free") as SubscriptionTier;
+  const limit = WEEKLY_LIMITS[tier] || WEEKLY_LIMITS.free;
+
+  const usage = await getWeeklyUsage();
+  return usage.count < limit;
 }
 
 // ── Custom Packs ──

@@ -4,19 +4,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { generateFormSchema, type GenerateFormData, type SavedScript, type BrandKit, type StylePack, FORMATS, OBJECTIVES, DAILY_LIMIT } from "@/types/schema";
+import { Progress } from "@/components/ui/progress";
+import { generateFormSchema, type GenerateFormData, type SavedScript, type BrandKit, type StylePack, FORMATS, OBJECTIVES, WEEKLY_LIMITS, type SubscriptionTier } from "@/types/schema";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
 import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite } from "@/lib/data-service";
-import { generateWithGroq } from "@/lib/groq";
-import { generateImageUrl, regenerateImageUrl, downloadImage } from "@/lib/image-gen";
+import { generateWithGroq, generateDeepContent } from "@/lib/groq";
+import { buildImagePrompt, generateImage, regenerateImage, downloadImage, generateImagePipeline } from "@/lib/image-gen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Copy, Heart, Video, Loader2, ImageIcon, Download, RefreshCw } from "lucide-react";
+import { Sparkles, Copy, Star, Video, Loader2, ImageIcon, Download, RefreshCw, FileText, Send } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Generate() {
   const { toast } = useToast();
@@ -27,10 +30,19 @@ export default function Generate() {
   const [brandKit, setBrandKit] = useState<BrandKit | null>(null);
   const [customPacks, setCustomPacks] = useState<StylePack[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const { isDemoMode: isDemo } = useAuth();
-  const [groqKey, setGroqKey] = useState(() => localStorage.getItem("soloreels_groq_key") || "");
+  const { isDemoMode, profile, isAdmin, isDemo } = useAuth();
+  const envGroqKey = import.meta.env.VITE_GROQ_API_KEY || "";
+  const envGeminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  const [groqKey, setGroqKey] = useState(() => envGroqKey || localStorage.getItem("soloreels_groq_key") || "");
+  const [geminiKey, setGeminiKey] = useState(() => envGeminiKey || localStorage.getItem("soloreels_gemini_key") || "");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagesLoading, setImagesLoading] = useState<boolean[]>([]);
+  const [imageErrors, setImageErrors] = useState<boolean[]>([]);
+  const [imageProgress, setImageProgress] = useState<number[]>([0, 0, 0]);
+  const [carouselImageIdx, setCarouselImageIdx] = useState(0);
+  const [deepLoading, setDeepLoading] = useState<number | null>(null);
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [dialogOpen, setDialogOpen] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([getBrandKit(), getCustomPacks(), getFavoriteIds()]).then(([bk, cp, fi]) => {
@@ -41,6 +53,8 @@ export default function Generate() {
     });
   }, []);
 
+  // Removido simulation effect - progresso agora vem direto da API de imagem
+
   const allPacks = [...OFFICIAL_PACKS, ...customPacks];
 
   const form = useForm<GenerateFormData>({
@@ -48,30 +62,12 @@ export default function Generate() {
     defaultValues: { format: "reels", objective: "", inputSummary: "", stylePackId: "" },
   });
 
-  function generateImages(script: SavedScript, bk: BrandKit) {
-    const urls: string[] = [];
-    const loadingState = [true, true, true];
-    setImagesLoading(loadingState);
-
-    script.resultJson.variants.forEach((v, i) => {
-      const { url, prompt } = generateImageUrl({
-        hook: v.hook,
-        inputSummary: script.inputSummary,
-        niche: bk.niche,
-        format: script.format,
-        objective: script.objective,
-        businessName: bk.businessName,
-        visualStyle: bk.visualStyleDescription,
-      });
-      urls[i] = url;
-      // Salvar prompt na variação
-      v.imageUrl = url;
-      v.imagePrompt = prompt;
-    });
-    setImageUrls(urls);
-  }
-
   function handleImageLoad(idx: number) {
+    setImageProgress((prev) => {
+      const next = [...prev];
+      next[idx] = 100;
+      return next;
+    });
     setImagesLoading((prev) => {
       const next = [...prev];
       next[idx] = false;
@@ -79,22 +75,64 @@ export default function Generate() {
     });
   }
 
-  function handleRegenImage(idx: number) {
-    if (!result || !brandKit) return;
-    const v = result.resultJson.variants[idx];
-    if (!v.imagePrompt) return;
-    const newUrl = regenerateImageUrl(v.imagePrompt, result.format);
-    v.imageUrl = newUrl;
-    setImageUrls((prev) => {
+  function handleImageError(idx: number, url?: string) {
+    const now = new Date().toLocaleTimeString();
+    console.error(`DEBUG [${now}] [Generate.tsx]: Erro ao carregar imagem index ${idx}.`);
+    console.log(`DEBUG [${now}] [Generate.tsx]: URL que falhou:`, url);
+
+    setImagesLoading((prev) => {
       const next = [...prev];
-      next[idx] = newUrl;
+      next[idx] = false;
       return next;
     });
-    setImagesLoading((prev) => {
+    setImageErrors((prev) => {
       const next = [...prev];
       next[idx] = true;
       return next;
     });
+  }
+
+  async function handleRegenImage(idx: number) {
+    if (!result || !brandKit) return;
+    const isCarousel = result.format === "carousel";
+    const v = result.resultJson.variants[0]; // Carousel sempre usa a primeira variação
+
+    // Para stories, pega o prompt da variação específica
+    const prompt = isCarousel
+      ? (v.imagePrompts?.[idx] || v.imagePrompt || "")
+      : (result.resultJson.variants[idx]?.imagePrompt || "");
+
+    if (!prompt) return;
+
+    setImagesLoading((prev) => { const next = [...prev]; next[idx] = true; return next; });
+    setImageErrors((prev) => { const next = [...prev]; next[idx] = false; return next; });
+    setImageProgress((prev) => { const next = [...prev]; next[idx] = 0; return next; });
+
+    try {
+      const newUrl = await regenerateImage(prompt, geminiKey);
+      const updatedResult = { ...result };
+
+      if (isCarousel) {
+        const newUrls = [...(updatedResult.resultJson.variants[0].imageUrls || [])];
+        newUrls[idx] = newUrl;
+        updatedResult.resultJson.variants[0].imageUrls = newUrls;
+      } else {
+        updatedResult.resultJson = {
+          ...updatedResult.resultJson,
+          variants: updatedResult.resultJson.variants.map((variant, i) =>
+            i === idx ? { ...variant, imageUrl: newUrl } : variant
+          ),
+        };
+      }
+
+      setResult(updatedResult);
+      setImageUrls((prev) => { const next = [...prev]; next[idx] = newUrl; return next; });
+      await saveScript(updatedResult);
+    } catch (err: any) {
+      console.error("Regen image failed:", err);
+      setImagesLoading((prev) => { const next = [...prev]; next[idx] = false; return next; });
+      setImageErrors((prev) => { const next = [...prev]; next[idx] = true; return next; });
+    }
   }
 
   async function onSubmit(data: GenerateFormData) {
@@ -103,15 +141,23 @@ export default function Generate() {
       navigate("/app/onboarding");
       return;
     }
+    const tier = (profile?.subscription_status || 'free') as SubscriptionTier;
+    const limit = WEEKLY_LIMITS[tier] || WEEKLY_LIMITS.free;
+
     const allowed = await canGenerate();
     if (!allowed) {
-      toast({ title: `Limite diário atingido (${DAILY_LIMIT}/dia)`, description: "Volte amanhã!", variant: "destructive" });
+      toast({
+        title: `Limite semanal atingido (${limit}/semana)`,
+        description: "Assine um plano superior para mais gerações!",
+        variant: "destructive",
+        action: <Button variant="outline" size="sm" onClick={() => navigate("/app/checkout")}>Ver Planos</Button>
+      });
       return;
     }
 
     const apiKey = groqKey;
-    if (isDemo && !apiKey) {
-      toast({ title: "Chave Groq não configurada", description: "Cole sua API key no campo abaixo do formulário.", variant: "destructive" });
+    if (!apiKey) {
+      toast({ title: "Chave Groq não configurada", description: "Configure VITE_GROQ_API_KEY no .env.local ou cole no campo abaixo.", variant: "destructive" });
       return;
     }
 
@@ -120,7 +166,25 @@ export default function Generate() {
 
     setLoading(true);
     try {
-      const aiResponse = await generateWithGroq(brandKit, pack, data, isDemo ? apiKey : undefined);
+      const aiResponse = await generateWithGroq(brandKit, pack, data, apiKey);
+
+      // Garantir que cada variação tenha um imagePrompt personalizado
+      aiResponse.variants.forEach((v) => {
+        const base = v.imagePrompt || v.hook;
+        v.imagePrompt = buildImagePrompt({
+          hook: v.hook,
+          inputSummary: data.inputSummary,
+          niche: brandKit.niche,
+          format: data.format,
+          objective: data.objective,
+          businessName: brandKit.businessName,
+          visualStyle: brandKit.visualStyleDescription,
+          targetAudience: brandKit.targetAudience,
+          colorPalette: brandKit.colorPalette,
+          toneAdjectives: brandKit.toneAdjectives,
+        }, base);
+      });
+
       const script: SavedScript = {
         id: crypto.randomUUID(),
         stylePackId: data.stylePackId,
@@ -133,16 +197,112 @@ export default function Generate() {
         createdAt: new Date().toISOString(),
       };
 
-      // Gerar imagens em paralelo
-      generateImages(script, brandKit);
-
       await saveScript(script);
       await incrementUsage();
+
+      // Iniciar estados de carregamento de imagem
+      if (data.format === "reels") {
+        setImagesLoading([false, false, false]);
+        setImageErrors([false, false, false]);
+      } else if (data.format === "carousel") {
+        setImagesLoading([true, true, true]);
+        setImageErrors([false, false, false]);
+        setImageProgress([0, 0, 0]);
+      } else {
+        setImagesLoading([true, true, true]);
+        setImageErrors([false, false, false]);
+        setImageProgress([0, 0, 0]);
+      }
+
+      setImageUrls([]);
       setResult(script);
-      toast({ title: "Roteiro gerado com sucesso! 🎉" });
+      toast({ title: data.format === "reels" ? "Roteiro gerado! ✨" : "Roteiro gerado! Gerando imagens... 🎨" });
+      setLoading(false);
+
+      // Gerar imagens em série com delay para evitar Rate Limit (429)
+      if (geminiKey && data.format !== "reels") {
+        const updatedScript = { ...script };
+        updatedScript.resultJson = { ...updatedScript.resultJson, variants: [...updatedScript.resultJson.variants] };
+
+        if (data.format === "carousel") {
+          // Processamento para Carrossel (1 variant, 3 images)
+          const variant = updatedScript.resultJson.variants[0];
+          const prompts = variant.imagePrompts || [variant.imagePrompt || ""];
+          const urls: string[] = [];
+          const errors: boolean[] = [];
+
+          for (let i = 0; i < 3; i++) {
+            try {
+              if (i > 0) await new Promise(r => setTimeout(r, 2000));
+              const prompt = prompts[i] || prompts[0];
+              const newImageUrl = await generateImage(prompt, undefined, {
+                hook: variant.hook,
+                inputSummary: data.inputSummary,
+                niche: brandKit.niche,
+                format: data.format,
+                objective: data.objective,
+                businessName: brandKit.businessName,
+                visualStyle: brandKit.visualStyleDescription,
+                targetAudience: brandKit.targetAudience,
+                colorPalette: brandKit.colorPalette,
+                toneAdjectives: brandKit.toneAdjectives,
+                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
+              }, i);
+              urls.push(newImageUrl);
+              errors.push(false);
+            } catch (err) {
+              console.error(`Carousel image ${i} failed:`, err);
+              urls.push("");
+              errors.push(true);
+            }
+            setImageUrls([...urls]);
+            setImageErrors([...errors]);
+          }
+          variant.imageUrls = urls;
+          variant.imageUrl = urls[0]; // Set first image as thumbnail
+          setResult(updatedScript);
+          await saveScript(updatedScript);
+        } else {
+          // Processamento para Stories (3 variants, 1 image each)
+          const urls: string[] = [];
+          const errors: boolean[] = [];
+          for (let i = 0; i < aiResponse.variants.length; i++) {
+            const v = aiResponse.variants[i];
+            try {
+              if (i > 0) await new Promise(r => setTimeout(r, 2000));
+              const newImageUrl = await generateImage(v.imagePrompt, undefined, {
+                hook: v.hook,
+                inputSummary: data.inputSummary,
+                niche: brandKit.niche,
+                format: data.format,
+                objective: data.objective,
+                businessName: brandKit.businessName,
+                visualStyle: brandKit.visualStyleDescription,
+                targetAudience: brandKit.targetAudience,
+                colorPalette: brandKit.colorPalette,
+                toneAdjectives: brandKit.toneAdjectives,
+                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
+              }, i);
+              urls.push(newImageUrl);
+              errors.push(false);
+              updatedScript.resultJson.variants[i] = { ...updatedScript.resultJson.variants[i], imageUrl: newImageUrl };
+            } catch (err) {
+              console.error(`Stories image ${i} failed:`, err);
+              urls.push("");
+              errors.push(true);
+            }
+            setImageUrls([...urls]);
+            setImageErrors([...errors]);
+          }
+          setResult(updatedScript);
+          await saveScript(updatedScript);
+        }
+      } else {
+        setImagesLoading([false, false, false]);
+        if (data.format !== "reels") setImageErrors([true, true, true]);
+      }
     } catch (err: any) {
       toast({ title: "Erro ao gerar", description: err.message, variant: "destructive" });
-    } finally {
       setLoading(false);
     }
   }
@@ -150,6 +310,33 @@ export default function Generate() {
   function handleCopy(text: string) {
     navigator.clipboard.writeText(text);
     toast({ title: "Copiado! 📋" });
+  }
+
+  async function handleDeepGenerate(idx: number) {
+    if (!result || !brandKit) return;
+    const v = result.resultJson.variants[idx];
+
+    setDeepLoading(idx);
+    try {
+      const apiKey = groqKey;
+      const content = await generateDeepContent(brandKit, v, additionalInfo, apiKey);
+
+      const updatedResult = { ...result };
+      updatedResult.resultJson.variants[idx] = {
+        ...updatedResult.resultJson.variants[idx],
+        detailedContent: content
+      };
+
+      setResult(updatedResult);
+      await saveScript(updatedResult);
+      setDialogOpen(null);
+      setAdditionalInfo("");
+      toast({ title: "Conteúdo expandido gerado! ✨" });
+    } catch (err: any) {
+      toast({ title: "Erro na expansão", description: err.message, variant: "destructive" });
+    } finally {
+      setDeepLoading(null);
+    }
   }
 
   async function handleFav(scriptId: string) {
@@ -168,37 +355,144 @@ export default function Generate() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold font-[Space_Grotesk]">3 Variações</h2>
-          <Button variant="outline" size="sm" onClick={() => { setResult(null); setImageUrls([]); }}>Nova geração</Button>
+          <Button variant="outline" size="sm" onClick={() => { setResult(null); setImageUrls([]); setImageErrors([]); }}>Nova geração</Button>
         </div>
         {result.resultJson.variants.map((v, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card>
               <CardContent className="space-y-3 p-4">
                 {/* Imagem gerada */}
-                <div className="relative overflow-hidden rounded-lg bg-muted">
-                  {imagesLoading[i] && (
-                    <div className="flex items-center justify-center py-16">
-                      <div className="text-center">
-                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
-                        <p className="mt-2 text-xs text-muted-foreground">Gerando imagem...</p>
+                <div className="relative aspect-[9/16] overflow-hidden rounded-xl bg-muted/50 border border-border group">
+                  {result.format === "reels" ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm p-6 text-center">
+                      <Video className="h-12 w-12 text-primary mb-3 animate-pulse" />
+                      <h4 className="text-xl font-bold text-white mb-2 font-[Space_Grotesk]">VÍDEO EM BREVE</h4>
+                      <p className="text-sm text-white/70">Estamos preparando a ferramenta de edição de vídeos automáticos. Use o roteiro abaixo para gravar seu Reel!</p>
+                    </div>
+                  ) : result.format === "carousel" ? (
+                    <>
+                      {imagesLoading[carouselImageIdx] && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+                          <div className="w-full max-w-[120px] space-y-3 text-center">
+                            <Progress value={imageProgress[carouselImageIdx]} className="h-1 w-full bg-primary/10 [&>div]:bg-primary" />
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Criando Slide {carouselImageIdx + 1}...</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {imageErrors[carouselImageIdx] && !imagesLoading[carouselImageIdx] && (
+                        <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+                          <div className="space-y-2">
+                            <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground/20" />
+                            <p className="text-[10px] text-muted-foreground">Erro no Slide {carouselImageIdx + 1}</p>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] hover:bg-primary/10" onClick={() => handleRegenImage(carouselImageIdx)}>
+                              <RefreshCw className="mr-1 h-3 w-3" /> Tentar novamente
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {imageUrls[carouselImageIdx] && !imageErrors[carouselImageIdx] && (
+                        <img
+                          src={imageUrls[carouselImageIdx]}
+                          alt={`${v.title} - Slide ${carouselImageIdx + 1}`}
+                          className={`h-full w-full object-cover transition-all duration-700 ${imagesLoading[carouselImageIdx] ? "scale-110 blur-lg" : "scale-100 blur-0"}`}
+                          onLoad={() => handleImageLoad(carouselImageIdx)}
+                          onError={() => handleImageError(carouselImageIdx, imageUrls[carouselImageIdx])}
+                        />
+                      )}
+
+                      {/* Navegação Carrossel */}
+                      {!imagesLoading[carouselImageIdx] && imageUrls.length > 1 && (
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 z-30 pointer-events-none">
+                          <Button
+                            variant="secondary" size="icon"
+                            className="h-8 w-8 rounded-full bg-black/40 text-white backdrop-blur-sm border-0 pointer-events-auto hover:bg-black/60"
+                            disabled={carouselImageIdx === 0}
+                            onClick={() => setCarouselImageIdx(prev => prev - 1)}
+                          >
+                            <Send className="h-4 w-4 rotate-180" />
+                          </Button>
+                          <Button
+                            variant="secondary" size="icon"
+                            className="h-8 w-8 rounded-full bg-black/40 text-white backdrop-blur-sm border-0 pointer-events-auto hover:bg-black/60"
+                            disabled={carouselImageIdx === imageUrls.length - 1}
+                            onClick={() => setCarouselImageIdx(prev => prev + 1)}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Indicador de Lâminas */}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
+                        {[0, 1, 2].map((dot) => (
+                          <div key={dot} className={`h-1.5 w-1.5 rounded-full transition-all ${carouselImageIdx === dot ? "bg-primary w-4" : "bg-white/40"}`} />
+                        ))}
                       </div>
+                    </>
+                  ) : (
+                    // Stories (Padrão)
+                    <>
+                      {imagesLoading[i] && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+                          <div className="w-full max-w-[120px] space-y-3 text-center">
+                            <Progress value={imageProgress[i]} className="h-1 w-full bg-primary/10 [&>div]:bg-primary" />
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Criando...</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {imageErrors[i] && !imagesLoading[i] && (
+                        <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+                          <div className="space-y-2">
+                            <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground/20" />
+                            <p className="text-[10px] text-muted-foreground">Erro na geração</p>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] hover:bg-primary/10" onClick={() => handleRegenImage(i)}>
+                              <RefreshCw className="mr-1 h-3 w-3" /> Tentar novamente
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {imageUrls[i] && !imageErrors[i] && (
+                        <img
+                          src={imageUrls[i]}
+                          alt={v.title}
+                          className={`h-full w-full object-cover transition-all duration-700 ${imagesLoading[i] ? "scale-110 blur-lg" : "scale-100 blur-0"}`}
+                          onLoad={() => handleImageLoad(i)}
+                          onError={() => handleImageError(i, imageUrls[i])}
+                        />
+                      )}
+                    </>
+                  )}
+
+                  {/* LOGO OVERLAY */}
+                  {brandKit?.logoUrls && brandKit.logoUrls.length > 0 && result.format !== "reels" && (
+                    <div className="absolute top-4 left-4 w-12 h-12 pointer-events-none drop-shadow-xl z-20">
+                      <img
+                        src={brandKit.logoUrls[0]}
+                        alt="Watermark"
+                        className="w-full h-full object-contain filter brightness-110"
+                      />
                     </div>
                   )}
-                  {imageUrls[i] && (
-                    <img
-                      src={imageUrls[i]}
-                      alt={v.title}
-                      className={`w-full object-cover ${result.format === "carousel" ? "aspect-square" : "aspect-[9/16] max-h-[400px]"} ${imagesLoading[i] ? "hidden" : ""}`}
-                      onLoad={() => handleImageLoad(i)}
-                      onError={() => handleImageLoad(i)}
-                    />
-                  )}
-                  {!imagesLoading[i] && imageUrls[i] && (
-                    <div className="absolute bottom-2 right-2 flex gap-1">
-                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white border-0" onClick={() => handleRegenImage(i)}>
+
+                  {!imagesLoading[i] && !imageErrors[i] && (result.format === "carousel" ? imageUrls[carouselImageIdx] : imageUrls[i]) && (
+                    <div className="absolute bottom-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-0 backdrop-blur-sm" onClick={() => handleRegenImage(result.format === "carousel" ? carouselImageIdx : i)}>
                         <RefreshCw className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white border-0" onClick={() => downloadImage(imageUrls[i], `soloreels-${v.title.replace(/\s+/g, "-")}.png`)}>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-0 backdrop-blur-sm" onClick={() => {
+                        const url = result.format === "carousel" ? imageUrls[carouselImageIdx] : imageUrls[i];
+                        if (url) downloadImage(url, `soloreels-${v.title.replace(/\s+/g, "-")}${result.format === "carousel" ? `-slide-${carouselImageIdx + 1}` : ""}.png`);
+                      }}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -208,7 +502,7 @@ export default function Generate() {
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold">{v.title}</h3>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFav(result.id)}>
-                    <Heart className={`h-4 w-4 ${favIds.has(result.id) ? "fill-primary text-primary" : ""}`} />
+                    <Star className={`h-4 w-4 ${favIds.has(result.id) ? "fill-primary text-primary" : ""}`} />
                   </Button>
                 </div>
                 <div className="rounded-lg bg-muted p-3">
@@ -253,6 +547,61 @@ export default function Generate() {
                     <Video className="mr-1 h-3 w-3" /> Teleprompter
                   </Button>
                 </div>
+
+                <div className="pt-2 border-t border-dashed">
+                  {v.detailedContent ? (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                      <div className="flex items-center gap-2 text-primary">
+                        <FileText className="h-4 w-4" />
+                        <p className="text-xs font-bold uppercase tracking-wider">Conteúdo Expandido</p>
+                      </div>
+                      <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
+                        <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">{v.detailedContent}</p>
+                      </div>
+                      <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => handleCopy(v.detailedContent!)}>
+                        <Copy className="mr-1 h-3 w-3" /> Copiar conteúdo expandido
+                      </Button>
+                    </div>
+                  ) : (
+                    <Dialog open={dialogOpen === i} onOpenChange={(open) => setDialogOpen(open ? i : null)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full border-primary/20 hover:bg-primary/5 text-primary gap-2">
+                          <Sparkles className="h-3.5 w-3.5" /> Estudar roteiro e sugerir conteúdo completo
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Expandir Roteiro</DialogTitle>
+                          <DialogDescription>
+                            O Groq fará uma pesquisa detalhada para sugerir o conteúdo completo baseado no seu roteiro e em informações extras que você fornecer.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Informações adicionais (opcional)</label>
+                            <Textarea
+                              placeholder="Fale mais sobre o produto, serviço ou detalhes técnicos que deseja incluir..."
+                              value={additionalInfo}
+                              onChange={(e) => setAdditionalInfo(e.target.value)}
+                              rows={4}
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDialogOpen(null)}>Cancelar</Button>
+                          <Button
+                            className="gradient-primary border-0"
+                            onClick={() => handleDeepGenerate(i)}
+                            disabled={deepLoading === i}
+                          >
+                            {deepLoading === i ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            Gerar Conteúdo Completo
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -263,10 +612,23 @@ export default function Generate() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold font-[Space_Grotesk]">Gerar Roteiro</h2>
-        <p className="text-sm text-muted-foreground">Preencha os dados e a IA cria 3 variações com imagens.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold font-[Space_Grotesk]">Gerar Roteiro</h2>
+          <p className="text-sm text-muted-foreground">Preencha os dados e a IA cria 3 variações com imagens.</p>
+        </div>
+        {isDemo && (
+          <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 animate-pulse">
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> Modo Demo
+          </Badge>
+        )}
       </div>
+
+      {isDemo && (
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-xs text-muted-foreground italic">
+          💡 No teste gratuito, os roteiros serão focados no nicho de <strong>Marketing Digital</strong> da Agência Solo.
+        </div>
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -326,14 +688,28 @@ export default function Generate() {
         </form>
       </Form>
 
-      {isDemo && (
-        <div className="space-y-2 rounded-xl border border-dashed border-muted-foreground/30 p-4">
-          <label className="text-xs font-medium text-muted-foreground">🔑 Chave API do Groq (Demo Mode)</label>
-          <div className="flex gap-2">
-            <Input type="password" placeholder="gsk_..." value={groqKey}
-              onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
+      {/* Mostrar inputs manuais apenas quando env vars não estão configuradas */}
+      {(!envGroqKey || !envGeminiKey) && (
+        <div className="space-y-3 rounded-xl border border-dashed border-muted-foreground/30 p-4">
+          <label className="text-xs font-medium text-muted-foreground">🔑 Chaves API {isDemo ? "(Demo Mode)" : ""}</label>
+          <div className="space-y-2">
+            {!envGroqKey && (
+              <div>
+                <p className="mb-1 text-xs text-muted-foreground">Groq (roteiro)</p>
+                <Input type="password" placeholder="gsk_..." value={groqKey}
+                  onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
+                <p className="mt-1 text-xs text-muted-foreground">Pegue em <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline text-primary">console.groq.com/keys</a></p>
+              </div>
+            )}
+            {!envGeminiKey && (
+              <div>
+                <p className="mb-1 text-xs text-muted-foreground">Gemini (imagens — grátis)</p>
+                <Input type="password" placeholder="AIza..." value={geminiKey}
+                  onChange={(e) => { setGeminiKey(e.target.value); localStorage.setItem("soloreels_gemini_key", e.target.value); }} />
+                <p className="mt-1 text-xs text-muted-foreground">Pegue em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" className="underline text-primary">aistudio.google.com/apikey</a></p>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">Pegue sua chave em <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline text-primary">console.groq.com/keys</a></p>
         </div>
       )}
     </div>

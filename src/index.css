@@ -15,16 +15,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 230 25% 10%;
 
-    --primary: 15 90% 55%;
+    --primary: 25 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 55% 40%;
+    --secondary: 145 75% 45%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 230 15% 93%;
     --muted-foreground: 230 10% 45%;
 
-    --accent: 270 60% 55%;
+    --accent: 155 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -52,25 +52,25 @@
   }
 
   .dark {
-    --background: 230 25% 7%;
+    --background: 220 35% 8%;
     --foreground: 210 30% 95%;
 
-    --card: 230 22% 11%;
+    --card: 220 30% 12%;
     --card-foreground: 210 30% 95%;
 
-    --popover: 230 22% 11%;
+    --popover: 220 30% 12%;
     --popover-foreground: 210 30% 95%;
 
-    --primary: 15 90% 55%;
+    --primary: 25 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 55% 40%;
+    --secondary: 145 75% 45%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 230 18% 16%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 220 25% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 270 60% 55%;
+    --accent: 155 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 45%;
@@ -106,7 +106,12 @@
     font-family: 'Inter', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Space Grotesk', sans-serif;
   }
 }
@@ -115,13 +120,16 @@
   .gradient-primary {
     background: linear-gradient(135deg, hsl(15 90% 55%), hsl(35 90% 55%));
   }
+
   .gradient-hero {
     background: linear-gradient(135deg, hsl(230 25% 7%), hsl(230 20% 14%));
   }
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, hsl(15 90% 55%), hsl(35 90% 55%));
   }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
