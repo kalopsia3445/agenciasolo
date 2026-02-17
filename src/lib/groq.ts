@@ -415,19 +415,25 @@ export async function analyzeMarketWithGroq(
   apiKey: string
 ): Promise<any> {
   const prompt = `
-    Aja como um Estrategista de Elite em Social Media e Branding.
-    Sua missão é analisar o perfil @${handle} e o mercado em que ele se insere.
+    Aja como o CCO (Chief Content Officer) da Agência Solo e um Estrategista de Elite em Branding.
+    Sua missão é realizar um diagnóstico profundo do perfil @${handle}, cruzando dados do mercado com o Brand Kit do usuário.
     
-    DADOS DO BRAND KIT ATUAL DO USUÁRIO (Use apenas como referência de nicho se o perfil @${handle} for o dele):
-    Negócio: ${brandKit?.businessName || "Não definido"}
+    CONTEXTO DO BRAND KIT (DADOS REAIS DO NEGÓCIO):
+    Nome do Negócio: ${brandKit?.businessName || "Não definido"}
     Nicho: ${brandKit?.niche || "Não definido"}
+    Oferta Principal: ${brandKit?.offer || "Não definido"}
+    Público-Alvo: ${brandKit?.targetAudience || "Não definido"}
+    Cidade/Região: ${brandKit?.city || "Brasil"}
+    Tons da Marca: ${brandKit?.toneAdjectives?.join(", ") || "Profissional"}
+    Diferenciais: ${brandKit?.differentiators?.join(", ") || "Não definidos"}
+    Estilo Visual Atual: ${brandKit?.visualStyleDescription || "Não definido"}
+    Cores da Marca: ${brandKit?.colorPalette?.join(", ") || "Não definidas"}
     
-    INSTRUÇÕES CRÍTICAS:
-    1. NÃO dê respostas genéricas. Se o perfil for @${handle}, analise ESPECIFICAMENTE o que esse nome sugere.
-    2. Identifique 3 tendências de mercado REAIS e ATUAIS para 2024/2025 para este setor específico.
-    3. Sugira uma estética visual disruptiva (ex: "Dark Mode Tech", "Boutique Minimalist", "High-Energy Fitness").
-    4. Proponha 3 sugestões estratégicas que NÃO sejam óbvias.
-    5. IMPORTANTE: NÃO repita roteiros ou estéticas genéricas como "Estética High-Contrast" ou "Minimalismo Futurista". Seja ORIGINAL e criativo para cada perfil.
+    INSTRUÇÕES CRÍTICAS PARA O DIAGNÓSTICO:
+    1. NÃO HALLUCINE DADOS PESSOAIS. Se não tiver certeza sobre o @${handle}, foque na análise estratégica baseada no NICHO e no BRAND KIT.
+    2. Identifique 3 tendências de mercado REAIS para 2024/2025 para o setor de ${brandKit?.niche}.
+    3. Sugira uma evolução da Estética Visual que combine as Cores da Marca mencionadas com uma tendência moderna.
+    4. Proponha 3 sugestões estratégicas para este perfil dominar o mercado local (${brandKit?.city}).
     
     Responda APENAS em JSON com o formato:
     {
