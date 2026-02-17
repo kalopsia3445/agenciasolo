@@ -1,4 +1,4 @@
-import { Sparkles, BookOpen, Palette, PenTool, BarChart3, CreditCard, Crown, User, Zap } from "lucide-react";
+import { Sparkles, BookOpen, Palette, PenTool, BarChart3, CreditCard, Crown, User, Zap, Wrench } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ const baseItems = [
   { to: "/app/generate", label: "Gerar", icon: Zap },
   { to: "/app/library", label: "Biblioteca", icon: BookOpen },
   { to: "/app/brand-kit", label: "Marca", icon: PenTool },
+  { to: "/app/tools", label: "Ferramentas", icon: Wrench },
   { to: "/app/packs", label: "Packs", icon: Palette },
 ];
 

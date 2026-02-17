@@ -18,6 +18,8 @@ import Packs from "./pages/app/Packs";
 import AdminDashboard from "./pages/app/AdminDashboard";
 import Checkout from "./pages/app/Checkout";
 import Profile from "./pages/app/Profile";
+import Tools from "./pages/app/Tools";
+import InstagramAnalysis from "./pages/app/InstagramAnalysis";
 import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,8 @@ const App = () => (
               <Route path="library" element={<Library />} />
               <Route path="brand-kit" element={<BrandKit />} />
               <Route path="packs" element={<Packs />} />
+              <Route path="tools" element={<Tools />} />
+              <Route path="tools/instagram-analysis" element={<InstagramAnalysis />} />
               <Route path="admin" element={<AdminDashboard />} />
               <Route path="checkout" element={<Checkout />} />
               <Route path="profile" element={<Profile />} />
