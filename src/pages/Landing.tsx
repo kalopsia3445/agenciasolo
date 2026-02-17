@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Zap, Palette, Video, CheckCircle, LogIn, LogOut, User } from "lucide-react";
+import { Sparkles, Zap, Image, TrendingUp, BarChart3, CheckCircle, LogIn, LogOut, User } from "lucide-react";
 import { NICHES } from "@/data/niches";
 import { useAuth } from "@/contexts/AuthContext";
 
 const benefits = [
-  { icon: Sparkles, title: "Roteiros com IA", desc: "3 variações por geração, prontos para gravar" },
-  { icon: Video, title: "Teleprompter", desc: "Leia o roteiro enquanto grava, com espelhamento" },
-  { icon: Palette, title: "12 Packs de Estilo", desc: "Do humor leve à autoridade, escolha seu tom" },
-  { icon: Zap, title: "Kit da Marca", desc: "Configure uma vez, gere conteúdo consistente" },
+  { icon: BarChart3, title: "Análise de Perfil", desc: "IA conecta no seu Instagram e diz exatamente o que postar." },
+  { icon: TrendingUp, title: "Notícias em Tempo Real", desc: "Monitore tendências do seu nicho via Google/Tavily." },
+  { icon: Image, title: "Imagens Hiper-Realistas", desc: "Crie visuais de estúdio sem câmeras, com consistência." },
+  { icon: Sparkles, title: "Roteiros Validamos", desc: "Hooks e CTAs de alta conversão baseados em dados." },
 ];
 
 export default function Landing() {
@@ -81,9 +81,13 @@ export default function Landing() {
             <span className="text-white/90">agência solo</span>
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight font-[Space_Grotesk] md:text-5xl">
-            Seus <span className="text-gradient">Reels</span> virais<br />com inteligência solo
+            Domine o Instagram com <span className="text-gradient">Inteligência Real</span>
           </h1>
-          <p className="mb-8 text-lg text-white/70">Roteiros, legendas e CTAs gerados por IA no estilo da sua marca. É só gravar.</p>
+          <p className="mb-8 text-lg text-white/70">
+            De análise profunda do seu perfil a roteiros virais e imagens de estúdio.
+            <br className="hidden md:block" />
+            Tudo automático, tudo conectado.
+          </p>
           <Button size="lg" className="gradient-primary border-0 px-8 text-base font-semibold shadow-lg" onClick={handleStart}>
             {user ? "Ir para o App" : "Começar grátis"}
           </Button>
@@ -119,9 +123,9 @@ export default function Landing() {
 
       <section className="bg-background px-4 py-16 text-center">
         <div className="mx-auto max-w-lg">
-          <h2 className="mb-4 text-2xl font-bold font-[Space_Grotesk]">Pronto para criar conteúdo?</h2>
+          <h2 className="mb-4 text-2xl font-bold font-[Space_Grotesk]">Pronto para profissionalizar?</h2>
           <div className="mb-6 space-y-2">
-            {["1 geração grátis por semana", "Teleprompter integrado", "12 estilos profissionais"].map((t) => (
+            {["Análise de Conta em Tempo Real", "Geração de Imagens Ilimitada", "Roteiros com Estratégia Viral"].map((t) => (
               <div key={t} className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 text-primary" /> {t}
               </div>

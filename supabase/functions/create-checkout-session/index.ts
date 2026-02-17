@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
             throw new Error(`Configuração incompleta: Price ID não encontrado para ${tier}`);
         }
 
-        // 1. Verificar se o cliente já existe
+        // 1. Verificar se o cliente já existe e é VÁLIDO no Stripe
         const { data: profile, error: profileError } = await supabaseClient
             .from("profiles")
             .select("stripe_customer_id")
@@ -94,6 +94,22 @@ Deno.serve(async (req) => {
 
         let customerId = profile?.stripe_customer_id;
 
+        // Se tivermos um ID, verificar se ele realmente existe no Stripe
+        if (customerId) {
+            try {
+                console.log(`Verificando existência do customer ${customerId}...`);
+                const customer = await stripe.customers.retrieve(customerId);
+                if (customer.deleted) {
+                    console.warn(`Customer ${customerId} foi deletado no Stripe.`);
+                    customerId = null;
+                }
+            } catch (err) {
+                console.warn(`Customer ${customerId} inválido ou não encontrado no Stripe (Ambiente diferente?):`, err.message);
+                customerId = null;
+            }
+        }
+
+        // Se não tiver ID (ou se o antigo era inválido), criar um novo
         if (!customerId) {
             console.log("Criando novo cliente no Stripe...");
             const customer = await stripe.customers.create({
@@ -111,7 +127,9 @@ Deno.serve(async (req) => {
                 .from("profiles")
                 .update({ stripe_customer_id: customerId })
                 .eq("id", user.id);
-            console.log(`Cliente Stripe ${customerId} vinculado ao usuário ${user.id}`);
+            console.log(`Novo Cliente Stripe ${customerId} vinculado ao usuário ${user.id}`);
+        } else {
+            console.log(`Customer existente e válido: ${customerId}`);
         }
 
         // 2. Criar sessão de checkout
