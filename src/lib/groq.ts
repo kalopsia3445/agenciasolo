@@ -365,3 +365,100 @@ Responda APENAS com o conteúdo expandido, sem introduções ou explicações ex
 
   throw new Error("Chave Groq não configurada");
 }
+
+export async function fetchInstagramProfile(
+  handle: string,
+  apiKey: string
+): Promise<{ name: string; bio: string; avatarUrl: string }> {
+  const prompt = `
+    Você é um assistente de pesquisa. 
+    Dê informações básicas sobre o perfil do Instagram @${handle}.
+    Se for um perfil real/famoso, use o que você sabe. 
+    Se não, gere um nome plausível e uma bio fictícia baseada no handle.
+    
+    Responda APENAS em JSON:
+    {
+      "name": "Nome Completo ou Razão Social",
+      "bio": "Bio curta do perfil",
+      "avatarUrl": "URL de uma imagem de placeholder realista (ex: unsplash) que combine com o provável nicho"
+    }
+  `;
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.5,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) throw new Error("Falha ao buscar perfil");
+
+  const data = await response.json();
+  return JSON.parse(data.choices?.[0]?.message?.content);
+}
+
+export async function analyzeMarketWithGroq(
+  handle: string,
+  brandKit: BrandKit | null,
+  apiKey: string
+): Promise<any> {
+  const prompt = `
+    Aja como um Estrategista de Elite em Social Media e Branding.
+    Sua missão é analisar o perfil @${handle} e o mercado em que ele se insere.
+    
+    DADOS DO BRAND KIT ATUAL DO USUÁRIO (Use apenas como referência de nicho se o perfil @${handle} for o dele):
+    Negócio: ${brandKit?.businessName || "Não definido"}
+    Nicho: ${brandKit?.niche || "Não definido"}
+    
+    INSTRUÇÕES CRÍTICAS:
+    1. NÃO dê respostas genéricas. Se o perfil for @${handle}, analise ESPECIFICAMENTE o que esse nome sugere.
+    2. Identifique 3 tendências de mercado REAIS e ATUAIS para 2024/2025 para este setor específico.
+    3. Sugira uma estética visual disruptiva (ex: "Dark Mode Tech", "Boutique Minimalist", "High-Energy Fitness").
+    4. Proponha 3 sugestões estratégicas que NÃO sejam óbvias.
+    5. IMPORTANTE: NÃO repita roteiros ou estéticas genéricas como "Estética High-Contrast" ou "Minimalismo Futurista". Seja ORIGINAL e criativo para cada perfil.
+    
+    Responda APENAS em JSON com o formato:
+    {
+      "niche": "string",
+      "visualStyle": "string",
+      "targetAudience": "string",
+      "trends": ["string", "string", "string"],
+      "suggestions": ["string", "string", "string"],
+      "tone": "string"
+    }
+  `;
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.8,
+      max_tokens: 3000,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Groq API error: ${response.status} - ${err}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Resposta vazia da IA");
+
+  return JSON.parse(content);
+}

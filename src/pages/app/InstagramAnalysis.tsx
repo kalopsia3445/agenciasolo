@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Instagram, Search, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Loader2, RefreshCw, Save, Lock as LockIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getBrandKit, saveBrandKit } from "@/lib/data-service";
-import { generateWithGroq } from "@/lib/groq";
+import { analyzeMarketWithGroq, fetchInstagramProfile } from "@/lib/groq";
 import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
@@ -34,6 +34,7 @@ export default function InstagramAnalysis() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
     const [result, setResult] = useState<AnalysisResult | null>(null);
+    const [profilePreview, setProfilePreview] = useState<{ name: string; bio: string; avatarUrl: string } | null>(null);
 
     const isEnterprise = profile?.subscription_status === "enterprise";
 
@@ -49,77 +50,42 @@ export default function InstagramAnalysis() {
         }
 
         setLoading(true);
+        try {
+            setStatus("Buscando informações do perfil...");
+            const apiKey = localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY;
+            if (!apiKey) throw new Error("Chave Groq não configurada");
+
+            const preview = await fetchInstagramProfile(values.handle, apiKey);
+            setProfilePreview(preview);
+        } catch (error: any) {
+            toast({ title: "Erro ao buscar perfil", description: error.message, variant: "destructive" });
+        } finally {
+            setLoading(false);
+            setStatus("");
+        }
+    }
+
+    async function startFullAnalysis() {
+        if (!isEnterprise || !profilePreview) return;
+
+        setLoading(true);
         setResult(null);
 
         try {
-            // Etapa 1: "Scraping" / Simulação de Scan
-            setStatus("Iniciando varredura do perfil...");
-            await new Promise(r => setTimeout(r, 2000));
+            setStatus("Iniciando análise profunda...");
 
-            setStatus("Analisando posts e engajamento...");
-            await new Promise(r => setTimeout(r, 2000));
-
-            setStatus("Pesquisando tendências globais no Groq...");
-
-            // Etapa 2: Consulta à IA para Análise de Mercado
             const brandKit = await getBrandKit();
             const apiKey = localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY;
 
-            if (!apiKey) {
-                throw new Error("Chave API do Groq não configurada.");
-            }
+            if (!apiKey) throw new Error("Chave API do Groq não configurada.");
 
-            // Prompt especializado para Análise de Mercado e Instagram
-            const prompt = `
-        Aja como um Especialista em Branding e Estrategista de Conteúdo do Instagram.
-        Analise o perfil @${values.handle} e o contexto atual da marca:
-        Negócio: ${brandKit?.businessName || "Não definido"}
-        Nicho: ${brandKit?.niche || "Não definido"}
-        
-        Sua tarefa:
-        1. Identifique 3 tendências de mercado quentes para este nicho em 2024/2025.
-        2. Sugira melhorias no estilo visual e tom de voz.
-        3. Identifique o público-alvo ideal.
-        
-        Responda APENAS em JSON com o formato:
-        {
-          "niche": "string",
-          "visualStyle": "string",
-          "targetAudience": "string",
-          "trends": ["trend1", "trend2", "trend3"],
-          "suggestions": ["sugestão1", "sugestão2"],
-          "tone": "string"
-        }
-      `;
-
-            // Como o generateWithGroq é focado em roteiros, faremos uma chamada direta simplificada ou usaremos o infra
-            // Para manter a consistência, vamos criar um novo método em groq.ts depois, mas por agora simulamos a resposta 
-            // ou usamos uma chamada fetch se necessário.
-
-            // Simulando resposta baseada no Groq para demonstração rápida de "Valor Elite"
-            // Em uma implementação real, chamaria uma Edge Function ou groq.ts
-
-            setStatus("Finalizando relatório estratégico...");
+            setStatus("Analizando posts e engajamento...");
             await new Promise(r => setTimeout(r, 1500));
 
-            const mockResult: AnalysisResult = {
-                niche: brandKit?.niche || "Marketing Digital",
-                visualStyle: "Estética High-Contrast, Minimalismo Futurista, Motion Graphics Orgânicos.",
-                targetAudience: "Empreendedores Digitais e Creators que buscam escala.",
-                trends: [
-                    "Uso de IA generativa para cenários surreais (Trend 'Dreamscape')",
-                    "Roteiros 'POV' focados em bastidores e transparência radical",
-                    "Conteúdo 'Fast-Learning' com cortes rápidos e legendas dinâmicas"
-                ],
-                suggestions: [
-                    "Adotar tons neon sutil no Kit de Marca para destacar hooks",
-                    "Utilizar trilha sonora 'Phonk' ou 'Lofi Beats' para autoridade",
-                    "Substituir CTAs genéricos por perguntas reflexivas"
-                ],
-                tone: "Inovador, Provocador, porém Altamente Educativo."
-            };
+            setStatus("Pesquisando tendências de mercado...");
+            const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit, apiKey);
 
-            setResult(mockResult);
+            setResult(analysisResult);
             toast({ title: "Análise concluída!", description: "Seu relatório de mercado está pronto." });
         } catch (error: any) {
             toast({ title: "Erro na análise", description: error.message, variant: "destructive" });
@@ -180,7 +146,7 @@ export default function InstagramAnalysis() {
                 </div>
             </div>
 
-            {!result && (
+            {!result && !profilePreview && (
                 <Card>
                     <CardContent className="pt-6 space-y-4">
                         <Form {...form}>
@@ -190,7 +156,7 @@ export default function InstagramAnalysis() {
                                     name="handle"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>@ do seu Perfil</FormLabel>
+                                            <FormLabel>@ do Perfil para Analisar</FormLabel>
                                             <FormControl>
                                                 <div className="relative">
                                                     <Instagram className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -210,17 +176,56 @@ export default function InstagramAnalysis() {
                                     ) : (
                                         <>
                                             <Search className="mr-2 h-4 w-4" />
-                                            Iniciar Análise de Mercado
+                                            Encontrar Perfil
                                         </>
                                     )}
                                 </Button>
                             </form>
                         </Form>
                         <p className="text-[10px] text-center text-muted-foreground italic">
-                            Esta análise utiliza Groq para pesquisar tendências de mercado em tempo real e sugerir alterações no seu Kit de Marca.
+                            Esta análise utiliza Groq para pesquisar tendências de mercado em tempo real.
                         </p>
                     </CardContent>
                 </Card>
+            )}
+
+            {profilePreview && !result && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+                    <Card className="border-primary/50 bg-primary/5 overflow-hidden">
+                        <CardHeader className="pb-2">
+                            <div className="flex items-start gap-4">
+                                <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0">
+                                    <img src={profilePreview.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                                </div>
+                                <div className="space-y-1 mt-1">
+                                    <h3 className="text-lg font-bold font-[Space_Grotesk] leading-none">{profilePreview.name}</h3>
+                                    <p className="text-sm text-primary font-medium">@{form.getValues().handle}</p>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{profilePreview.bio}</p>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                            <div className="flex gap-2">
+                                <Button variant="outline" className="flex-1 h-10 text-xs" onClick={() => setProfilePreview(null)} disabled={loading}>
+                                    Alterar @
+                                </Button>
+                                <Button className="flex-[2] h-10 gradient-primary border-0 font-bold" onClick={startFullAnalysis} disabled={loading}>
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            {status}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <TrendingUp className="mr-2 h-4 w-4" />
+                                            Iniciar Diagnóstico
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             )}
 
             <AnimatePresence>
@@ -234,7 +239,7 @@ export default function InstagramAnalysis() {
                             <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
                                     <Badge className="bg-primary text-white">Relatório Elite</Badge>
-                                    <Button variant="outline" size="sm" onClick={() => setResult(null)}>
+                                    <Button variant="outline" size="sm" onClick={() => { setResult(null); setProfilePreview(null); }}>
                                         <RefreshCw className="h-3 w-3 mr-1" /> Nova Análise
                                     </Button>
                                 </div>
