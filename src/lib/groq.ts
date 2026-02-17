@@ -368,101 +368,47 @@ Responda APENAS com o conteúdo expandido, sem introduções ou explicações ex
 
 export async function fetchInstagramProfile(
   handle: string,
-  apiKey: string
+  apiKey?: string
 ): Promise<{ name: string; bio: string; avatarUrl: string }> {
-  const prompt = `
-    Você é um assistente de pesquisa especializado em mídias sociais em 2026. 
-    Sua missão é dar informações reais sobre o perfil do Instagram @${handle}.
-    
-    INSTRUÇÕES CRÍTICAS:
-    1. Se o perfil for de uma pessoa ou marca real, identifique o Nome e Bio reais.
-    2. Se você não tiver certeza (perfil pequeno), NÃO invente nomes genéricos.
-    3. Se houver incerteza, use o próprio handle "@${handle}" como o nome e "Perfil do Instagram" como a bio.
-    4. NÃO halluncine dados biográficos se não tiver certeza.
-    
-    Responda APENAS em JSON:
-    {
-      "name": "Nome (ou @handle se incerto)",
-      "bio": "Bio curta (ou 'Perfil do Instagram' se incerto)",
-      "avatarUrl": "https://ui-avatars.com/api/?name=${handle}&background=0D8ABC&color=fff&size=256"
+  // Chamada via Supabase Intelligence Function (produção)
+  if (!isDemoMode && supabase) {
+    const response = await supabase.functions.invoke("instagram-intelligence", {
+      body: { handle, type: "profile" },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message || "Falha na inteligência de perfil");
     }
-  `;
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2, // Lower temp for factual fetch
-      max_tokens: 500,
-      response_format: { type: "json_object" },
-    }),
-  });
+    return response.data;
+  }
 
-  if (!response.ok) throw new Error("Falha ao buscar perfil");
-
-  const data = await response.json();
-  return JSON.parse(data.choices?.[0]?.message?.content);
+  // Fallback para quando não há Supabase (local/demo)
+  // Mas como o usuário quer "ferramenta real", em produção usaremos a Edge Function
+  return {
+    name: handle,
+    bio: "Perfil em análise (Modo Demo)",
+    avatarUrl: `https://ui-avatars.com/api/?name=${handle}&background=0D8ABC&color=fff&size=256`
+  };
 }
 
 export async function analyzeMarketWithGroq(
   handle: string,
   brandKit: BrandKit | null,
-  apiKey: string
+  apiKey?: string
 ): Promise<any> {
-  const prompt = `
-    Aja como o CCO (Chief Content Officer) da Agência Solo e o maior estrategista de Branding do Brasil em 2026. 
-    Sua missão é analisar o perfil @${handle} para CRIAR uma Identidade de Marca (Brand Kit) completa.
-    
-    OBJETIVO: Extrair/Sugerir dados para preencher um Brand Kit profissional de alto nível.
-    
-    INSTRUÇÕES PARA 2026/2027:
-    1. Identifique o NICHO real com base no @${handle}.
-    2. Sugira uma OFERTA PRINCIPAL irresistível focada em conversão digital.
-    3. Sugira uma ESTRATÉGIA VISUAL (Cores e Estilo) coerente com o mercado brasileiro em 2027.
-    4. Defina o PÚBLICO-ALVO ideal e o TOM DE VOZ que gera conexão imediata.
-    
-    Responda APENAS em JSON com o formato:
-    {
-      "niche": "string (ex: Engenharia Florestal)",
-      "offer": "string (Oferta sugerida)",
-      "targetAudience": "string (Público-alvo detalhado)",
-      "toneAdjectives": ["string", "string", "string"],
-      "visualStyle": "string (Descrição do estilo)",
-      "colorPalette": ["#hex1", "#hex2", "#hex3"],
-      "trends": ["string", "string", "string"],
-      "suggestions": ["string", "string", "string"],
-      "differentiators": ["string", "string", "string"]
+  // Chamada via Supabase Intelligence Function (produção)
+  if (!isDemoMode && supabase) {
+    const response = await supabase.functions.invoke("instagram-intelligence", {
+      body: { handle, brandKit, type: "analysis" },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message || "Falha na análise de mercado");
     }
-  `;
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.8,
-      max_tokens: 3000,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Groq API error: ${response.status} - ${err}`);
+    return response.data;
   }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Resposta vazia da IA");
-
-  return JSON.parse(content);
+  throw new Error("Modo de análise profundada requer conexão com Supabase Cloud.");
 }

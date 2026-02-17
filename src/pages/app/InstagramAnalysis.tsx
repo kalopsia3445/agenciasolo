@@ -55,15 +55,14 @@ export default function InstagramAnalysis() {
 
         setLoading(true);
         try {
-            setStatus("Buscando informações do perfil...");
+            setStatus("Pesquisando perfil na web real...");
             setAvatarError(false);
-            const apiKey = localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY;
-            if (!apiKey) throw new Error("Chave Groq não configurada");
 
-            const preview = await fetchInstagramProfile(values.handle, apiKey);
+            // Agora a fetchInstagramProfile chama a Edge Function que usa Tavily
+            const preview = await fetchInstagramProfile(values.handle);
             setProfilePreview(preview);
         } catch (error: any) {
-            toast({ title: "Erro ao buscar perfil", description: error.message, variant: "destructive" });
+            toast({ title: "Erro na pesquisa real", description: error.message, variant: "destructive" });
         } finally {
             setLoading(false);
             setStatus("");
@@ -77,21 +76,17 @@ export default function InstagramAnalysis() {
         setResult(null);
 
         try {
-            setStatus("Iniciando análise profunda...");
+            setStatus("Iniciando análise de mercado 2026...");
 
             const brandKit = await getBrandKit();
-            const apiKey = localStorage.getItem("soloreels_groq_key") || import.meta.env.VITE_GROQ_API_KEY;
 
-            if (!apiKey) throw new Error("Chave API do Groq não configurada.");
+            setStatus("Consultando tendências web em tempo real...");
 
-            setStatus("Cruzando dados com seu Brand Kit...");
-            await new Promise(r => setTimeout(r, 1200));
-
-            setStatus("Identificando tendências de mercado para 2024/2025...");
-            const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit, apiKey);
+            // A analyzeMarketWithGroq agora chama a Edge Function "instagram-intelligence"
+            const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit);
 
             setResult(analysisResult);
-            toast({ title: "Análise concluída!", description: "Seu relatório de mercado está pronto." });
+            toast({ title: "Análise Factual Concluída!", description: "Dados baseados em pesquisas web reais." });
         } catch (error: any) {
             toast({ title: "Erro na análise", description: error.message, variant: "destructive" });
         } finally {
@@ -201,7 +196,7 @@ export default function InstagramAnalysis() {
                             </form>
                         </Form>
                         <p className="text-[10px] text-center text-muted-foreground italic">
-                            Esta análise utiliza Groq para pesquisar tendências de mercado em tempo real.
+                            Esta análise utiliza <b>Tavily Search</b> e <b>Groq AI</b> para pesquisar dados reais de mercado em 2026.
                         </p>
                     </CardContent>
                 </Card>
