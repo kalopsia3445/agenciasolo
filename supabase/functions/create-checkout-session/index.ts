@@ -2,9 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@^14.0.0";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-    httpClient: Stripe.createFetchHttpClient(),
-});
+console.log("Edge Function 'create-checkout-session' loaded v3 (NPM).");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -14,25 +12,46 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+    // 1. Handle CORS Preflight
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     try {
+        // 2. Initialize Supabase Client
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_ANON_KEY") ?? "",
             { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
         );
 
+        // 3. Authenticate User
         const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
         if (authError || !user) {
-            console.error("Erro de autenticação:", authError);
-            throw new Error("Usuário não autenticado ou sessão expirada");
+            console.error("Auth Error:", authError);
+            throw new Error("Unauthorized: " + (authError?.message || "No user found"));
+        }
+        console.log("User authenticated:", user.id);
+
+        // 4. Initialize Stripe (Lazy Load)
+        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+        if (!stripeKey) {
+            console.error("Missing STRIPE_SECRET_KEY");
+            throw new Error("Server Misconfiguration: Missing Stripe Key");
         }
 
+        const stripe = new Stripe(stripeKey, {
+            apiVersion: '2023-10-16',
+            // httpClient removed as it causes crash with npm:stripe
+        });
+
         const body = await req.json();
+        console.log("Received Body:", JSON.stringify(body));
         const { return_url, tier } = body;
+
+        if (!tier) {
+            throw new Error("Missing 'tier' parameter in request body.");
+        }
         console.log(`Iniciando checkout para o tier: ${tier}, usuário: ${user.email}`);
 
         // Mapeamento de Tiers para Price IDs
@@ -41,6 +60,19 @@ Deno.serve(async (req) => {
             pro: Deno.env.get("STRIPE_PRICE_PRO"),
             enterprise: Deno.env.get("STRIPE_PRICE_ELITE"),
         };
+
+        // Check for missing keys
+        const missingKeys = [];
+        if (!Deno.env.get("STRIPE_SECRET_KEY")) missingKeys.push("STRIPE_SECRET_KEY");
+        if (tier === "basic" && !Deno.env.get("STRIPE_PRICE_BASIC")) missingKeys.push("STRIPE_PRICE_BASIC");
+        if (tier === "pro" && !Deno.env.get("STRIPE_PRICE_PRO")) missingKeys.push("STRIPE_PRICE_PRO");
+        if (tier === "enterprise" && !Deno.env.get("STRIPE_PRICE_ELITE")) missingKeys.push("STRIPE_PRICE_ELITE");
+
+        if (missingKeys.length > 0) {
+            const msg = `Configuração incompleta no Supabase. Faltam as keys: ${missingKeys.join(", ")}`;
+            console.error(msg);
+            throw new Error(msg);
+        }
 
         const priceId = priceMapping[tier];
         if (!priceId) {

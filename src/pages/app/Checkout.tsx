@@ -108,6 +108,7 @@ export default function Checkout() {
     async function handleUpgrade(tierId: string) {
         if (!supabase) return;
         setLoadingTier(tierId);
+        console.log("Iniciando checkout para tier:", tierId);
         try {
             const { data, error } = await supabase.functions.invoke("create-checkout-session", {
                 body: {

@@ -38,34 +38,35 @@ Toda a autoridade e branding devem ser da Agência Solo e SoloReels.` : "";
   return `Você é um especialista em conteúdo para Instagram voltado para MEI solo.
 ${demoInstruction}
 
-MARCA:
+MARCA (PERSONALIZAÇÃO OBRIGATÓRIA):
 - Negócio: ${brandKit.businessName}
 - Nicho: ${brandKit.niche}
 - Oferta: ${brandKit.offer}
 - Público: ${brandKit.targetAudience}
-- Cidade: ${brandKit.city || "não informada"}
-- Tom: ${brandKit.toneAdjectives.join(", ")}
-- Diferenciais: ${brandKit.differentiators.join(", ") || "não informados"}
-- Provas: ${brandKit.proofs.join(", ") || "não informadas"}
-- Objeções comuns: ${brandKit.commonObjections.join(", ") || "não informadas"}
-- Palavras proibidas: ${brandKit.forbiddenWords.join(", ") || "nenhuma"}
-- CTA preferido: ${brandKit.ctaPreference || "qualquer"}
-
-PACK DE ESTILO: ${pack.name}
-Regras: ${pack.rules.join("; ")}
-Frases exemplo: ${pack.examplePhrases.join("; ")}
+- Estilo Visual: ${brandKit.visualStyleDescription}
+- Paleta de Cores: ${brandKit.colorPalette.join(", ")}
+- Tom de Voz: ${brandKit.toneAdjectives.join(", ")}
 
 FORMATO: ${form.format}
 OBJETIVO: ${form.objective}
 RESUMO DO CONTEÚDO: ${form.inputSummary}
 
-Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo. Seja criativo e use o Tom de voz e as Regras do Pack de Estilo.
+INSTRUÇÕES DE ROTEIRO (ANTI-GENÉRICO):
+1. O conteúdo deve ser ESPECÍFICO para o Nicho "${brandKit.niche}". Evite dicas genéricas que servem para qualquer um.
+2. Mencione ou conecte com a Oferta "${brandKit.offer}" sutilmente se fizer sentido.
+3. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
+
+INSTRUÇÕES DE IMAGEM (BRANDING VISUAL):
+Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'), você DEVE incluir explicitamente as cores e o estilo da marca.
+Exemplo: "Professional photography of [scene], ${brandKit.visualStyleDescription} style, dominant colors ${brandKit.colorPalette.join(" and ")}, 8k, highly detailed".
+
+Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo.
 
 ${imageInstruction}
 
 CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
 1. title: Título da variação.
-2. hook: Gancho de impacto.
+2. hook: Gancho de impacto específico para ${brandKit.targetAudience}.
 3. script: Roteiro completo.
 4. teleprompterText: Texto limpo para leitura.
 5. shotList: ARRAY DE STRINGS com instruções de filmagem.
@@ -74,7 +75,7 @@ CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
 8. captionLong: Legenda completa com quebras de linha.
 9. hashtags: ARRAY DE STRINGS com 5-10 hashtags.
 10. disclaimer: String de aviso ou vazia "".
-${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês para cada slide)." : "11. imagePrompt: Prompt em INGLÊS para imagem realista (photography, 8k)."}
+${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, contendo OBRIGATORIAMENTE as cores e estilo visual da marca)." : "11. imagePrompt: Prompt em INGLÊS, contendo OBRIGATORIAMENTE as cores e estilo visual da marca (ex: 'neon blue lighting', 'minimalist beige')."}
 
 Responda APENAS com JSON válido no formato:
 {"variants": [{ ... }${numVariants > 1 ? ", { ... }, { ... }" : ""}]}`;
@@ -395,12 +396,14 @@ export async function fetchInstagramProfile(
 export async function analyzeMarketWithGroq(
   handle: string,
   brandKit: BrandKit | null,
-  apiKey?: string
+  apiKey?: string,
+  profileData?: { name: string; bio: string } | null
 ): Promise<any> {
   // Chamada via Supabase Intelligence Function (produção)
   if (!isDemoMode && supabase) {
+    console.log("Sending intelligence request with profileData:", profileData);
     const response = await supabase.functions.invoke("instagram-intelligence", {
-      body: { handle, brandKit, type: "analysis" },
+      body: { handle, brandKit, type: "analysis", profileData },
     });
 
     if (response.error) {

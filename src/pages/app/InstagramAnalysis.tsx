@@ -47,19 +47,45 @@ export default function InstagramAnalysis() {
         defaultValues: { handle: "" },
     });
 
+    function extractHandle(input: string): string {
+        try {
+            // Remove trailing slashes
+            const cleanInput = input.replace(/\/$/, "");
+
+            // Handle URL format
+            if (cleanInput.includes("instagram.com/")) {
+                const parts = cleanInput.split("instagram.com/");
+                const handlePart = parts[1].split("/")[0];
+                return handlePart.replace("@", "").trim();
+            }
+
+            // Handle @ format of plain text
+            return cleanInput.replace("@", "").trim();
+        } catch (e) {
+            return input;
+        }
+    }
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!isEnterprise) {
             toast({ title: "Acesso Negado", description: "Esta ferramenta é exclusiva para o plano Elite.", variant: "destructive" });
             return;
         }
 
+        const handle = extractHandle(values.handle);
+        if (!handle || handle.length < 2) {
+            toast({ title: "Inválido", description: "Por favor insira um @ ou Link de perfil válido.", variant: "destructive" });
+            return;
+        }
+
         setLoading(true);
         try {
-            setStatus("Pesquisando perfil na web real...");
+            setStatus(`Pesquisando @${handle} na web real...`);
             setAvatarError(false);
+            setProfilePreview(null); // Clear previous
 
             // Agora a fetchInstagramProfile chama a Edge Function que usa Tavily
-            const preview = await fetchInstagramProfile(values.handle);
+            const preview = await fetchInstagramProfile(handle);
             setProfilePreview(preview);
         } catch (error: any) {
             toast({ title: "Erro na pesquisa real", description: error.message, variant: "destructive" });
@@ -83,7 +109,8 @@ export default function InstagramAnalysis() {
             setStatus("Consultando tendências web em tempo real...");
 
             // A analyzeMarketWithGroq agora chama a Edge Function "instagram-intelligence"
-            const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit);
+            // Passamos o profilePreview (que pode ter sido editado pelo usuário) para ser a "Verdade"
+            const analysisResult = await analyzeMarketWithGroq(form.getValues().handle, brandKit, undefined, profilePreview);
 
             setResult(analysisResult);
             toast({ title: "Análise Factual Concluída!", description: "Dados baseados em pesquisas web reais." });
@@ -169,11 +196,11 @@ export default function InstagramAnalysis() {
                                     name="handle"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>@ do Perfil para Analisar</FormLabel>
+                                            <FormLabel>Link do Perfil ou @Usuario</FormLabel>
                                             <FormControl>
                                                 <div className="relative">
                                                     <Instagram className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                    <Input placeholder="ex: agenciasolo" className="pl-9" {...field} disabled={loading} />
+                                                    <Input placeholder="Cole o link ou digite (ex: @agenciasolo)" className="pl-9" {...field} disabled={loading} />
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
@@ -202,13 +229,13 @@ export default function InstagramAnalysis() {
                 </Card>
             )}
 
-            {profilePreview && !result && (
+            {profilePreview && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
-                    <Card className="border-primary/50 bg-primary/5 overflow-hidden">
+                    <Card className={`border-primary/50 bg-primary/5 overflow-hidden transition-all ${result ? "opacity-80 hover:opacity-100" : ""}`}>
                         <CardHeader className="pb-2">
                             <div className="flex items-start gap-4">
                                 <div className="h-16 w-16 rounded-full border-2 border-primary overflow-hidden bg-muted flex-shrink-0 shadow-lg relative flex items-center justify-center">
-                                    {!avatarError ? (
+                                    {!avatarError && profilePreview.avatarUrl ? (
                                         <img
                                             src={profilePreview.avatarUrl}
                                             alt=""
@@ -221,31 +248,47 @@ export default function InstagramAnalysis() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="space-y-1 mt-1">
-                                    <h3 className="text-lg font-bold font-[Space_Grotesk] leading-none">{profilePreview.name}</h3>
+                                <div className="space-y-2 flex-1">
+                                    <Input
+                                        value={profilePreview.name}
+                                        onChange={(e) => setProfilePreview({ ...profilePreview, name: e.target.value })}
+                                        className="font-bold font-[Space_Grotesk] h-8 text-lg bg-transparent border-transparent hover:border-border focus:border-primary px-0"
+                                        placeholder="Nome do Perfil"
+                                        disabled={!!result}
+                                    />
                                     <p className="text-sm text-primary font-medium">@{form.getValues().handle}</p>
-                                    <p className="text-xs text-muted-foreground line-clamp-2">{profilePreview.bio}</p>
+                                    <textarea
+                                        value={profilePreview.bio}
+                                        onChange={(e) => setProfilePreview({ ...profilePreview, bio: e.target.value })}
+                                        className="w-full text-xs text-muted-foreground bg-transparent border border-transparent hover:border-border focus:border-primary rounded-md p-1 resize-none focus:outline-none"
+                                        rows={3}
+                                        placeholder="Cole a Bio do Instagram aqui se ela não foi detectada..."
+                                        disabled={!!result}
+                                    />
+                                    {!result && <p className="text-[10px] text-muted-foreground italic">* Se a Bio estiver errada ou vazia, você pode editar acima antes de analisar.</p>}
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent className="pt-2">
                             <div className="flex gap-2">
-                                <Button variant="outline" className="flex-1 h-10 text-xs" onClick={() => setProfilePreview(null)} disabled={loading}>
+                                <Button variant="outline" className="flex-1 h-10 text-xs" onClick={() => { setProfilePreview(null); setResult(null); }} disabled={loading}>
                                     Alterar @
                                 </Button>
-                                <Button className="flex-[2] h-10 gradient-primary border-0 font-bold" onClick={startFullAnalysis} disabled={loading}>
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            {status}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <TrendingUp className="mr-2 h-4 w-4" />
-                                            Iniciar Diagnóstico
-                                        </>
-                                    )}
-                                </Button>
+                                {!result && (
+                                    <Button className="flex-[2] h-10 gradient-primary border-0 font-bold" onClick={startFullAnalysis} disabled={loading}>
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                {status}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <TrendingUp className="mr-2 h-4 w-4" />
+                                                Iniciar Diagnóstico
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

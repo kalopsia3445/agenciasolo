@@ -142,8 +142,26 @@ async function generateWithPollinations(prompt: string, index: number, onProgres
   const seed = Math.floor(now / 1000) + index + Math.floor(Math.random() * 1000);
   // Prompt muito curtos e limpos funcionam melhor no Pollinations Direct
   const cleanPrompt = encodeURIComponent(prompt.substring(0, 300));
+  const tempUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
+
+  onProgress?.(index, 98);
+
+  // FORCE UPLOAD TO STORAGE
+  try {
+    const response = await fetch(tempUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      const path = `pollinations_${Date.now()}_${index}.jpg`;
+      const persistentUrl = await uploadImage(blob, path);
+      onProgress?.(index, 100);
+      return persistentUrl;
+    }
+  } catch (err) {
+    console.warn("Autosave to storage failed, returning temp URL:", err);
+  }
+
   onProgress?.(index, 100);
-  return `https://image.pollinations.ai/prompt/${cleanPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
+  return tempUrl;
 }
 
 // 2. HUGGING FACE (Proxy via Supabase)
