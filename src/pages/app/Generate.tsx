@@ -59,7 +59,7 @@ export default function Generate() {
 
   const form = useForm<GenerateFormData>({
     resolver: zodResolver(generateFormSchema),
-    defaultValues: { format: "reels", objective: "", inputSummary: "", stylePackId: "" },
+    defaultValues: { format: "carousel", objective: "", inputSummary: "", stylePackId: "" },
   });
 
   function handleImageLoad(idx: number) {
@@ -641,6 +641,9 @@ export default function Generate() {
                     className={`rounded-xl border p-3 text-center transition-all ${field.value === f.value ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "bg-card"}`}>
                     <span className="text-xl">{f.icon}</span>
                     <p className="mt-1 text-xs font-medium">{f.label}</p>
+                    {f.description && (
+                      <p className="mt-0.5 text-[8px] text-muted-foreground opacity-80">{f.description}</p>
+                    )}
                   </button>
                 ))}
               </div>

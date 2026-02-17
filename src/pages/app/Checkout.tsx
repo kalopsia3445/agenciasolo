@@ -11,9 +11,9 @@ const PLANS = [
     {
         id: "basic",
         name: "Básico",
-        price: "R$ 37",
+        price: "R$ 39,90",
         limit: "3 gerações",
-        period: "por semana",
+        period: "por mês",
         icon: Star,
         color: "text-blue-500",
         features: [
@@ -27,9 +27,9 @@ const PLANS = [
     {
         id: "pro",
         name: "Pro",
-        price: "R$ 67",
+        price: "R$ 79,90",
         limit: "6 gerações",
-        period: "por semana",
+        period: "por mês",
         icon: Zap,
         color: "text-primary",
         recommended: true,
@@ -44,9 +44,9 @@ const PLANS = [
     {
         id: "enterprise",
         name: "Elite",
-        price: "R$ 127",
+        price: "R$ 119,90",
         limit: "12 gerações",
-        period: "por semana",
+        period: "por mês",
         icon: Crown,
         color: "text-orange-500",
         features: [

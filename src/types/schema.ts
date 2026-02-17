@@ -97,9 +97,9 @@ export const WEEKLY_LIMITS: Record<SubscriptionTier, number> = {
 };
 
 export const FORMATS = [
-  { value: "reels" as const, label: "Reels", icon: "🎬" },
-  { value: "stories" as const, label: "Stories", icon: "📱" },
   { value: "carousel" as const, label: "Carrossel", icon: "📸" },
+  { value: "stories" as const, label: "Stories", icon: "📱" },
+  { value: "reels" as const, label: "Reels", icon: "🎬", description: "(Ainda não gera vídeos)" },
 ];
 
 
