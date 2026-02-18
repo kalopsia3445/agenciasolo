@@ -140,24 +140,23 @@ async function generateWithPollinations(prompt: string, index: number, onProgres
 
   // Fallback definitivo: Direct GET (No-Auth, No-Proxy)
   const seed = Math.floor(now / 1000) + index + Math.floor(Math.random() * 1000);
-  // Prompt muito curtos e limpos funcionam melhor no Pollinations Direct
   const cleanPrompt = encodeURIComponent(prompt.substring(0, 300));
   const tempUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
 
   onProgress?.(index, 98);
 
-  // FORCE UPLOAD TO STORAGE
+  // FORCE UPLOAD TO STORAGE (Robust fallback)
   try {
     const response = await fetch(tempUrl);
     if (response.ok) {
       const blob = await response.blob();
-      const path = `pollinations_${Date.now()}_${index}.jpg`;
+      const path = `pollinations_direct_${Date.now()}_${index}.jpg`;
       const persistentUrl = await uploadImage(blob, path);
       onProgress?.(index, 100);
       return persistentUrl;
     }
   } catch (err) {
-    console.warn("Autosave to storage failed, returning temp URL:", err);
+    console.warn("Pollinations final autosave failed:", err);
   }
 
   onProgress?.(index, 100);
@@ -237,8 +236,23 @@ async function generateWithFal(prompt: string, index: number, onProgress?: (idx:
 
   if (!imgUrl) throw new Error("Fal.ai: No image URL in response");
 
+  // FORCE PERSISTENCE: Download and upload to Supabase
+  try {
+    const imgResponse = await fetch(imgUrl);
+    if (imgResponse.ok) {
+      const blob = await imgResponse.blob();
+      const path = `fal_${Date.now()}_${index}.png`;
+      const persistentUrl = await uploadImage(blob, path);
+      onProgress?.(index, 100);
+      console.log(`✅ FAL.AI ${index} PERSISTED:`, persistentUrl);
+      return persistentUrl;
+    }
+  } catch (persistErr) {
+    console.warn("Fal.ai persistence failed, falling back to temp URL:", persistErr);
+  }
+
   onProgress?.(index, 100);
-  console.log(`✅ FAL.AI ${index} OK`);
+  console.log(`✅ FAL.AI ${index} OK (Temp URL)`);
   return imgUrl;
 }
 
