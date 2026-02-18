@@ -11,7 +11,7 @@ const corsHeaders = {
     "Access-Control-Max-Age": "86400",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
     // 1. Handle CORS Preflight
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders });
