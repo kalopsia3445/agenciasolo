@@ -145,7 +145,7 @@ export default function Profile() {
                     className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 border border-border/50"
                     onClick={async () => {
                         await signOut();
-                        window.location.href = "/auth";
+                        window.location.href = "/";
                     }}
                 >
                     <LogOut className="h-4 w-4" />

@@ -17,7 +17,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isDemoMode) return <>{children}</>;
 
   // Supabase mode: require auth
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 }

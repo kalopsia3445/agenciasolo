@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Zap, Image, TrendingUp, BarChart3, CheckCircle, LogIn, LogOut, User } from "lucide-react";
+import { Sparkles, Zap, Image, TrendingUp, BarChart3, CheckCircle, LogIn, LogOut, User, Layout, Smartphone, FileText } from "lucide-react";
 import { NICHES } from "@/data/niches";
 import { useAuth } from "@/contexts/AuthContext";
 
 const benefits = [
-  { icon: BarChart3, title: "Análise de Perfil", desc: "IA conecta no seu Instagram e diz exatamente o que postar." },
-  { icon: TrendingUp, title: "Notícias em Tempo Real", desc: "Monitore tendências do seu nicho via Inteligência Artificial." },
-  { icon: Image, title: "Imagens Hiper-Realistas", desc: "Crie visuais de estúdio sem câmeras, com consistência." },
-  { icon: Sparkles, title: "Roteiros Validamos", desc: "Hooks e CTAs de alta conversão baseados em dados." },
+  { icon: BarChart3, title: "Inteligência Estratégica", desc: "Análise profunda que sugere os melhores caminhos para seu perfil." },
+  { icon: Layout, title: "Postagens Estratégicas", desc: "Sugestões de carrosséis e artes completas alinhadas à sua marca." },
+  { icon: Smartphone, title: "Presença Diária", desc: "Estruturas de Stories e Reels criadas para gerar conexões reais." },
+  { icon: FileText, title: "Roteiros Validados", desc: "Copywriting profissional com Shotlist e Teleprompter integrado." },
+  { icon: Image, title: "IA Visual Studio", desc: "Imagens de alta qualidade com sua identidade visual e logo." },
+  { icon: Sparkles, title: "Conteúdo Autoral", desc: "Transformamos ideias em scripts detalhados para sua autoridade." },
 ];
 
 export default function Landing() {
@@ -26,6 +28,7 @@ export default function Landing() {
 
   async function handleLogout() {
     await signOut();
+    navigate("/");
   }
 
   return (
@@ -81,12 +84,12 @@ export default function Landing() {
             <span className="text-white/90">agência solo</span>
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight font-[Space_Grotesk] md:text-5xl">
-            Domine o Instagram com <span className="text-gradient">Inteligência Real</span>
+            Sua Estratégia Digital Potencializada por <span className="text-gradient">Inteligência Real</span>
           </h1>
           <p className="mb-8 text-lg text-white/70">
-            De análise profunda do seu perfil a roteiros virais e imagens de estúdio.
+            A Agência Solo combina dados e criatividade para sugerir
             <br className="hidden md:block" />
-            Tudo automático, tudo conectado.
+            os melhores conteúdos para o seu Instagram.
           </p>
           <Button size="lg" className="gradient-primary border-0 px-8 text-base font-semibold shadow-lg" onClick={handleStart}>
             {user ? "Ir para o App" : "Começar grátis"}
@@ -125,7 +128,7 @@ export default function Landing() {
         <div className="mx-auto max-w-lg">
           <h2 className="mb-4 text-2xl font-bold font-[Space_Grotesk]">Pronto para profissionalizar?</h2>
           <div className="mb-6 space-y-2">
-            {["Análise de Conta em Tempo Real", "Geração de Imagens Ilimitada", "Roteiros com Estratégia Viral"].map((t) => (
+            {["Análise Real-Time de Mercado", "Carrosséis e Stories com IA", "Shotlist e Teleprompter Profissional"].map((t) => (
               <div key={t} className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 text-primary" /> {t}
               </div>

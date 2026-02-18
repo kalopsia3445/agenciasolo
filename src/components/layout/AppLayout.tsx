@@ -83,7 +83,7 @@ export function AppLayout() {
               className="h-8 w-8 text-muted-foreground hover:text-destructive"
               onClick={async () => {
                 await signOut();
-                navigate("/auth");
+                navigate("/");
               }}
             >
               <LogOut className="h-4 w-4" />
