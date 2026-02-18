@@ -70,9 +70,10 @@ Deno.serve(async (req: Request) => {
                         console.warn(`[Proxy] Falha no modelo ${modelId}: ${err}`);
                         lastError = err;
                     }
-                } catch (e: any) {
-                    console.error(`[Proxy] Erro de rede/v8 no modelo ${modelId}:`, e.message);
-                    lastError = e.message;
+                } catch (e: unknown) {
+                    const errorMessage = e instanceof Error ? e.message : String(e);
+                    console.error(`[Proxy] Erro de rede/v8 no modelo ${modelId}:`, errorMessage);
+                    lastError = errorMessage;
                 }
             }
 
@@ -103,9 +104,10 @@ Deno.serve(async (req: Request) => {
 
         throw new Error(`Provider não suportado: ${provider}`);
 
-    } catch (error: any) {
-        console.error(`[Proxy] Erro Fatal:`, error.message);
-        return new Response(JSON.stringify({ error: error.message }), {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[Proxy] Erro Fatal:`, errorMessage);
+        return new Response(JSON.stringify({ error: errorMessage }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

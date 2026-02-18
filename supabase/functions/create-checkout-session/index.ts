@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
 
         const body = await req.json();
         console.log("Received Body:", JSON.stringify(body));
-        const { return_url, tier } = body;
+        const { return_url, tier } = body as { return_url?: string; tier?: string };
 
         if (!tier) {
             throw new Error("Missing 'tier' parameter in request body.");
@@ -103,8 +103,9 @@ Deno.serve(async (req) => {
                     console.warn(`Customer ${customerId} foi deletado no Stripe.`);
                     customerId = null;
                 }
-            } catch (err) {
-                console.warn(`Customer ${customerId} inválido ou não encontrado no Stripe (Ambiente diferente?):`, err.message);
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                console.warn(`Customer ${customerId} inválido ou não encontrado no Stripe (Ambiente diferente?):`, errorMessage);
                 customerId = null;
             }
         }
@@ -162,9 +163,10 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
         });
-    } catch (error) {
-        console.error("Erro final na Edge Function:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Erro final na Edge Function:", errorMessage);
+        return new Response(JSON.stringify({ error: errorMessage }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 400,
         });
