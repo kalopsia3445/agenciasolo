@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getScripts, getFavoriteIds, toggleFavorite, deleteScript } from "@/lib/data-service";
 import type { SavedScript } from "@/types/schema";
-import { Star, Copy, Video, Search, Loader2, Trash2, FileText, Sparkles, Eye, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Copy, Video, Search, Loader2, Trash2, FileText, Sparkles, Eye, X, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { downloadImage } from "@/lib/image-gen";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -63,8 +64,29 @@ export default function Library() {
             {v.imageUrl && (
               <div className="h-20 w-20 flex-shrink-0 relative">
                 <img src={v.imageUrl} alt={v.title} className="h-full w-full rounded-lg object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                  <Eye className="text-white h-5 w-5" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg z-10">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 bg-white/20 hover:bg-white/40 text-white border-0 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedScript(script);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 bg-white/20 hover:bg-white/40 text-white border-0 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadImage(v.imageUrl!, `soloreels-${v.title.replace(/\s+/g, "-")}.png`);
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                 </div>
                 <button
                   className="absolute inset-0"
@@ -149,16 +171,36 @@ export default function Library() {
                   {isCarousel ? (
                     <div className="grid grid-cols-3 gap-2">
                       {(variant.imageUrls || []).map((url, idx) => (
-                        <div key={idx} className="aspect-square relative rounded-lg overflow-hidden border border-primary/10">
+                        <div key={idx} className="aspect-square relative rounded-lg overflow-hidden border border-primary/10 group/img">
                           <img src={url} className="h-full w-full object-cover" alt={`Slide ${idx + 1}`} />
                           <div className="absolute top-1 left-1 bg-black/60 text-[8px] text-white px-1 rounded uppercase font-bold">Lâmina {idx + 1}</div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center z-10">
+                            <Button
+                              size="icon"
+                              variant="secondary"
+                              className="h-7 w-7 bg-white/20 hover:bg-white/40 text-white border-0 backdrop-blur-sm"
+                              onClick={() => downloadImage(url, `soloreels-${variant.title.replace(/\s+/g, "-")}-slide-${idx + 1}.png`)}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : variant.imageUrl && (
-                    <div className="aspect-square w-full relative rounded-xl overflow-hidden border border-primary/10 bg-muted">
+                    <div className="aspect-square w-full relative rounded-xl overflow-hidden border border-primary/10 bg-muted group/img">
                       <img src={variant.imageUrl} className="h-full w-full object-cover" alt="Capa" />
                       <div className="absolute top-3 left-3 bg-black/60 text-[10px] text-white px-2 py-0.5 rounded uppercase font-bold backdrop-blur-sm">Imagem de Capa</div>
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover/img:opacity-100 transition-opacity z-10">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-0 backdrop-blur-sm shadow-xl"
+                          onClick={() => downloadImage(variant.imageUrl!, `soloreels-${variant.title.replace(/\s+/g, "-")}.png`)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   )}
 
