@@ -697,19 +697,18 @@ export default function Generate() {
           <label className="text-xs font-medium text-muted-foreground">🔑 Chaves API {isDemo ? "(Demo Mode)" : ""}</label>
           <div className="space-y-2">
             {!envGroqKey && (
-              <div>
-                <p className="mb-1 text-xs text-muted-foreground">Groq (roteiro)</p>
-                <Input type="password" placeholder="gsk_..." value={groqKey}
-                  onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
-                <p className="mt-1 text-xs text-muted-foreground">Pegue em <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline text-primary">console.groq.com/keys</a></p>
-              </div>
+              {!envGroqKey && (
+            <div>
+              <p className="mb-1 text-xs text-muted-foreground">Motor de Roteiro (Opcional)</p>
+              <Input type="password" placeholder="Chave da API..." value={groqKey}
+                onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
+            </div>
             )}
             {!envGeminiKey && (
               <div>
-                <p className="mb-1 text-xs text-muted-foreground">Gemini (imagens — grátis)</p>
-                <Input type="password" placeholder="AIza..." value={geminiKey}
+                <p className="mb-1 text-xs text-muted-foreground">Motor de Imagem (Opcional)</p>
+                <Input type="password" placeholder="Chave da API..." value={geminiKey}
                   onChange={(e) => { setGeminiKey(e.target.value); localStorage.setItem("soloreels_gemini_key", e.target.value); }} />
-                <p className="mt-1 text-xs text-muted-foreground">Pegue em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" className="underline text-primary">aistudio.google.com/apikey</a></p>
               </div>
             )}
           </div>

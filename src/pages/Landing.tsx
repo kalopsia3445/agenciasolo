@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const benefits = [
   { icon: BarChart3, title: "Análise de Perfil", desc: "IA conecta no seu Instagram e diz exatamente o que postar." },
-  { icon: TrendingUp, title: "Notícias em Tempo Real", desc: "Monitore tendências do seu nicho via Google/Tavily." },
+  { icon: TrendingUp, title: "Notícias em Tempo Real", desc: "Monitore tendências do seu nicho via Inteligência Artificial." },
   { icon: Image, title: "Imagens Hiper-Realistas", desc: "Crie visuais de estúdio sem câmeras, com consistência." },
   { icon: Sparkles, title: "Roteiros Validamos", desc: "Hooks e CTAs de alta conversão baseados em dados." },
 ];
