@@ -573,7 +573,7 @@ export default function Generate() {
                         <DialogHeader>
                           <DialogTitle>Expandir Roteiro</DialogTitle>
                           <DialogDescription>
-                            O Groq fará uma pesquisa detalhada para sugerir o conteúdo completo baseado no seu roteiro e em informações extras que você fornecer.
+                            Nossa Inteligência Artificial fará uma pesquisa detalhada para sugerir o conteúdo completo baseado no seu roteiro e em informações extras que você fornecer.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">

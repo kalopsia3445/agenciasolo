@@ -223,7 +223,7 @@ export default function InstagramAnalysis() {
                             </form>
                         </Form>
                         <p className="text-[10px] text-center text-muted-foreground italic">
-                            Esta análise utiliza <b>Tavily Search</b> e <b>Groq AI</b> para pesquisar dados reais de mercado em 2026.
+                            Esta análise utiliza Inteligência Artificial avançada para pesquisar dados reais de mercado em 2026.
                         </p>
                     </CardContent>
                 </Card>

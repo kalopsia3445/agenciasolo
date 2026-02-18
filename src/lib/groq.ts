@@ -53,8 +53,10 @@ RESUMO DO CONTEÚDO: ${form.inputSummary}
 
 INSTRUÇÕES DE ROTEIRO (ANTI-GENÉRICO):
 1. O conteúdo deve ser ESPECÍFICO para o Nicho "${brandKit.niche}". Evite dicas genéricas que servem para qualquer um.
-2. Mencione ou conecte com a Oferta "${brandKit.offer}" sutilmente se fizer sentido.
-3. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
+2. NUNCA inicie o roteiro com "Olá, eu sou [nome]" de forma genérica.
+3. Use a identidade "${brandKit.businessName}" e o nicho "${brandKit.niche}" de forma natural. Se o nicho for uma profissão (ex: Engenheira Florestal), fale diretamente como essa pessoa, sem se apresentar como "especialista" robótico.
+4. Mencione ou conecte com a Oferta "${brandKit.offer}" sutilmente se fizer sentido.
+5. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
 
 INSTRUÇÕES DE IMAGEM (BRANDING VISUAL):
 Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'), você DEVE incluir explicitamente as cores e o estilo da marca.
@@ -300,12 +302,13 @@ ${additionalInfo}
 
 INSTRUÇÕES:
 1. Realize uma expansão detalhada do conteúdo. 
-2. Se o usuário forneceu detalhes de um produto ou serviço, integre-os de forma orgânica.
-3. Divida o conteúdo em seções claras (Ex: "O Problema", "A Solução", "Como Funciona", "Dica Prática").
-4. Mantenha o tom de voz da marca.
-5. O resultado deve ser um texto rico, pronto para ser lido ou usado como base para um vídeo longo/carrossel informativo.
+2. NUNCA inicie o texto com "Olá, eu sou [nome]" ou apresentações genéricas. Comece direto no conteúdo ou com uma introdução contextualizada à marca "${brandKit.businessName}".
+3. Se o usuário forneceu detalhes de um produto ou serviço, integre-os de forma orgânica.
+4. Divida o conteúdo em seções claras (Ex: "O Problema", "A Solução", "Como Funciona", "Dica Prática").
+5. Mantenha o tom de voz da marca e a autoridade específica do nicho "${brandKit.niche}".
+6. O resultado deve ser um texto rico, pronto para ser lido ou usado como base para um vídeo longo/carrossel informativo.
 
-Responda APENAS com o conteúdo expandido, sem introduções ou explicações extras.`;
+Responda APENAS com o conteúdo expandido, sem introduções de IA ou explicações extras.`;
 
   if (apiKey) {
     try {
