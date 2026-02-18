@@ -697,12 +697,11 @@ export default function Generate() {
           <label className="text-xs font-medium text-muted-foreground">🔑 Chaves API {isDemo ? "(Demo Mode)" : ""}</label>
           <div className="space-y-2">
             {!envGroqKey && (
-              {!envGroqKey && (
-            <div>
-              <p className="mb-1 text-xs text-muted-foreground">Motor de Roteiro (Opcional)</p>
-              <Input type="password" placeholder="Chave da API..." value={groqKey}
-                onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
-            </div>
+              <div>
+                <p className="mb-1 text-xs text-muted-foreground">Motor de Roteiro (Opcional)</p>
+                <Input type="password" placeholder="Chave da API..." value={groqKey}
+                  onChange={(e) => { setGroqKey(e.target.value); localStorage.setItem("soloreels_groq_key", e.target.value); }} />
+              </div>
             )}
             {!envGeminiKey && (
               <div>
