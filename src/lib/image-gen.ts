@@ -15,6 +15,8 @@ export interface ImageGenOptions {
   targetAudience?: string;
   colorPalette?: string[];
   toneAdjectives?: string[];
+  visualSubject?: string;
+  customVisualPrompt?: string;
   onProgress?: (index: number, progress: number) => void;
 }
 

@@ -25,14 +25,13 @@ Deno.serve(async (req: Request) => {
             const HF_TOKEN = Deno.env.get("HF_TOKEN");
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
-            // LISTA DE MODELOS GRATUITOS (Serverless Inference API)
-            // Tentamos FLUX primeiro, se falhar/limitar, vamos para SDXL e depois OpenJourney
+            // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
+            // Prioridade para FLUX.1-dev conforme solicitado para qualidade extrema ("agência real")
             const models = [
-                "black-forest-labs/FLUX.1-schnell",
-                "stabilityai/stable-diffusion-xl-base-1.0",
-                "prompthero/openjourney",
-                "runwayml/stable-diffusion-v1-5"
+                "black-forest-labs/FLUX.1-dev",
+                "black-forest-labs/FLUX.1-schnell"
             ];
+
 
             let lastError = "";
             for (const modelId of models) {

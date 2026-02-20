@@ -182,6 +182,8 @@ export default function Generate() {
           targetAudience: brandKit.targetAudience,
           colorPalette: brandKit.colorPalette,
           toneAdjectives: brandKit.toneAdjectives,
+          visualSubject: data.visualSubject,
+          customVisualPrompt: data.customVisualPrompt,
         }, base);
       });
 
@@ -246,6 +248,8 @@ export default function Generate() {
                 targetAudience: brandKit.targetAudience,
                 colorPalette: brandKit.colorPalette,
                 toneAdjectives: brandKit.toneAdjectives,
+                visualSubject: data.visualSubject,
+                customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
               }, i);
               urls.push(newImageUrl);
@@ -281,6 +285,8 @@ export default function Generate() {
                 targetAudience: brandKit.targetAudience,
                 colorPalette: brandKit.colorPalette,
                 toneAdjectives: brandKit.toneAdjectives,
+                visualSubject: data.visualSubject,
+                customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
               }, i);
               urls.push(newImageUrl);
@@ -677,10 +683,40 @@ export default function Generate() {
             </FormItem>
           )} />
 
+          <FormField control={form.control} name="visualSubject" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Foco Visual da Imagem (Opcional)</FormLabel>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { value: "pessoas", label: "Pessoas/Rostos" },
+                  { value: "objetos", label: "Apenas Objetos" },
+                  { value: "abstrato", label: "Arte Abstrata" },
+                  { value: "texto", label: "Apenas Texto" }
+                ].map((s) => (
+                  <button key={s.value} type="button" onClick={() => field.onChange(field.value === s.value ? undefined : s.value)}
+                    className={`rounded-lg border p-2 text-center text-xs transition-all ${field.value === s.value ? "border-primary bg-primary/10 font-bold" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Marque para forçar ou proibir a presença de pessoas/rostos nas imagens geradas.</p>
+              <FormMessage />
+            </FormItem>
+          )} />
+
           <FormField control={form.control} name="inputSummary" render={({ field }) => (
             <FormItem>
               <FormLabel>Sobre o que é o conteúdo?</FormLabel>
               <FormControl><Textarea {...field} placeholder="Ex: Dicas de skincare para pele oleosa no verão" rows={3} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="customVisualPrompt" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descreva a Imagem (Opcional)</FormLabel>
+              <FormControl><Textarea {...field} placeholder="Ex: Uma mulher de 30 anos segurando um notebook em um café moderno" rows={2} /></FormControl>
+              <p className="text-[10px] text-muted-foreground">+ Detalhes específicos na imagem (nossa IA mesclará com sua identidade visual).</p>
               <FormMessage />
             </FormItem>
           )} />

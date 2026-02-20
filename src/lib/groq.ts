@@ -15,18 +15,45 @@ function buildImagePrompt(opts: {
   colorPalette: string[];
   targetAudience: string;
   inputSummary: string;
+  visualSubject?: string;
+  customVisualPrompt?: string;
 }): string {
-  const style = opts.visualStyleDescription || 'photography';
+  const style = opts.visualStyleDescription || 'modern design';
   const niche = opts.niche;
   const summary = translate(opts.inputSummary || 'scene');
-  return `professional photography, ${style}, ${niche}, ${summary}, realistic, 8k, highly detailed`;
+
+  // Format visual subject instruction
+  let subjectInstruction = '';
+  if (opts.visualSubject === 'pessoas') subjectInstruction = 'featuring clearly visible people and faces';
+  else if (opts.visualSubject === 'objetos') subjectInstruction = 'focusing strictly on objects and products, NO people, NO faces, NO humans';
+  else if (opts.visualSubject === 'abstrato') subjectInstruction = 'abstract art and conceptual composition, NO people, NO recognizable faces, NO literal objects';
+  else if (opts.visualSubject === 'texto') subjectInstruction = 'minimalist background layout designed primarily for overlaying text, simple background, NO people, NO distractions';
+
+  // Include user's custom instructions if provided
+  const customVisual = opts.customVisualPrompt ? `Specific user request: ${translate(opts.customVisualPrompt)}. ` : '';
+
+  return `${customVisual}High quality image, ${style}, ${niche}, ${summary}, ${subjectInstruction}, exceptionally detailed`.trim();
 }
 function buildPrompt(brandKit: BrandKit, pack: StylePack, form: GenerateFormData, isDemo: boolean): string {
   const isCarousel = form.format === "carousel";
   const numVariants = isCarousel ? 1 : 3;
+
+  let subjectPrompt = '';
+  if (form.visualSubject) {
+    const sv = form.visualSubject;
+    if (sv === 'pessoas') subjectPrompt = "IMAGEM DEVE TER PESSOAS/ROSTOS evidentes na cena.";
+    else if (sv === 'objetos') subjectPrompt = "A imagem DEVE FOCAR EM OBJETOS/PRODUTOS. PROIBIDO gerar pessoas, rostos ou humanos nas imagens.";
+    else if (sv === 'abstrato') subjectPrompt = "A imagem deve ser ARTE ABSTRATA/CONCEITUAL. PROIBIDO gerar pessoas, rostos ou objetos literais.";
+    else if (sv === 'texto') subjectPrompt = "A imagem deve ser um fundo MUITO SIMPLES e minimalista, preparado APENAS para receber texto por cima. PROIBIDO pessoas. Evite focar em objetos complexos.";
+  }
+
+  if (form.customVisualPrompt) {
+    subjectPrompt += `\nINSTRUÇÃO ESPECÍFICA DO USUÁRIO PARA A IMAGEM: "${form.customVisualPrompt}". Você deve incorporar essa ideia visual ao prompt da imagem em inglês.`;
+  }
+
   const imageInstruction = isCarousel
-    ? "Para Carrossel, gere um ARRAY 'imagePrompts' com EXATAMENTE 3 prompts em INGLÊS para as 3 imagens/lâminas do carrossel."
-    : (form.format === "reels" ? "Para Reels, deixe o campo 'imagePrompt' vazio ou ignore, pois não haverá geração de imagem agora." : "Gere 1 'imagePrompt' em INGLÊS para a imagem de capa.");
+    ? `Para Carrossel, gere um ARRAY 'imagePrompts' com EXATAMENTE 3 prompts em INGLÊS para as 3 imagens/lâminas do carrossel. ${subjectPrompt}`
+    : (form.format === "reels" ? "Para Reels, deixe o campo 'imagePrompt' vazio ou ignore, pois não haverá geração de imagem agora." : `Gere 1 'imagePrompt' em INGLÊS para a imagem de capa. ${subjectPrompt}`);
 
   const demoInstruction = isDemo ? `
 IMPORTANTE: VOCÊ ESTÁ NO MODO DE DEMONSTRAÇÃO.
@@ -37,6 +64,10 @@ Toda a autoridade e branding devem ser da Agência Solo e SoloReels.` : "";
 
   return `Você é um especialista em conteúdo para Instagram voltado para MEI solo.
 ${demoInstruction}
+
+IDIOMA OBRIGATÓRIO:
+Todo o texto retornado (títulos, roteiros, legendas, texto no vídeo, teleprompter) DEVE SER ESTRITAMENTE EM PORTUGUÊS BRASILEIRO (PT-BR). Nenhuma palavra em inglês nos textos voltados ao público.
+Apenas os campos de 'imagePrompt'/'imagePrompts' devem ser escritos em INGLÊS.
 
 MARCA (PERSONALIZAÇÃO OBRIGATÓRIA):
 - Negócio: ${brandKit.businessName}
@@ -59,8 +90,8 @@ INSTRUÇÕES DE ROTEIRO (ANTI-GENÉRICO):
 5. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
 
 INSTRUÇÕES DE IMAGEM (BRANDING VISUAL):
-Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'), você DEVE incluir explicitamente as cores e o estilo da marca.
-Exemplo: "Professional photography of [scene], ${brandKit.visualStyleDescription} style, dominant colors ${brandKit.colorPalette.join(" and ")}, 8k, highly detailed".
+Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'), você DEVE incluir explicitamente as cores e o estilo da marca, além de focar no foco principal.
+Exemplo: "High quality image of [scene], ${brandKit.visualStyleDescription} aesthetic, dominant colors ${brandKit.colorPalette.join(" and ")}, highly detailed".
 
 Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo.
 
@@ -306,7 +337,8 @@ INSTRUÇÕES:
 3. Se o usuário forneceu detalhes de um produto ou serviço, integre-os de forma orgânica.
 4. Divida o conteúdo em seções claras (Ex: "O Problema", "A Solução", "Como Funciona", "Dica Prática").
 5. Mantenha o tom de voz da marca e a autoridade específica do nicho "${brandKit.niche}".
-6. O resultado deve ser um texto rico, pronto para ser lido ou usado como base para um vídeo longo/carrossel informativo.
+6. ESTRITAMENTE IMPORTANTE: Escreva todo o conteúdo, 100%, em PORTUGUÊS DO BRASIL (PT-BR). Nenhuma frase em outro idioma.
+7. O resultado deve ser um texto rico, pronto para ser lido ou usado como base para um vídeo longo/carrossel informativo.
 
 Responda APENAS com o conteúdo expandido, sem introduções de IA ou explicações extras.`;
 

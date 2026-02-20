@@ -114,19 +114,19 @@ export async function analyzeBrandStyle(urls: string[]): Promise<AnalysisResult>
         };
     });
 
-    const prompt = `Analyze the visual style of the provided images. Focus on identifying key characteristics such as:
-- **Dominant visual style**: (e.g., minimalist, vibrant, retro, modern, elegant, playful, industrial, natural, futuristic, artistic, clean, bold, sophisticated, rustic, luxurious, abstract, geometric, organic, hand-drawn, photographic, illustrative, etc.)
-- **Color palette**: List 3-5 main colors or color groups (e.g., "pastel blues and pinks", "earthy tones", "monochromatic with a pop of red", "bright primary colors", "dark and moody greens and grays").
-- **Suggested tone/mood**: (e.g., professional, friendly, serious, innovative, calm, energetic, luxurious, approachable, edgy, traditional, whimsical, trustworthy, exciting, serene, dynamic, etc.)
+    const prompt = `Analise o estilo visual das imagens fornecidas. Concentre-se em identificar as principais características como:
+- **Estilo visual predominante**: (ex: minimalista, vibrante, retrô, moderno, elegante, lúdico, industrial, natural, futurista, artístico, clean, sofisticado, rústico, luxuoso, abstrato, fotográfico, etc.)
+- **Paleta de cores**: Liste de 3 a 5 cores ou grupos de cores principais (ex: "tons de azul e rosa pastel", "tons terrosos", "monocromático com detalhes em vermelho", "cores primárias vibrantes").
+- **Tom/humor sugerido**: (ex: profissional, amigável, sério, inovador, calmo, enérgico, luxuoso, acessível, ousado, tradicional, confiável, empolgante, sereno, dinâmico, etc.)
 
-Provide the analysis in a JSON object with the following structure:
+Forneça a análise em PORTUGUÊS DO BRASIL (PT-BR) em um objeto JSON com a seguinte estrutura:
 {
-  "visualStyleDescription": "A concise description of the overall visual style.",
-  "colorPalette": ["color1", "color2", "color3"],
-  "suggestedTone": ["tone1", "tone2"]
+  "visualStyleDescription": "Uma descrição concisa e em PT-BR do estilo visual geral.",
+  "colorPalette": ["cor1", "cor2", "cor3"],
+  "suggestedTone": ["tom1", "tom2"]
 }
 
-Ensure the response is a valid JSON object, and do not include any additional text or markdown formatting outside the JSON.`;
+Certifique-se de que a resposta seja um objeto JSON válido e não inclua nenhum texto adicional ou formatação markdown fora do JSON.`;
 
     // 1. TENTATIVA GROQ: LISTAR E USAR PRIMEIRO MODELO DISPONÍVEL
     let groqModel = "llama-3.2-90b-vision-preview"; // Default fallback

@@ -79,6 +79,8 @@ export const generateFormSchema = z.object({
   objective: z.string().min(1, "Objetivo é obrigatório"),
   inputSummary: z.string().min(10, "Descreva o conteúdo com pelo menos 10 caracteres"),
   stylePackId: z.string().min(1, "Selecione um pack de estilo"),
+  visualSubject: z.enum(["pessoas", "objetos", "abstrato", "texto"]).optional(),
+  customVisualPrompt: z.string().optional(),
 });
 export type GenerateFormData = z.infer<typeof generateFormSchema>;
 
