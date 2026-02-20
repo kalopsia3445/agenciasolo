@@ -28,12 +28,12 @@ Deno.serve(async (req: Request) => {
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
-                objetos: "black-forest-labs/FLUX.1-dev",
-                abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "black-forest-labs/FLUX.1-dev"      // Funciona 100% no router HF Pro com prompt otimizado
+                objetos: "black-forest-labs/FLUX.2-klein",   // Rápido e de alta qualidade
+                abstrato: "black-forest-labs/FLUX.2-dev",    // Top quality
+                texto: "black-forest-labs/FLUX.2-dev"        // Melhor texto atual
             };
 
-            let modelId = "black-forest-labs/FLUX.1-dev";  // Default
+            let modelId = "black-forest-labs/FLUX.2-dev";  // Default
 
             if (visualSubject === 'texto') {
                 modelId = BEST_MODEL_BY_FOCUS["texto"];
