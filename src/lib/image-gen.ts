@@ -1,8 +1,4 @@
-import { supabase } from "./supabase";
 import { uploadImage } from "./data-service";
-
-let lastPollinationsCall = 0;
-const POLLINATIONS_MIN_DELAY = 15500; // 15.5s safety margin
 
 export interface ImageGenOptions {
   hook: string;
@@ -84,89 +80,7 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   return `professional photography, ${style}, ${niche}, ${summary}, realistic, 8k, highly detailed`;
 }
 
-// 1. POLLINATIONS AI (Proxy via Supabase for robustness)
-async function generateWithPollinations(prompt: string, index: number, onProgress?: (idx: number, p: number) => void): Promise<string> {
-  // Gerenciamento de Rate Limit Global (Session-wide)
-  const now = Date.now();
-  const timeSinceLast = now - lastPollinationsCall;
-
-  if (timeSinceLast < POLLINATIONS_MIN_DELAY) {
-    const waitTime = POLLINATIONS_MIN_DELAY - timeSinceLast;
-    console.log(`⏳ POLLINATIONS RATE LIMIT: Aguardando ${Math.round(waitTime / 1000)}s...`);
-
-    // Feedback de progresso enquanto espera
-    const steps = 10;
-    for (let i = 0; i < steps; i++) {
-      onProgress?.(index, Math.round((i / steps) * 90));
-      await new Promise(r => setTimeout(r, waitTime / steps));
-    }
-  }
-
-  lastPollinationsCall = Date.now();
-  console.log(`🚀 POLLINATIONS REQUEST ${index} (Proxy):`, prompt);
-  onProgress?.(index, 95);
-
-  if (!supabase) {
-    // Fallback para Direct GET se Supabase não disponível (Demo mode)
-    const seed = Math.floor(now / 1000) + index + Math.floor(Math.random() * 1000);
-    const cleanPrompt = encodeURIComponent(prompt.substring(0, 1000));
-    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
-    onProgress?.(index, 100);
-    return url;
-  }
-
-  // Chamada via Proxy Direto (Bypassing Supabase invoke for binary safety)
-  try {
-    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`;
-
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ prompt, provider: "pollinations" }),
-    });
-
-    if (response.ok) {
-      const blob = await response.blob();
-      if (blob.type.startsWith('image/')) {
-        const path = `pollinations_${Date.now()}_${index}.png`;
-        const persistentUrl = await uploadImage(blob, path);
-        onProgress?.(index, 100);
-        return persistentUrl;
-      }
-    }
-  } catch (err) {
-    console.warn("Pollinations Proxy failed, trying direct GET:", err);
-  }
-
-  // Fallback definitivo: Direct GET (No-Auth, No-Proxy)
-  const seed = Math.floor(now / 1000) + index + Math.floor(Math.random() * 1000);
-  const cleanPrompt = encodeURIComponent(prompt.substring(0, 300));
-  const tempUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
-
-  onProgress?.(index, 98);
-
-  // FORCE UPLOAD TO STORAGE (Robust fallback)
-  try {
-    const response = await fetch(tempUrl);
-    if (response.ok) {
-      const blob = await response.blob();
-      const path = `pollinations_direct_${Date.now()}_${index}.jpg`;
-      const persistentUrl = await uploadImage(blob, path);
-      onProgress?.(index, 100);
-      return persistentUrl;
-    }
-  } catch (err) {
-    console.warn("Pollinations final autosave failed:", err);
-  }
-
-  onProgress?.(index, 100);
-  return tempUrl;
-}
-
-// 2. HUGGING FACE (Proxy via Supabase)
+// 1. HUGGING FACE (Proxy via Supabase)
 async function generateWithHF(prompt: string, index: number, visualSubject?: string, onProgress?: (idx: number, p: number) => void): Promise<string> {
   console.log(`🚀 HF REQUEST ${index} (Proxy):`, prompt);
   onProgress?.(index, 20);
@@ -207,59 +121,6 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
 }
 
 
-// 3. FAL.AI (Primário Pago - Ultra Rápido)
-async function generateWithFal(prompt: string, index: number, onProgress?: (idx: number, p: number) => void): Promise<string> {
-  const apiKey = import.meta.env.VITE_FAL_KEY;
-  if (!apiKey) throw new Error("VITE_FAL_KEY not found");
-
-  console.log(`🚀 FAL.AI REQUEST ${index}:`, prompt);
-  onProgress?.(index, 10); // Início
-
-  const response = await fetch("https://fal.run/fal-ai/flux/schnell", {
-    method: "POST",
-    headers: {
-      "Authorization": `Key ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      prompt: prompt,
-      image_size: "portrait_16_9",
-      num_images: 1,
-      enable_safety_checker: true,
-      sync_mode: true
-    })
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Fal.ai Error ${response.status}: ${errText}`);
-  }
-
-  const data = await response.json();
-  const imgUrl = data.images?.[0]?.url;
-
-  if (!imgUrl) throw new Error("Fal.ai: No image URL in response");
-
-  // FORCE PERSISTENCE: Download and upload to Supabase
-  try {
-    const imgResponse = await fetch(imgUrl);
-    if (imgResponse.ok) {
-      const blob = await imgResponse.blob();
-      const path = `fal_${Date.now()}_${index}.png`;
-      const persistentUrl = await uploadImage(blob, path);
-      onProgress?.(index, 100);
-      console.log(`✅ FAL.AI ${index} PERSISTED:`, persistentUrl);
-      return persistentUrl;
-    }
-  } catch (persistErr) {
-    console.warn("Fal.ai persistence failed, falling back to temp URL:", persistErr);
-  }
-
-  onProgress?.(index, 100);
-  console.log(`✅ FAL.AI ${index} OK (Temp URL)`);
-  return imgUrl;
-}
-
 export async function generateImagePipeline(
   _originalPrompt: string,
   kit: ImageGenOptions | undefined,
@@ -278,28 +139,8 @@ export async function generateImagePipeline(
   // Garantir prompt em Inglês e PERSONALIZADO com o roteiro
   const prompt = buildImagePrompt(safeKit, _originalPrompt);
 
-  // PIPELINE INTELIGENTE: Velocidade + Custo
-  try {
-    // 1. FAL.AI (Tentativa Principal - Você pagou por isso)
-    return await generateWithFal(prompt, index, safeKit.onProgress);
-  } catch (falError: any) {
-    console.warn(`⚠️ FAL.AI ${index} bloqueado/falhou, tentando HUGGING FACE:`, falError.message);
-
-    try {
-      // 2. HUGGING FACE (Rápido, Estável com Token)
-      return await generateWithHF(prompt, index, safeKit.visualSubject, safeKit.onProgress);
-    } catch (hfError: any) {
-      console.warn(`⚠️ HF ${index} falhou, tentando POLLINATIONS:`, hfError.message);
-
-      try {
-        // 3. POLLINATIONS (Super Rápido, Grátis, Flux Model)
-        return await generateWithPollinations(prompt, index, safeKit.onProgress);
-      } catch (pollError: any) {
-        console.error(`❌ Pipeline falhou definitivamente no Pollinations ${index}:`, pollError.message);
-        throw pollError;
-      }
-    }
-  }
+  // Pipeline Exclusiva: Inteligência de Modelos via Hugging Face
+  return await generateWithHF(prompt, index, safeKit.visualSubject, safeKit.onProgress);
 }
 
 // Mantendo compatibilidade com Generate.tsx
