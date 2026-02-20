@@ -51,7 +51,7 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
     const styleContext = translate(opts.visualStyle || 'simple minimalist');
     const customPromptParam = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}` : '';
 
-    return `Typography masterpiece, perfectly legible bold text "${textToShow}", exact spelling, integrated design, ${colorContext}, ${styleContext}, professional marketing banner, clean minimalist background, high contrast glow, 1024x1024${customPromptParam ? `: ${customPromptParam}` : ''}`;
+    return `Typography masterpiece, perfectly legible bold text "${textToShow}", exact PORTUGUESE (PT-BR) spelling, integrated design, ${colorContext}, ${styleContext}, professional marketing banner, clean minimalist background, high contrast glow, 1024x1024${customPromptParam ? `: ${customPromptParam}` : ''}`;
   }
 
   const niche = translate(opts.niche);

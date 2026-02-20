@@ -1,6 +1,7 @@
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Expose-Headers": "X-Used-Model",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -29,7 +30,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
                 objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "fal-ai/recraft-v4"                 // Recraft V4 via FAL (100% stable router)
+                texto: "recraft-ai/Recraft-V4"                 // Recraft V4 HF hub directly
             };
 
             let modelId = "black-forest-labs/FLUX.1-dev";  // Default
