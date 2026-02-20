@@ -45,6 +45,14 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
     return result.trim();
   };
 
+  if (opts.visualSubject === 'texto') {
+    const textToShow = opts.hook ? opts.hook : 'Solo Reels';
+    const customInstruction = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}, ` : '';
+    const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'dark navy';
+    const styleContext = translate(opts.visualStyle || 'simple minimalist');
+    return `CRISTAL CLEAR TYPOGRAPHY, PERFECTLY LEGIBLE LARGE TEXT "${textToShow}", EXACT SPELLING NO ERRORS, ${customInstruction}bold modern font, centered on ${colorContext} background, bright orange neon green glow high contrast, ${styleContext}, professional marketing post, 1024x1024`;
+  }
+
   const niche = translate(opts.niche);
   const style = translate(opts.visualStyle || 'professional');
 

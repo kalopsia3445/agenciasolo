@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
                 objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "recraft-ai/recraft-v4"             // Texto perfeito
+                texto: "recraft-ai/Recraft-V3"             // Texto perfeito
             };
 
             // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
