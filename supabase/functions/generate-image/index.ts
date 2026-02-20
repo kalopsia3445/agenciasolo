@@ -32,70 +32,61 @@ Deno.serve(async (req: Request) => {
                 texto: "fal-ai/recraft-v4"                 // Recraft V4 via FAL (100% stable router)
             };
 
-            // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
-            let models = [
-                "black-forest-labs/FLUX.1-dev",
-                "black-forest-labs/FLUX.1-schnell"
-            ];
+            let modelId = "black-forest-labs/FLUX.1-dev";  // Default
 
-            if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
-                const bestModel = BEST_MODEL_BY_FOCUS[visualSubject];
-                console.log(`[Proxy] Foco Visual Detectado: '${visualSubject}'. Priorizando modelo ótimo: ${bestModel}`);
-                // Remove the best model if it already exists in the list to avoid duplicates, then prepend it.
-                models = [bestModel, ...models.filter(m => m !== bestModel)];
+            if (visualSubject === 'texto') {
+                modelId = BEST_MODEL_BY_FOCUS["texto"];
+                console.log(`🔥 TEXTO PRO: Usando modelo especialista direto -> ${modelId}`);
+            } else if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
+                modelId = BEST_MODEL_BY_FOCUS[visualSubject];
+                console.log(`🚀 FOCO PRO: Priorizando modelo ótimo -> ${modelId}`);
             }
 
-            let lastError = "";
-            for (const modelId of models) {
-                try {
-                    // MUDANÇA OBRIGATÓRIA: Hugging Face agora exige o uso do router.huggingface.co
-                    const URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
-                    console.log(`[Proxy] Tentando Modelo HF Grátis via Router: ${modelId}`);
+            console.log(`[Proxy] Modelo final roteado: ${modelId}`);
+            const URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
 
-                    const response = await fetch(URL, {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${HF_TOKEN}`,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            inputs: prompt,
-                            parameters: {
-                                num_inference_steps: 28,
-                                guidance_scale: 7.5,
-                                seed: seed || Math.floor(Math.random() * 1e9),
-                                width: 1024,
-                                height: 1024
-                            }
-                        }),
-                    });
-
-                    if (response.ok) {
-                        const buffer = await response.arrayBuffer();
-                        if (buffer.byteLength > 1000) { // Garantir que não é um JSON minúsculo de erro
-                            console.log(`[Proxy] Sucesso HF (${modelId})! Buffer size: ${buffer.byteLength} bytes`);
-                            return new Response(buffer, {
-                                headers: {
-                                    ...corsHeaders,
-                                    "Content-Type": "image/jpeg",
-                                    "Cache-Control": "public, max-age=31536000",
-                                    "X-Used-Model": modelId // Enviar o modelo real usado para o cliente poder logar
-                                },
-                            });
+            try {
+                const response = await fetch(URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${HF_TOKEN}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        parameters: {
+                            num_inference_steps: 28,
+                            guidance_scale: 8.0,
+                            seed: seed || Math.floor(Math.random() * 1e9),
+                            width: 1024,
+                            height: 1024
                         }
-                    } else {
-                        const err = await response.text();
-                        console.warn(`[Proxy] Falha no modelo ${modelId}: ${err}`);
-                        lastError = err;
-                    }
-                } catch (e: unknown) {
-                    const errorMessage = e instanceof Error ? e.message : String(e);
-                    console.error(`[Proxy] Erro de rede/v8 no modelo ${modelId}:`, errorMessage);
-                    lastError = errorMessage;
-                }
-            }
+                    }),
+                });
 
-            throw new Error(`Todos os modelos HF grátis falharam. Último erro: ${lastError}`);
+                if (response.ok) {
+                    const buffer = await response.arrayBuffer();
+                    if (buffer.byteLength > 1000) {
+                        console.log(`[Proxy] Sucesso HF (${modelId})! Buffer size: ${buffer.byteLength} bytes`);
+                        return new Response(buffer, {
+                            headers: {
+                                ...corsHeaders,
+                                "Content-Type": "image/jpeg",
+                                "Cache-Control": "public, max-age=31536000",
+                                "X-Used-Model": modelId
+                            },
+                        });
+                    }
+                }
+
+                const err = await response.text();
+                throw new Error(`Falha no modelo ${modelId}: ${err}`);
+
+            } catch (e: unknown) {
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                console.error(`[Proxy] Erro fatal no modelo ${modelId}:`, errorMessage);
+                throw new Error(`Requisição falhou: ${errorMessage}`);
+            }
         }
 
         if (provider === "pollinations") {
