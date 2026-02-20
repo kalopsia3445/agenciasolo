@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
                 objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "recraft-ai/Recraft-V3"             // Texto perfeito
+                texto: "recraft-ai/Recraft-V4"             // Texto perfeito (V4)
             };
 
             // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
@@ -73,6 +73,7 @@ Deno.serve(async (req: Request) => {
                                     ...corsHeaders,
                                     "Content-Type": "image/jpeg",
                                     "Cache-Control": "public, max-age=31536000",
+                                    "X-Used-Model": modelId // Enviar o modelo real usado para o cliente poder logar
                                 },
                             });
                         }

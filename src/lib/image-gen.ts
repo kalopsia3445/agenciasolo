@@ -47,10 +47,11 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
 
   if (opts.visualSubject === 'texto') {
     const textToShow = opts.hook ? opts.hook : 'Solo Reels';
-    const customInstruction = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}, ` : '';
     const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'dark navy';
     const styleContext = translate(opts.visualStyle || 'simple minimalist');
-    return `CRISTAL CLEAR TYPOGRAPHY, PERFECTLY LEGIBLE LARGE TEXT "${textToShow}", EXACT SPELLING NO ERRORS, ${customInstruction}bold modern font, centered on ${colorContext} background, bright orange neon green glow high contrast, ${styleContext}, professional marketing post, 1024x1024`;
+    const customPromptParam = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}` : '';
+
+    return `Typography masterpiece, perfectly legible bold text "${textToShow}", exact spelling, integrated design, ${colorContext}, ${styleContext}, professional marketing banner, clean minimalist background, high contrast glow, 1024x1024${customPromptParam ? `: ${customPromptParam}` : ''}`;
   }
 
   const niche = translate(opts.niche);
@@ -112,6 +113,16 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
     const errText = await response.text();
     throw new Error(`HF Proxy error (${response.status}): ${errText}`);
   }
+
+  const usedModel = response.headers.get("X-Used-Model") || "black-forest-labs/FLUX.1-dev (default/fallback)";
+
+  console.log(`
+  =========================================
+  🎨 GERADORA DE IMAGEM INICIADA
+  👉 Model Usado: ${usedModel}
+  👉 Foco Visual: ${visualSubject || "Não especificado (Genérico)"}
+  =========================================
+  `);
 
   const blob = await response.blob();
   console.log(`[Frontend] HF Proxy Success:`, blob.type, blob.size, "bytes");
