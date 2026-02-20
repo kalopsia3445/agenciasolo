@@ -27,13 +27,13 @@ Deno.serve(async (req: Request) => {
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
-                pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
-                objetos: "black-forest-labs/FLUX.2-klein",   // Rápido e de alta qualidade
-                abstrato: "black-forest-labs/FLUX.2-dev",    // Top quality
-                texto: "black-forest-labs/FLUX.2-dev"        // Melhor texto atual
+                pessoas: "black-forest-labs/FLUX.2-pro",     // Máx fotorealismo
+                objetos: "recraft-ai/recraft-v4-pro",        // Rápido e isolamento perfeito
+                abstrato: "black-forest-labs/FLUX.2-dev",    // Top quality art
+                texto: "ideogram-ai/ideogram-3.0"            // Melhor tipografia atual
             };
 
-            let modelId = "black-forest-labs/FLUX.2-dev";  // Default
+            let modelId = "black-forest-labs/FLUX.2-pro";  // Default
 
             if (visualSubject === 'texto') {
                 modelId = BEST_MODEL_BY_FOCUS["texto"];
@@ -44,7 +44,8 @@ Deno.serve(async (req: Request) => {
             }
 
             console.log(`[Proxy] Modelo final roteado: ${modelId}`);
-            const URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
+            // Endpoint V1 do HF Router Pro
+            const URL = `https://router.huggingface.co/v1/models/${modelId}/text-to-image`;
 
             try {
                 const response = await fetch(URL, {
