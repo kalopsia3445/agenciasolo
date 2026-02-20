@@ -10,7 +10,7 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { prompt, provider } = await req.json();
+        const { prompt, provider, visualSubject } = await req.json();
 
         if (!prompt) {
             return new Response(JSON.stringify({ error: "Prompt is required" }), {
@@ -25,13 +25,25 @@ Deno.serve(async (req: Request) => {
             const HF_TOKEN = Deno.env.get("HF_TOKEN");
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
+            const BEST_MODEL_BY_FOCUS: Record<string, string> = {
+                pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
+                objetos: "black-forest-labs/FLUX.1-dev",
+                abstrato: "black-forest-labs/FLUX.1-dev",
+                texto: "recraft-ai/recraft-v4"             // Texto perfeito
+            };
+
             // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
-            // Prioridade para FLUX.1-dev conforme solicitado para qualidade extrema ("agência real")
-            const models = [
+            let models = [
                 "black-forest-labs/FLUX.1-dev",
                 "black-forest-labs/FLUX.1-schnell"
             ];
 
+            if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
+                const bestModel = BEST_MODEL_BY_FOCUS[visualSubject];
+                console.log(`[Proxy] Foco Visual Detectado: '${visualSubject}'. Priorizando modelo ótimo: ${bestModel}`);
+                // Remove the best model if it already exists in the list to avoid duplicates, then prepend it.
+                models = [bestModel, ...models.filter(m => m !== bestModel)];
+            }
 
             let lastError = "";
             for (const modelId of models) {

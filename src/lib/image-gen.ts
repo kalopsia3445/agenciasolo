@@ -166,7 +166,7 @@ async function generateWithPollinations(prompt: string, index: number, onProgres
 }
 
 // 2. HUGGING FACE (Proxy via Supabase)
-async function generateWithHF(prompt: string, index: number, onProgress?: (idx: number, p: number) => void): Promise<string> {
+async function generateWithHF(prompt: string, index: number, visualSubject?: string, onProgress?: (idx: number, p: number) => void): Promise<string> {
   console.log(`🚀 HF REQUEST ${index} (Proxy):`, prompt);
   onProgress?.(index, 20);
 
@@ -181,7 +181,7 @@ async function generateWithHF(prompt: string, index: number, onProgress?: (idx: 
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ prompt, provider: "hf" }),
+    body: JSON.stringify({ prompt, provider: "hf", visualSubject }),
   });
 
   if (!response.ok) {
@@ -285,7 +285,7 @@ export async function generateImagePipeline(
 
     try {
       // 2. HUGGING FACE (Rápido, Estável com Token)
-      return await generateWithHF(prompt, index, safeKit.onProgress);
+      return await generateWithHF(prompt, index, safeKit.visualSubject, safeKit.onProgress);
     } catch (hfError: any) {
       console.warn(`⚠️ HF ${index} falhou, tentando POLLINATIONS:`, hfError.message);
 
