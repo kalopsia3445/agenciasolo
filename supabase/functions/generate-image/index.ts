@@ -28,12 +28,12 @@ Deno.serve(async (req: Request) => {
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
                 pessoas: "black-forest-labs/FLUX.2-pro",     // Máx fotorealismo
-                objetos: "recraft-ai/recraft-v4-pro",        // Rápido e isolamento perfeito
+                objetos: "recraft-ai/Recraft-V3-Text-to-Image", // Rápido e isolamento perfeito
                 abstrato: "black-forest-labs/FLUX.2-dev",    // Top quality art
-                texto: "ideogram-ai/ideogram-3.0"            // Melhor tipografia atual
+                texto: "black-forest-labs/FLUX.1-dev"        // Melhor tipografia atual via HF
             };
 
-            let modelId = "black-forest-labs/FLUX.2-pro";  // Default
+            let modelId = "black-forest-labs/FLUX.1-dev";  // Default
 
             if (visualSubject === 'texto') {
                 modelId = BEST_MODEL_BY_FOCUS["texto"];
