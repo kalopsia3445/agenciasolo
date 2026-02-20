@@ -30,7 +30,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
                 objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "recraft-ai/Recraft-V4"                 // Recraft V4 HF hub directly
+                texto: "black-forest-labs/FLUX.1-dev"      // Funciona 100% no router HF Pro com prompt otimizado
             };
 
             let modelId = "black-forest-labs/FLUX.1-dev";  // Default
