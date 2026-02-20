@@ -10,7 +10,7 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { prompt, provider, visualSubject } = await req.json();
+        const { prompt, provider, visualSubject, seed } = await req.json();
 
         if (!prompt) {
             return new Response(JSON.stringify({ error: "Prompt is required" }), {
@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/FLUX.2-dev",     // Máx fotorealismo
                 objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "recraft-ai/Recraft-V4"             // Texto perfeito (V4)
+                texto: "fal-ai/recraft-v4"                 // Recraft V4 via FAL (100% stable router)
             };
 
             // LISTA DE MODELOS PRO/PAGOS (Serverless Inference API)
@@ -60,7 +60,13 @@ Deno.serve(async (req: Request) => {
                         },
                         body: JSON.stringify({
                             inputs: prompt,
-                            options: { wait_for_model: true }
+                            parameters: {
+                                num_inference_steps: 28,
+                                guidance_scale: 7.5,
+                                seed: seed || Math.floor(Math.random() * 1e9),
+                                width: 1024,
+                                height: 1024
+                            }
                         }),
                     });
 

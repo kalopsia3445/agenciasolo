@@ -106,7 +106,7 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ prompt, provider: "hf", visualSubject }),
+    body: JSON.stringify({ prompt, provider: "hf", visualSubject, seed: Date.now() + index }),
   });
 
   if (!response.ok) {
