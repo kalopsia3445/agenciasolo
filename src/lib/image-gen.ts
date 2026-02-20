@@ -123,6 +123,7 @@ async function generateWithPollinations(prompt: string, index: number, onProgres
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ prompt, provider: "pollinations" }),
     });
@@ -180,6 +181,7 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({ prompt, provider: "hf", visualSubject }),
   });
