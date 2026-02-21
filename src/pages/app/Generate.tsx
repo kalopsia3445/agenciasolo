@@ -221,10 +221,12 @@ export default function Generate() {
       toast({ title: data.format === "reels" ? "Roteiro gerado! ✨" : "Roteiro gerado! Gerando imagens... 🎨" });
       setLoading(false);
 
-      // Gerar imagens em série com delay para evitar Rate Limit (429)
+      // Gerar imagens em série com delay para evitar Rate Limit (429) ou REUSAR FUNDO se for texto
       if (geminiKey && data.format !== "reels") {
         const updatedScript = { ...script };
         updatedScript.resultJson = { ...updatedScript.resultJson, variants: [...updatedScript.resultJson.variants] };
+
+        let baseBlob: Blob | undefined = undefined;
 
         if (data.format === "carousel") {
           // Processamento para Carrossel (1 variant, 3 images)
@@ -237,7 +239,12 @@ export default function Generate() {
             try {
               if (i > 0) await new Promise(r => setTimeout(r, 2000));
               const prompt = prompts[i] || prompts[0];
-              const newImageUrl = await generateImage(prompt, undefined, {
+
+              // Se for texto, tentamos reusar o fundo da primeira geração
+              const isTexto = data.visualSubject === "texto";
+
+              // Helper para pegar o blob se estivermos em 'texto' e for a primeira vez
+              const genOpts: any = {
                 hook: variant.hook,
                 inputSummary: data.inputSummary,
                 niche: brandKit.niche,
@@ -250,10 +257,22 @@ export default function Generate() {
                 toneAdjectives: brandKit.toneAdjectives,
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
-                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
-                overlayDesign: (variant as any).overlayDesigns?.[i] || (variant as any).overlayDesign,
-                fontFamily: data.fontFamily
-              }, i);
+                onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
+                overlayDesign: variant.overlayDesigns?.[i] || variant.overlayDesign,
+                fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
+                baseBlob: (i > 0 && isTexto) ? baseBlob : undefined
+              };
+
+              const newImageUrl = await generateImage(prompt, undefined, genOpts, i);
+
+              // Se for a primeira imagem e for texto, vamos baixar esse fundo para as próximas se o Nebius gerou um
+              // NOTE: generateImage retorna URL. Para reusar o BLOB sem baixar de novo, precisariamos que ela retornasse o blob.
+              // Otimização rápida: Se i=0 e isTexto, fazemos um fetch rápido do que acabamos de subir.
+              if (i === 0 && isTexto && !baseBlob) {
+                const res = await fetch(newImageUrl);
+                baseBlob = await res.blob();
+              }
+
               urls.push(newImageUrl);
               errors.push(false);
             } catch (err) {
@@ -265,7 +284,7 @@ export default function Generate() {
             setImageErrors([...errors]);
           }
           variant.imageUrls = urls;
-          variant.imageUrl = urls[0]; // Set first image as thumbnail
+          variant.imageUrl = urls[0];
           setResult(updatedScript);
           await saveScript(updatedScript);
         } else {
@@ -276,7 +295,9 @@ export default function Generate() {
             const v = aiResponse.variants[i];
             try {
               if (i > 0) await new Promise(r => setTimeout(r, 2000));
-              const newImageUrl = await generateImage(v.imagePrompt, undefined, {
+
+              const isTexto = data.visualSubject === "texto";
+              const genOpts: any = {
                 hook: v.hook,
                 inputSummary: data.inputSummary,
                 niche: brandKit.niche,
@@ -289,10 +310,19 @@ export default function Generate() {
                 toneAdjectives: brandKit.toneAdjectives,
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
-                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
+                onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: (v as any).overlayDesign,
-                fontFamily: data.fontFamily
-              }, i);
+                fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
+                baseBlob: (i > 0 && isTexto) ? baseBlob : undefined
+              };
+
+              const newImageUrl = await generateImage(v.imagePrompt, undefined, genOpts, i);
+
+              if (i === 0 && isTexto && !baseBlob) {
+                const res = await fetch(newImageUrl);
+                baseBlob = await res.blob();
+              }
+
               urls.push(newImageUrl);
               errors.push(false);
               updatedScript.resultJson.variants[i] = { ...updatedScript.resultJson.variants[i], imageUrl: newImageUrl };
@@ -307,7 +337,8 @@ export default function Generate() {
           setResult(updatedScript);
           await saveScript(updatedScript);
         }
-      } else {
+      }
+      else {
         setImagesLoading([false, false, false]);
         if (data.format !== "reels") setImageErrors([true, true, true]);
       }

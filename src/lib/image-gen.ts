@@ -22,6 +22,29 @@ export interface ImageGenOptions {
     styleType?: string;
   };
   fontFamily?: string;
+  baseBlob?: Blob; // New: To reuse an existing background
+}
+
+/**
+ * Carrega fontes do Google Fonts dinamicamente
+ */
+export async function loadGoogleFont(fontName: string): Promise<void> {
+  const family = fontName.replace(/ /g, "+");
+  const id = `font-${family}`;
+  if (document.getElementById(id)) return;
+
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;900&display=swap`;
+  document.head.appendChild(link);
+
+  try {
+    // Esperar um pouco para o browser registrar a fonte
+    await document.fonts.load(`bold 10px "${fontName}"`);
+  } catch (e) {
+    console.warn(`Could not load font ${fontName}, fallback to sans-serif`);
+  }
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
@@ -117,11 +140,11 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       ctx.drawImage(img, 0, 0);
 
       // 2. Carregamento de Fonte e Configuração
-      const selectedFont = opts.fontFamily || "Space Grotesk";
+      const selectedFont = opts.fontFamily || "Montserrat";
 
       // Tentar garantir que a fonte está carregada (browser)
       try {
-        await document.fonts.load(`bold 10px "${selectedFont}"`);
+        await loadGoogleFont(selectedFont); // Using the implemented loadGoogleFont
       } catch (e) {
         console.warn("Font load failed, using fallback:", selectedFont);
       }
@@ -133,32 +156,31 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
         styleType: "modern"
       };
 
-      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
-
-      // Shadow Premium (Contraste Máximo)
-      ctx.shadowColor = "rgba(0,0,0,0.9)";
-      ctx.shadowBlur = 30;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 4;
+      // Shadow Sutil conforme pedido (contrastante mas não pesada)
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
 
       // Estilo de Preenchimento e Borda
+      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 6; // Borda mais grossa para "Premium Look"
+      ctx.lineWidth = 1.8; // Borda sutil de destaque
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 
-      ctx.textAlign = "center"; // Forçamos centralização horizontal por padrão para evitar overflow lateral
+      ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
       // 3. Sistema de Redimensionamento Automático (Auto-fit)
-      let fontSize = Math.floor(canvas.width * 0.085 * (design.fontSizeMultiplier || 1));
-      const maxWidth = canvas.width * 0.88;
+      let fontSize = Math.floor(canvas.width * 0.08 * (design.fontSizeMultiplier || 1));
+      const maxWidth = canvas.width * 0.9;
       const maxHeight = canvas.height * 0.7;
 
       let lines: string[] = [];
       const wrapText = (size: number) => {
-        ctx.font = `bold ${size}px "${selectedFont}", sans-serif`;
+        ctx.font = `bold ${size}px "${selectedFont}", "Inter", sans-serif`;
         const words = text.split(" ");
         const resLines = [];
         let currentLine = "";
@@ -177,19 +199,18 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
         return resLines;
       };
 
-      // Reduzir fonte se o bloco de texto ficar muito alto
       lines = wrapText(fontSize);
-      while (lines.length * (fontSize * 1.2) > maxHeight && fontSize > 20) {
-        fontSize -= 5;
+      while (lines.length * (fontSize * 1.2) > maxHeight && fontSize > 24) {
+        fontSize -= 4;
         lines = wrapText(fontSize);
       }
 
-      // 4. Desenhar com Centralização Matemática Absoluta
+      // 4. Desenhar com Centralização Absoluta
       const lineHeight = fontSize * 1.15;
       const totalHeight = lines.length * lineHeight;
 
       // Centralização vertical + ajuste fino de yOffset
-      const verticalAdjustment = (design.yOffset || 0) * (canvas.height * 0.5);
+      const verticalAdjustment = (design.yOffset || 0) * (canvas.height * 0.4);
       let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2) + verticalAdjustment;
 
       const x = canvas.width / 2;
@@ -203,7 +224,7 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
 
       canvas.toBlob((blob) => {
         if (blob) {
-          console.log(`[Canvas] Premium Render Successful: Font=${selectedFont}, Color=${brandColor}`);
+          console.log(`[Canvas] UI Polish Render: Font=${selectedFont}, Center=OK`);
           resolve(blob);
         } else {
           reject(new Error("Canvas toBlob failed"));
@@ -223,36 +244,44 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
 async function generateWithNebius(prompt: string, index: number, opts: ImageGenOptions): Promise<string> {
   const { visualSubject, onProgress } = opts;
   console.log(`🚀 NEBIUS REQUEST ${index} (Proxy):`, prompt);
-  onProgress?.(index, 20);
 
   if (!import.meta.env.VITE_SUPABASE_URL) {
     throw new Error("VITE_SUPABASE_URL não configurado");
   }
 
-  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`;
+  // Otimização: Bypassar Nebius se já tivermos um fundo
+  let blob: Blob;
+  let usedModel = "black-forest-labs/flux-dev (default)";
 
-  const response = await fetch(functionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      prompt,
-      provider: "nebius",
-      visualSubject,
-      seed: Math.floor(Math.random() * 999999999), // Changed seed to a random number
-      colorPalette: opts.colorPalette,
-      visualStyle: opts.visualStyle
-    }),
-  });
+  if (opts.baseBlob) {
+    console.log(`[ImageGen] Reusing existing background blob for index ${index}`);
+    blob = opts.baseBlob;
+  } else {
+    onProgress?.(index, 20);
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        prompt,
+        provider: "nebius",
+        visualSubject,
+        seed: Math.floor(Math.random() * 999999999),
+        colorPalette: opts.colorPalette,
+        visualStyle: opts.visualStyle
+      }),
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Nebius API error (${response.status}): ${errText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Nebius Edge Function Error: ${errorText}`);
+    }
+
+    blob = await response.blob();
+    usedModel = response.headers.get("X-Used-Model") || usedModel;
   }
-
-  const usedModel = response.headers.get("X-Used-Model") || "black-forest-labs/flux-dev (default)";
 
   console.log(`
   =========================================
@@ -262,7 +291,6 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
   =========================================
   `);
 
-  let blob = await response.blob();
   console.log(`[Frontend] Nebius Studio Success:`, blob.type, blob.size, "bytes");
 
   // APLICAR OVERLAY SE FOR FOCO EM TEXTO

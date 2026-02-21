@@ -115,15 +115,22 @@ ${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, conten
     - colorOverride: string (hexadecimal de uma das cores da marca, opcional)
     - yOffset: número (-0.4 sugerido para topo, 0 para meio, 0.4 para baixo)
     - styleType: "modern" | "classic" | "bold" | "clean"
+    - fontFamily: Nome de uma das fontes sugeridas abaixo (ex: o valor de selectedFonts.display)
+
+13. selectedFonts (OBJETO GLOBAL): Sugira 3 fontes do Google Fonts que combinem perfeitamente com o estilo visual e tom da marca:
+    - display: Uma fonte impactante para títulos/hooks (ex: 'Bebas Neue', 'Space Grotesk', 'Playfair Display').
+    - primary: Uma fonte legível para corpo de texto ou legendas (ex: 'Montserrat', 'Inter', 'Lora').
+    - secondary: Uma fonte complementar.
 
 IMPORTANTE PARA VARIAÇÕES:
 Você deve gerar 3 variações que sejam VISUALMENTE E TEXTUALMENTE DIFERENTES. 
 - Cada 'hook' deve abordar um ângulo diferente do problema.
 - Cada 'imagePrompt' deve descrever um cenário ou composição diferente, mantendo o estilo da marca.
 - Varie os valores de 'overlayDesign' para que nem todas as imagens tenham o texto no mesmo lugar.
+- O 'fontFamily' em 'overlayDesign' deve ser dinâmico! Use a fonte 'display' para hooks curtos e 'primary' para frases mais longas.
 
 Responda APENAS com JSON válido no formato:
-{"variants": [{ ... }, { ... }, { ... }]}`;
+{"variants": [{ ... }, { ... }, { ... }], "suggestedFonts": { "display": "...", "primary": "...", "secondary": "..." }}`;
 }
 
 // Chamada via Supabase Edge Function (produção)

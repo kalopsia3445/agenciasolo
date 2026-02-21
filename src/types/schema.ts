@@ -19,6 +19,11 @@ export const brandKitSchema = z.object({
   referenceImageUrls: z.array(z.string()).default([]),
   referenceVideoUrls: z.array(z.string()).default([]),
   visualStyleDescription: z.string().optional().default(""),
+  suggestedFonts: z.object({
+    display: z.string().optional().default("Space Grotesk"),
+    primary: z.string().optional().default("Montserrat"),
+    secondary: z.string().optional().default("Inter"),
+  }).optional(),
 });
 export type BrandKit = z.infer<typeof brandKitSchema>;
 
@@ -40,6 +45,7 @@ export const overlayDesignSchema = z.object({
   colorOverride: z.string().optional(),
   yOffset: z.number().optional().default(0), // -0.5 is top, 0.5 is bottom
   styleType: z.enum(["modern", "classic", "bold", "clean"]).optional().default("modern"),
+  fontFamily: z.string().optional(),
 });
 export type OverlayDesign = z.infer<typeof overlayDesignSchema>;
 
@@ -67,6 +73,11 @@ export type ScriptVariant = z.infer<typeof scriptVariantSchema>;
 
 export const aiResponseSchema = z.object({
   variants: z.array(scriptVariantSchema).min(1).max(3),
+  suggestedFonts: z.object({
+    display: z.string().optional(),
+    primary: z.string().optional(),
+    secondary: z.string().optional(),
+  }).optional(),
 });
 export type AIResponse = z.infer<typeof aiResponseSchema>;
 
