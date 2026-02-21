@@ -28,16 +28,20 @@ Deno.serve(async (req: Request) => {
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
                 pessoas: "Kwai-Kolors/Kolors",
-                objetos: "black-forest-labs/FLUX.1-dev",
-                abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "black-forest-labs/FLUX.1-dev"
+                objetos: "black-forest-labs/FLUX.1-Krea-dev",
+                abstrato: "black-forest-labs/FLUX.1-Krea-dev",
+                texto: "black-forest-labs/FLUX.1-Krea-dev"
             };
 
-            let modelId = "black-forest-labs/FLUX.1-dev"; // Default Pro Model
+            let modelId = "black-forest-labs/FLUX.1-Krea-dev"; // Modern Krea-dev Model
+            let providerNode = "fal-ai"; // Target provider for stability
 
             if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
                 modelId = BEST_MODEL_BY_FOCUS[visualSubject];
                 console.log(`💎 PRO ROUTE: Target model -> ${modelId} (${visualSubject})`);
+
+                // Kolors might need hf-inference or another provider if fal-ai doesn't host it
+                if (modelId.includes("Kolors")) providerNode = "hf-inference";
             }
 
             // 1. PRE-FLIGHT CHECK: Verify if model is warm/available
@@ -57,10 +61,10 @@ Deno.serve(async (req: Request) => {
                 console.warn(`[Status Check Failed] Could not verify ${modelId} status:`, e.message);
             }
 
-            console.log(`[Proxy] Final Pro Routed Model: ${modelId}`);
+            console.log(`[Proxy] Final Pro Routed Model: ${modelId} via ${providerNode}`);
 
-            // Standard Router URL - Using hf-inference with Pro Token handles the Pro routing/priority
-            const URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
+            // Using the modern Router URL
+            const URL = `https://router.huggingface.co/v1/models/${modelId}/text-to-image`;
 
             try {
                 const response = await fetch(URL, {
@@ -68,6 +72,7 @@ Deno.serve(async (req: Request) => {
                     headers: {
                         "Authorization": `Bearer ${HF_TOKEN}`,
                         "Content-Type": "application/json",
+                        "X-Inference-Provider": providerNode,
                         "x-use-cache": "false" // Avoid stale generated images
                     },
                     body: JSON.stringify({
