@@ -5,7 +5,7 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// VERSION: 2.1.0 - BRAND_DYNAMIC_RESTORED
+// VERSION: 3.0.0 - ZERO_HARDCODES_PURE_DYNAMIC
 Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
@@ -21,13 +21,11 @@ Deno.serve(async (req: Request) => {
             });
         }
 
-        // --- BACKGROUND PROMPT ENGINE ---
-        let finalPrompt = rawPrompt;
-        if (visualSubject === 'texto') {
-            // v2.1.0: TRUST THE FRONTEND BRAND-KIT PROMPT
-            finalPrompt = `${rawPrompt}, professional studio lighting, 8k resolution, clean backdrop, no text, no characters, no words, no signs.`;
-            console.log(`[Nebius v2.1.0] Brand Engine: Preserving frontend prompt: ${finalPrompt.substring(0, 50)}...`);
-        }
+        // --- BACKGROUND PROMPT ENGINE v3.0 ---
+        // TRUST THE FRONTEND COMPLETELY. 
+        // Groq already analyzed the brand kit and built a high-quality prompt.
+        const finalPrompt = rawPrompt;
+        console.log(`[Nebius v3.0.0] Dynamic Engine: Passthrough for ${visualSubject || 'general'}`);
 
         // --- NEBIUS AI INTEGRATION ---
         if (provider === "nebius") {
@@ -36,7 +34,7 @@ Deno.serve(async (req: Request) => {
 
             const modelId = "black-forest-labs/flux-schnell";
 
-            console.log(`🚀 NEBIUS REQUEST v2.1.0 - Model: ${modelId}, Prompt: ${finalPrompt.substring(0, 50)}...`);
+            console.log(`🚀 NEBIUS REQUEST v3.0.0 - Model: ${modelId}, Prompt: ${finalPrompt.substring(0, 50)}...`);
 
             const response = await fetch("https://api.studio.nebius.ai/v1/images/generations", {
                 method: "POST",

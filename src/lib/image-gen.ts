@@ -49,108 +49,38 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // Tradução automática de termos comuns para Inglês (IA performa muito melhor em EN)
-  const translationMap: Record<string, string> = {
-    'beleza': 'beauty',
-    'rosto': 'face, portrait',
-    'estética': 'aesthetics',
-    'maquiagem': 'makeup',
-    'cabelo': 'hair',
-    'pele': 'skin',
-    'contabilidade': 'accounting',
-    'contador': 'accountant',
-    'eletrônicos': 'electronics',
-    'tecnologia': 'technology',
-    'loja': 'store, retail',
-    'comida': 'food, gourmet',
-    'restaurante': 'restaurant'
+  // v4.0: Dynamic cleaner - only remove HEX codes that break APIs
+  const clean = (text: string) => {
+    return text
+      .replace(/#[a-fA-F0-9]{3,6}/g, '')
+      .replace(/#/g, '')
+      .trim();
   };
 
-  const translate = (text: string) => {
-    let result = text.toLowerCase();
-    // Remover códigos hexadecimais e '#' que confundem a IA e quebram URLs
-    result = result.replace(/#[a-fA-F0-9]{3,6}/g, '').replace(/#/g, '');
-
-    Object.entries(translationMap).forEach(([pt, en]) => {
-      result = result.replace(new RegExp(`\\b${pt}\\b`, 'g'), en);
-    });
-    return result.trim();
-  };
-
-  if (opts.visualSubject === 'texto') {
-    // Detect if we are already receiving a built prompt to avoid double-processing
-    if (basePrompt && (basePrompt.includes('background') || basePrompt.includes('aesthetic'))) {
-      return basePrompt;
-    }
-
-    // Brand Context (Crucial for non-hardcoded feel)
-    const brandStyle = opts.visualStyle || 'modern minimalist';
-    const brandColors = opts.colorPalette && opts.colorPalette.length > 0
-      ? `using a color palette of ${opts.colorPalette.filter(c => c && c.length > 2).join(', ')}`
-      : 'with vibrant professional colors';
-
-    // Abstract variation based on index to avoid 3 identical images
-    const variations = [
-      "dynamic geometric composition",
-      "fluid organic shapes and gradients",
-      "minimalist glassmorphism and soft shadows"
-    ];
-    // Property access fix: check both index and 'i' (common in my gen loops)
-    const idx = (opts as any).index !== undefined ? (opts as any).index : (opts as any).i;
-    const variationIdx = idx !== undefined ? idx % variations.length : 0;
-    const styleVariation = variations[variationIdx];
-
-    const customPromptParam = opts.customVisualPrompt ? `, following this direction: ${translate(opts.customVisualPrompt)}` : '';
-    const hookContext = opts.hook ? `, inspired by the theme: "${translate(opts.hook.substring(0, 100))}"` : '';
-
-    // BUILD DYNAMIC PROMPT (No hardcodes!)
-    const result = `Clean professional high-end background, ${translate(brandStyle)} style, ${styleVariation}, ${brandColors}, luxury cinematic lighting, 8k resolution, artistic composition${hookContext}${customPromptParam}, absolute clean background, no text, no characters, no words, no signs.`;
-    return result;
+  // v4.0: TRUST THE GROQ ANALYZED PROMPT COMPLETELY.
+  if (basePrompt && basePrompt.length > 5) {
+    return clean(basePrompt);
   }
 
-  const niche = translate(opts.niche);
-  const style = translate(opts.visualStyle || 'professional');
+  // Purely dynamic fallback using only brand kit fields (no hardcoded descriptors)
+  const style = clean(opts.visualStyle || '');
+  const colors = opts.colorPalette && opts.colorPalette.length > 0
+    ? `with colors ${opts.colorPalette.filter(c => c.length > 2).join(', ')}`
+    : '';
+  const niche = clean(opts.niche || '');
+  const summary = clean(opts.inputSummary || '');
 
-  if (basePrompt) {
-    const translatedBase = translate(basePrompt);
-    const baseLower = translatedBase.toLowerCase();
-
-    let parts = [translatedBase];
-
-    // Adicionar niche se não estiver presente
-    if (!baseLower.includes(niche.toLowerCase())) {
-      parts.push(niche);
-    }
-
-    // Adicionar style se não estiver presente
-    if (!baseLower.includes(style.toLowerCase())) {
-      parts.push(style);
-    }
-
-    // Sufixos de qualidade se não estiverem presentes
-    const qualitySuffixes = ['photography', 'realistic', '8k', 'high resolution', 'lighting'];
-    qualitySuffixes.forEach(suffix => {
-      if (!baseLower.includes(suffix)) {
-        parts.push(suffix);
-      }
-    });
-
-    return parts.join(', ');
-  }
-
-  // Fallback se não houver prompt base
-  const summary = translate(opts.inputSummary || 'scene');
-  return `professional photography, ${style}, ${niche}, ${summary}, realistic, 8k, highly detailed`;
+  return `${summary}, ${niche}, ${style} style, ${colors}`.replace(/, ,/g, ',').trim();
 }
 
 /**
  * Sobrepõe texto em um blob de imagem usando Canvas API.
  * Garante perfeição ortográfica e alinhamento com branding.
  */
-async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOptions): Promise<Blob> {
+export async function applyTextOverlay(imageBlob: Blob | string, text: string, opts: ImageGenOptions): Promise<string | Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    const url = URL.createObjectURL(imageBlob);
+    const url = typeof imageBlob === 'string' ? imageBlob : URL.createObjectURL(imageBlob);
 
     img.onload = async () => {
       URL.revokeObjectURL(url);
@@ -168,31 +98,35 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
 
       // Tentar garantir que a fonte está carregada (browser)
       try {
-        await loadGoogleFont(selectedFont); // Using the implemented loadGoogleFont
+        await loadGoogleFont(selectedFont);
+        // CRITICAL FIX: Ensure font is REALLY loaded before drawing
+        await (document as any).fonts.load(`bold 64px "${selectedFont}"`);
       } catch (e) {
-        console.warn("Font load failed, using fallback:", selectedFont);
+        console.warn("Font load timeout or failed, using fallback:", selectedFont);
       }
 
       const design = opts.overlayDesign || {
         fontSizeMultiplier: 1,
         textAlign: "center",
       };
-      // Shadow Premium (Contraste Máximo para não ficar "feio")
-      ctx.shadowColor = "rgba(0,0,0,0.95)";
-      ctx.shadowBlur = 15;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 4;
+
+      // Shadow Polish (V3.0: Sharper and Cleaner)
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
 
       // Estilo de Preenchimento e Borda
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2.5; // Borda mais nítida
+      ctx.lineWidth = 1.2; // Sharper white border
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      ctx.font = `bold ${Math.floor(canvas.width * 0.08)}px "${selectedFont}", "Inter", sans-serif`;
 
       // 3. Sistema de Redimensionamento Automático (Auto-fit)
       let fontSize = Math.floor(canvas.width * 0.08 * (design.fontSizeMultiplier || 1));
@@ -243,14 +177,20 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
         startY += lineHeight;
       });
 
+      // BLOB FIX (v3.0): Convert to permanent dataURL to avoid garbage collection
       canvas.toBlob((blob) => {
         if (blob) {
-          console.log(`[Canvas] UI Polish Render: Font=${selectedFont}, Center=OK`);
-          resolve(blob);
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result as string;
+            console.log(`[Canvas] UI Polish Render v3.0: Font=${selectedFont}, Format=dataURL`);
+            resolve(dataUrl);
+          };
+          reader.readAsDataURL(blob);
         } else {
           reject(new Error("Canvas toBlob failed"));
         }
-      }, 'image/jpeg', 0.98);
+      }, 'image/jpeg', 0.95);
     };
 
     img.onerror = () => {
@@ -271,7 +211,7 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
   }
 
   // Otimização: Bypassar Nebius se já tivermos um fundo
-  let blob: Blob;
+  let blob: Blob | string;
   let usedModel = "black-forest-labs/flux-dev (default)";
 
   if (opts.baseBlob) {
@@ -310,7 +250,8 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
       const textToShow = opts.hook || 'Solo Reels';
       console.log(`[Frontend] Applying text overlay: "${textToShow}"`);
       blob = await applyTextOverlay(blob, textToShow, opts);
-      console.log(`[Frontend] Text overlay applied successfully. New size: ${blob.size} bytes`);
+      const size = typeof blob === 'string' ? blob.length : blob.size;
+      console.log(`[Frontend] Text overlay applied successfully. New size: ${size} bytes`);
     } catch (e) {
       console.warn("Falha ao aplicar overlay de texto:", e);
     }
@@ -321,8 +262,11 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
     return blob;
   }
 
-  if (!blob.type.startsWith('image/')) {
-    const text = await blob.text();
+  const isString = typeof blob === 'string';
+  const type = isString ? 'image/jpeg' : (blob as Blob).type;
+
+  if (!isString && !type.startsWith('image/')) {
+    const text = await (blob as Blob).text();
     throw new Error(`Nebius Studio Error (Non-Image): ${text}`);
   }
 

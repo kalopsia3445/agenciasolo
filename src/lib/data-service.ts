@@ -10,13 +10,30 @@ async function getUserId(): Promise<string | null> {
   return data.user?.id ?? null;
 }
 
-export async function uploadImage(blob: Blob, path: string): Promise<string> {
-  if (isDemoMode || !supabase) return URL.createObjectURL(blob);
+export async function uploadImage(image: Blob | string, path: string): Promise<string> {
+  let blob: Blob;
+
+  if (typeof image === 'string') {
+    // Convert dataURL to Blob
+    const parts = image.split(',');
+    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    blob = new Blob([u8arr], { type: mime });
+  } else {
+    blob = image;
+  }
+
+  if (isDemoMode || !supabase) return typeof image === 'string' ? image : URL.createObjectURL(blob);
 
   const userId = await getUserId();
   if (!userId) {
     console.error("Upload error: User not authenticated");
-    return URL.createObjectURL(blob);
+    return typeof image === 'string' ? image : URL.createObjectURL(blob);
   }
 
   const finalPath = `${userId}/${path}`;
@@ -30,7 +47,7 @@ export async function uploadImage(blob: Blob, path: string): Promise<string> {
 
   if (error) {
     console.error("Storage upload error:", error);
-    return URL.createObjectURL(blob); // Fallback to temp URL if upload fails
+    return typeof image === 'string' ? image : URL.createObjectURL(blob);
   }
 
   const { data: { publicUrl } } = supabase.storage

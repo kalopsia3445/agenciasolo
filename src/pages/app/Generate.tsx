@@ -13,9 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { generateFormSchema, type GenerateFormData, type SavedScript, type BrandKit, type StylePack, FORMATS, OBJECTIVES, WEEKLY_LIMITS, type SubscriptionTier } from "@/types/schema";
 import { OFFICIAL_PACKS } from "@/data/style-packs";
-import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite } from "@/lib/data-service";
+import { getBrandKit, getCustomPacks, canGenerate, incrementUsage, saveScript, getFavoriteIds, toggleFavorite, uploadImage } from "@/lib/data-service";
 import { generateWithGroq, generateDeepContent } from "@/lib/groq";
-import { buildImagePrompt, generateImage, regenerateImage, downloadImage, generateImagePipeline } from "@/lib/image-gen";
+import { buildImagePrompt, generateImage, regenerateImage, downloadImage, generateImagePipeline, applyTextOverlay } from "@/lib/image-gen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Copy, Star, Video, Loader2, ImageIcon, Download, RefreshCw, FileText, Send } from "lucide-react";
@@ -234,41 +234,55 @@ export default function Generate() {
           const urls: string[] = [];
           const errors: boolean[] = [];
 
-          for (let i = 0; i < 3; i++) {
-            try {
-              if (i > 0) await new Promise(r => setTimeout(r, 2000));
-              const prompt = prompts[i] || prompts[0];
+          try {
+            // v3.0 OPTIMIZATION: Generate 1 background for all slides
+            const firstPrompt = prompts[0];
+            const baseGenOpts: any = {
+              inputSummary: data.inputSummary,
+              niche: brandKit.niche,
+              format: data.format,
+              objective: data.objective,
+              businessName: brandKit.businessName,
+              visualStyle: brandKit.visualStyleDescription,
+              targetAudience: brandKit.targetAudience,
+              colorPalette: brandKit.colorPalette,
+              toneAdjectives: brandKit.toneAdjectives,
+              visualSubject: data.visualSubject,
+              customVisualPrompt: data.customVisualPrompt,
+              skipOverlay: true, // Clean background
+              skipUpload: true,  // Temporary
+            };
 
-              const genOpts: any = {
-                hook: variant.hooks?.[i] || variant.hook,
-                inputSummary: data.inputSummary,
-                niche: brandKit.niche,
-                format: data.format,
-                objective: data.objective,
-                businessName: brandKit.businessName,
-                visualStyle: brandKit.visualStyleDescription,
-                targetAudience: brandKit.targetAudience,
-                colorPalette: brandKit.colorPalette,
-                toneAdjectives: brandKit.toneAdjectives,
-                visualSubject: data.visualSubject,
-                customVisualPrompt: data.customVisualPrompt,
-                onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
-                overlayDesign: variant.overlayDesigns?.[i] || variant.overlayDesign,
-                fontFamily: data.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display,
+            const backgroundResult = await generateImage(firstPrompt, undefined, baseGenOpts, 0);
+            const backgroundBlob = backgroundResult as Blob;
+
+            for (let i = 0; i < 3; i++) {
+              setImageProgress(prev => { const n = [...prev]; n[i] = 10; return n; });
+              const slideHook = variant.hooks?.[i] || variant.hook;
+              const slideDesign = variant.overlayDesigns?.[i] || variant.overlayDesign;
+              const slideFont = data.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display;
+
+              const slideOpts: any = {
+                ...baseGenOpts,
+                hook: slideHook,
+                overlayDesign: slideDesign,
+                fontFamily: slideFont,
+                skipOverlay: false,
+                skipUpload: false,
               };
 
-              const res = await generateImage(prompt, undefined, genOpts, i);
-              const newImageUrl = typeof res === 'string' ? res : URL.createObjectURL(res);
+              // Re-run the pipeline with the existing background
+              const res = await applyTextOverlay(backgroundBlob, slideHook, slideOpts);
+              const path = `carousel_${Date.now()}_${i}.jpg`;
+              const finalUrl = await uploadImage(res as Blob, path);
 
-              urls.push(newImageUrl);
+              urls.push(finalUrl);
               errors.push(false);
-            } catch (err) {
-              console.error(`Carousel image ${i} failed:`, err);
-              urls.push("");
-              errors.push(true);
+              setImageProgress(prev => { const n = [...prev]; n[i] = 100; return n; });
+              setImageUrls([...urls]);
             }
-            setImageUrls([...urls]);
-            setImageErrors([...errors]);
+          } catch (err) {
+            console.error(`Carousel generation v3.0 failed:`, err);
           }
           variant.imageUrls = urls;
           variant.imageUrl = urls[0];
