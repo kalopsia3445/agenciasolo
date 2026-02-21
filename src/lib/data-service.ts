@@ -13,17 +13,11 @@ async function getUserId(): Promise<string | null> {
 export async function uploadImage(image: Blob | string, path: string): Promise<string> {
   let blob: Blob;
 
-  if (typeof image === 'string') {
-    // Convert dataURL to Blob
-    const parts = image.split(',');
-    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-    const bstr = atob(parts[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    blob = new Blob([u8arr], { type: mime });
+  if (typeof image === 'string' && image.startsWith('data:')) {
+    const response = await fetch(image);
+    blob = await response.blob();
+  } else if (typeof image === 'string') {
+    return image;
   } else {
     blob = image;
   }

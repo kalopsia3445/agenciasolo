@@ -205,7 +205,7 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
           const reader = new FileReader();
           reader.onload = () => {
             const dataUrl = reader.result as string;
-            console.log(`[Canvas] UI Polish Render v3.0: Font=${selectedFont}, Format=dataURL`);
+            console.log(`[Canvas] UI Polish Render v5.0: Font=${selectedFont}, Format=dataURL`);
             resolve(dataUrl);
           };
           reader.readAsDataURL(blob);

@@ -260,9 +260,7 @@ export default function Generate() {
                 fontFamily: slideFont,
               };
 
-              const res = await generateImage(slidePrompt, undefined, slideOpts, i);
-              const path = `carousel_${Date.now()}_${i}.jpg`;
-              const finalUrl = await uploadImage(res as Blob, path);
+              const finalUrl = await generateImage(slidePrompt, undefined, slideOpts, i) as string;
 
               urls.push(finalUrl);
               setImageUrls([...urls]);
