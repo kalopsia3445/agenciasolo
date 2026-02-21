@@ -27,24 +27,39 @@ Deno.serve(async (req: Request) => {
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
-                pessoas: "stabilityai/stable-diffusion-xl-base-1.0", // Fotorealismo SDXL estável
-                objetos: "black-forest-labs/FLUX.1-schnell",        // Velocidade e precisão
-                abstrato: "black-forest-labs/FLUX.1-schnell",       // Estilo moderno
-                texto: "black-forest-labs/FLUX.1-schnell"           // Texto legível (Schnell é capaz)
+                pessoas: "stabilityai/stable-diffusion-3.5-large",
+                objetos: "recraft-ai/recraft-v4-pro",
+                abstrato: "black-forest-labs/FLUX.1-dev",
+                texto: "stabilityai/stable-diffusion-3.5-large"
             };
 
-            let modelId = "stabilityai/stable-diffusion-xl-base-1.0";  // Default
+            let modelId = "stabilityai/stable-diffusion-3.5-large"; // Default Pro Model
 
-            if (visualSubject === 'texto') {
-                modelId = BEST_MODEL_BY_FOCUS["texto"];
-                console.log(`🔥 TEXTO PRO: Usando modelo especialista direto -> ${modelId}`);
-            } else if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
+            if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
                 modelId = BEST_MODEL_BY_FOCUS[visualSubject];
-                console.log(`🚀 FOCO PRO: Priorizando modelo ótimo -> ${modelId}`);
+                console.log(`💎 PRO ROUTE: Target model -> ${modelId} (${visualSubject})`);
             }
 
-            console.log(`[Proxy] Modelo final roteado: ${modelId}`);
-            // Endpoint Padrão do HF Inference Providers Hub (suporta fal-ai implicitamente)
+            // 1. PRE-FLIGHT CHECK: Verify if model is warm/available
+            try {
+                const statusUrl = `https://huggingface.co/api/models/${modelId}?expand[]=inference`;
+                const statusRes = await fetch(statusUrl, {
+                    headers: { "Authorization": `Bearer ${HF_TOKEN}` }
+                });
+
+                if (statusRes.ok) {
+                    const info = await statusRes.json();
+                    const isLive = info.inference === "warm" || info.inference === "live" || info.inference?.status === "live";
+                    console.log(`[Status] ${modelId} is ${isLive ? "LIVE/WARM" : "NOT LIVE (Status: " + JSON.stringify(info.inference) + ")"}`);
+                    // We proceed anyway as Inference API handles cold starts, but logging helps debug
+                }
+            } catch (e: any) {
+                console.warn(`[Status Check Failed] Could not verify ${modelId} status:`, e.message);
+            }
+
+            console.log(`[Proxy] Final Pro Routed Model: ${modelId}`);
+
+            // Standard Router URL - Using hf-inference with Pro Token handles the Pro routing/priority
             const URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
 
             try {
@@ -53,11 +68,12 @@ Deno.serve(async (req: Request) => {
                     headers: {
                         "Authorization": `Bearer ${HF_TOKEN}`,
                         "Content-Type": "application/json",
+                        "x-use-cache": "false" // Avoid stale generated images
                     },
                     body: JSON.stringify({
                         inputs: prompt,
                         parameters: {
-                            num_inference_steps: 28,
+                            num_inference_steps: 35, // High quality steps for Pro models
                             guidance_scale: 8.0,
                             seed: seed || Math.floor(Math.random() * 1e9),
                             width: 1024,
@@ -69,7 +85,7 @@ Deno.serve(async (req: Request) => {
                 if (response.ok) {
                     const buffer = await response.arrayBuffer();
                     if (buffer.byteLength > 1000) {
-                        console.log(`[Proxy] Sucesso HF (${modelId})! Buffer size: ${buffer.byteLength} bytes`);
+                        console.log(`[Proxy] Success Pro HF (${modelId})! Buffer size: ${buffer.byteLength} bytes`);
                         return new Response(buffer, {
                             headers: {
                                 ...corsHeaders,
@@ -82,12 +98,13 @@ Deno.serve(async (req: Request) => {
                 }
 
                 const err = await response.text();
-                throw new Error(`Falha no modelo ${modelId}: ${err}`);
+                console.error(`[Error Details] Status: ${response.status}, Content: ${err}`);
+                throw new Error(`HF Pro Error (${modelId}): ${err}`);
 
             } catch (e: unknown) {
                 const errorMessage = e instanceof Error ? e.message : String(e);
-                console.error(`[Proxy] Erro fatal no modelo ${modelId}:`, errorMessage);
-                throw new Error(`Requisição falhou: ${errorMessage}`);
+                console.error(`[Proxy] Fatal error in ${modelId}:`, errorMessage);
+                throw new Error(`HF Pro Request failed: ${errorMessage}`);
             }
         }
 
