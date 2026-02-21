@@ -1,0 +1,50 @@
+[Search] Keyword: ideogram...
+[Results] Found 3 models for ideogram:
+- nicolaus-huang/ideogram (Downloads: 0, Pipeline: undefined)
+- diffusers-internal-dev/ideogram-character-generator (Downloads: 0, Pipeline: undefined)
+- Muapi/ideogram1024-text-style-enhancer-flux.1-d-lora (Downloads: 0, Pipeline: undefined)
+----------------------------------------
+[Search] Keyword: recraft...
+[Results] Found 2 models for recraft:
+- strangerzonehf/Halftone-Recraft-Flux (Downloads: 11, Pipeline: text-to-image)
+- crowdclairvoyance/recraft-cartoon (Downloads: 0, Pipeline: undefined)
+----------------------------------------
+[Search] Keyword: flux.2...
+[Results] Found 10 models for flux.2:
+- Comfy-Org/flux2-dev (Downloads: 1043165, Pipeline: undefined)
+- black-forest-labs/FLUX.2-klein-4B (Downloads: 180018, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-dev (Downloads: 166388, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-4b-fp8 (Downloads: 124679, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-9B (Downloads: 88002, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-4b-fp8 (Downloads: 65221, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-9B (Downloads: 64833, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-4B (Downloads: 63920, Pipeline: image-to-image)
+- unsloth/FLUX.2-klein-9B-GGUF (Downloads: 56468, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-9b-fp8 (Downloads: 53327, Pipeline: image-to-image)
+----------------------------------------
+[Search] Keyword: flux-2...
+[Results] Found 10 models for flux-2:
+- Comfy-Org/flux2-dev (Downloads: 1043165, Pipeline: undefined)
+- black-forest-labs/FLUX.2-klein-4B (Downloads: 180018, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-dev (Downloads: 166388, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-4b-fp8 (Downloads: 124679, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-9B (Downloads: 88002, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-4b-fp8 (Downloads: 65221, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-9B (Downloads: 64833, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-base-4B (Downloads: 63920, Pipeline: image-to-image)
+- unsloth/FLUX.2-klein-9B-GGUF (Downloads: 56468, Pipeline: image-to-image)
+- black-forest-labs/FLUX.2-klein-9b-fp8 (Downloads: 53327, Pipeline: image-to-image)
+----------------------------------------
+[Search] Keyword: flux-pro...
+[Results] Found 10 models for flux-pro:
+- Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro-2.0 (Downloads: 16762, Pipeline: text-to-image)
+- Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro (Downloads: 7503, Pipeline: text-to-image)
+- ABDALLALSWAITI/FLUX.1-dev-ControlNet-Union-Pro-2.0-fp8 (Downloads: 4452, Pipeline: text-to-image)
+- gokaygokay/Flux-Prompt-Enhance (Downloads: 2488, Pipeline: text-generation)
+- ABDALLALSWAITI/llm_3_2_flux_prompt (Downloads: 2005, Pipeline: text-generation)
+- prithivMLmods/Flux-Product-Ad-Backdrop (Downloads: 638, Pipeline: text-to-image)
+- prithivMLmods/Shadow-Projection-Flux-LoRA (Downloads: 623, Pipeline: text-to-image)
+- mradermacher/Flux-Prompt-Enhance-GGUF (Downloads: 371, Pipeline: undefined)
+- ND911/Project0_Flux_Beta_GGUF (Downloads: 324, Pipeline: undefined)
+- Runware/FLUX.1-dev-ControlNet-Union-Pro-2.0 (Downloads: 182, Pipeline: text-to-image)
+----------------------------------------

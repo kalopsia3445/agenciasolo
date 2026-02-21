@@ -1,0 +1,144 @@
+[Guess] black-forest-labs/FLUX.2-max @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] black-forest-labs/FLUX.2-max @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] black-forest-labs/FLUX.2-max @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.2-max for provider together"}
+---
+[Guess] black-forest-labs/FLUX.2-max @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.2-max for provider replicate"}
+---
+[Guess] black-forest-labs/FLUX.2-pro @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] black-forest-labs/FLUX.2-pro @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] black-forest-labs/FLUX.2-pro @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.2-pro for provider together"}
+---
+[Guess] black-forest-labs/FLUX.2-pro @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.2-pro for provider replicate"}
+---
+[Guess] ideogram-ai/ideogram-3.0 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] ideogram-ai/ideogram-3.0 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] ideogram-ai/ideogram-3.0 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/ideogram-ai/ideogram-3.0 for provider together"}
+---
+[Guess] ideogram-ai/ideogram-3.0 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/ideogram-ai/ideogram-3.0 for provider replicate"}
+---
+[Guess] fal-ai/ideogram-3.0 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] fal-ai/ideogram-3.0 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] fal-ai/ideogram-3.0 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/ideogram-3.0 for provider together"}
+---
+[Guess] fal-ai/ideogram-3.0 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/ideogram-3.0 for provider replicate"}
+---
+[Guess] togethercomputer/ideogram-3.0 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] togethercomputer/ideogram-3.0 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] togethercomputer/ideogram-3.0 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/togethercomputer/ideogram-3.0 for provider together"}
+---
+[Guess] togethercomputer/ideogram-3.0 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/togethercomputer/ideogram-3.0 for provider replicate"}
+---
+[Guess] recraft-ai/recraft-v3 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] recraft-ai/recraft-v3 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] recraft-ai/recraft-v3 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/recraft-ai/recraft-v3 for provider together"}
+---
+[Guess] recraft-ai/recraft-v3 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/recraft-ai/recraft-v3 for provider replicate"}
+---
+[Guess] fal-ai/recraft-v3 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] fal-ai/recraft-v3 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] fal-ai/recraft-v3 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/recraft-v3 for provider together"}
+---
+[Guess] fal-ai/recraft-v3 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/recraft-v3 for provider replicate"}
+---
+[Guess] recraft-ai/recraft-v4 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] recraft-ai/recraft-v4 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] recraft-ai/recraft-v4 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/recraft-ai/recraft-v4 for provider together"}
+---
+[Guess] recraft-ai/recraft-v4 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/recraft-ai/recraft-v4 for provider replicate"}
+---
+[Guess] fal-ai/recraft-v4 @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Guess] fal-ai/recraft-v4 @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Guess] fal-ai/recraft-v4 @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/recraft-v4 for provider together"}
+---
+[Guess] fal-ai/recraft-v4 @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/fal-ai/recraft-v4 for provider replicate"}
+---

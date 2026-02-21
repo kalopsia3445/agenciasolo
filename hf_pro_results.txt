@@ -1,0 +1,31 @@
+[Testing Router] black-forest-labs/FLUX.2-dev @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Testing Router] black-forest-labs/FLUX.2-dev @ hf-pro
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Testing Router] black-forest-labs/FLUX.2-dev @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Testing Router] black-forest-labs/FLUX.2-dev @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.2-dev for provider replicate"}
+---
+[Testing Router] black-forest-labs/FLUX.1-schnell @ hf-inference
+  -> Status: 200 OK
+---
+[Testing Router] black-forest-labs/FLUX.1-schnell @ hf-pro
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Testing Router] black-forest-labs/FLUX.1-schnell @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[Testing Router] black-forest-labs/FLUX.1-schnell @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /models/black-forest-labs/FLUX.1-schnell for provider replicate"}
+---

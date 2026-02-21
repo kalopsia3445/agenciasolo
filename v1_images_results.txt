@@ -1,0 +1,20 @@
+[Testing V1 Images] Model: black-forest-labs/FLUX.1-schnell | Provider: default
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------
+[Testing V1 Images] Model: black-forest-labs/FLUX.2-dev | Provider: default
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------
+[Testing V1 Images] Model: black-forest-labs/FLUX.2-dev | Provider: fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------
+[Testing V1 Images] Model: recraft-ai/recraft-v3 | Provider: default
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------
+[Testing V1 Images] Model: ideogram-ai/ideogram-3.0 | Provider: default
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------

@@ -1,0 +1,12 @@
+[V1 Provider Guess] black-forest-labs/FLUX.2-dev @ fal-ai
+  -> Status: 402 Payment Required
+  -> Error: {"error":"Pre-paid credits are required to use provider fal-ai. Add pre-paid credits to your account
+---
+[V1 Provider Guess] black-forest-labs/FLUX.2-dev @ together
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /v1/models/black-forest-labs/FLUX.2-dev/text-to-image for provider tog
+---
+[V1 Provider Guess] black-forest-labs/FLUX.2-dev @ replicate
+  -> Status: 400 Bad Request
+  -> Error: {"error":"Not allowed to POST /v1/models/black-forest-labs/FLUX.2-dev/text-to-image for provider rep
+---

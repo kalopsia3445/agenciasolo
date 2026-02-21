@@ -1,0 +1,42 @@
+[Search] Looking for endpoints_compatible models containing 'flux.2'...
+[Results] Found 20 models:
+- black-forest-labs/FLUX.2-klein-9B (Downloads: 88002)
+  Tags: ["diffusers","safetensors","image-generation","image-editing","flux","diffusion-single-file","image-to-image","en","license:other","diffusers:Flux2KleinPipeline","region:us"]
+- black-forest-labs/FLUX.2-klein-4B (Downloads: 180018)
+  Tags: ["diffusers","safetensors","text-to-image","image-editing","flux","diffusion-single-file","image-to-image","en","license:apache-2.0","diffusers:Flux2KleinPipeline","region:us"]
+- black-forest-labs/FLUX.2-dev (Downloads: 166388)
+  Tags: ["diffusers","safetensors","image-generation","image-editing","flux","diffusion-single-file","image-to-image","en","license:other","diffusers:Flux2Pipeline","region:us"]
+- Cordux/flux2-klein-4B-uncensored-text-encoder (Downloads: 1810)
+  Tags: ["gguf","qwen3","abliterated","uncensored","text-generation-inference","flux2","klein","base_model:huihui-ai/Qwen3-4B-abliterated","base_model:quantized:huihui-ai/Qwen3-4B-abliterated","license:apache-2.0","endpoints_compatible","region:us","conversational"]
+- unsloth/FLUX.2-klein-9B-GGUF (Downloads: 56468)
+  Tags: ["ggml","gguf","image-generation","unsloth","image-editing","flux","diffusion-single-file","image-to-image","en","base_model:black-forest-labs/FLUX.2-klein-9B","base_model:quantized:black-forest-labs/FLUX.2-klein-9B","license:other","region:us"]
+- black-forest-labs/FLUX.2-klein-base-9B (Downloads: 64833)
+  Tags: ["diffusers","safetensors","image-generation","image-editing","flux","diffusion-single-file","image-to-image","en","license:other","diffusers:Flux2KleinPipeline","region:us"]
+- wikeeyang/Flux2-Klein-9B-True-V1 (Downloads: 7867)
+  Tags: ["diffusers","gguf","text-to-image","en","zh","base_model:black-forest-labs/FLUX.2-klein-9B","base_model:finetune:black-forest-labs/FLUX.2-klein-9B","license:apache-2.0","region:us"]
+- unsloth/FLUX.2-klein-4B-GGUF (Downloads: 30915)
+  Tags: ["ggml","gguf","text-to-image","unsloth","image-editing","flux","diffusion-single-file","image-to-image","en","base_model:black-forest-labs/FLUX.2-klein-4B","base_model:quantized:black-forest-labs/FLUX.2-klein-4B","license:apache-2.0","region:us"]
+- CodeGoat24/FLUX.2-klein-base-9B-UnifiedReward-Flex-lora (Downloads: 350)
+  Tags: ["diffusers","text-to-image","arxiv:2602.02380","base_model:black-forest-labs/FLUX.2-klein-base-9B","base_model:finetune:black-forest-labs/FLUX.2-klein-base-9B","license:mit","region:us"]
+- alibaba-pai/FLUX.2-dev-Fun-Controlnet-Union (Downloads: 2142)
+  Tags: ["videox_fun","license:other","region:us"]
+- black-forest-labs/FLUX.2-klein-9b-fp8 (Downloads: 53327)
+  Tags: ["diffusers","image-generation","image-editing","flux","diffusion-single-file","image-to-image","en","license:other","region:us"]
+- GuangyuanSD/FLUX.2-klein-9B-Blitz-ComfyUI (Downloads: 772)
+  Tags: ["diffusers","safetensors","flux","klein","blitz","finetune","comfyui","flux2","base_model:black-forest-labs/FLUX.2-klein-9B","base_model:finetune:black-forest-labs/FLUX.2-klein-9B","diffusers:Flux2KleinPipeline","region:us"]
+- silveroxides/FLUX.2-dev-fp8_scaled (Downloads: 15580)
+  Tags: ["diffusion-single-file","image-generation","image-editing","flux","comfyui","fp8_scaled","image-to-image","en","base_model:black-forest-labs/FLUX.2-dev","base_model:finetune:black-forest-labs/FLUX.2-dev","license:other","region:us"]
+- fal/FLUX.2-dev-Turbo (Downloads: 21210)
+  Tags: ["diffusers","image-generation","flux","lora","distillation","turbo","text-to-image","en","base_model:black-forest-labs/FLUX.2-dev","base_model:adapter:black-forest-labs/FLUX.2-dev","license:other","region:us"]
+- cyrildiagne/flux2-klein9b-lora-mlsharp-3d-repair (Downloads: 0)
+  Tags: ["ml-sharp","flux","flux2","klein","mlsharp","camera","gaussian-splats","dataset:DL3DV/DL3DV-ALL-2K","base_model:black-forest-labs/FLUX.2-klein-base-9B","base_model:finetune:black-forest-labs/FLUX.2-klein-base-9B","license:cc-by-nc-4.0","region:us"]
+- nhathoangfoto/FLUX.2-klein-ghost-mannequin (Downloads: 499)
+  Tags: ["diffusers","flux","lora","adapter","text-to-image","ghost-mannequin","3d-effect","template:diffusion-lora","base_model:black-forest-labs/FLUX.2-klein-base-9B","base_model:adapter:black-forest-labs/FLUX.2-klein-base-9B","doi:10.57967/hf/7717","license:apache-2.0","region:us"]
+- black-forest-labs/FLUX.2-klein-base-4B (Downloads: 63920)
+  Tags: ["diffusers","safetensors","text-to-image","image-editing","flux","diffusion-single-file","image-to-image","en","license:apache-2.0","diffusers:Flux2KleinPipeline","region:us"]
+- black-forest-labs/FLUX.2-klein-base-9b-fp8 (Downloads: 32239)
+  Tags: ["diffusers","image-generation","image-editing","flux","diffusion-single-file","image-to-image","en","license:other","region:us"]
+- fal/flux-2-klein-4b-spritesheet-lora (Downloads: 0)
+  Tags: ["flux","flux-2-klein","flux-lora","lora","sprite-sheet","game-asset","2x2-grid","multi-view","isometric","top-down","side-view","image-to-image","fal-ai","template:diffusion-lora","en","base_model:black-forest-labs/FLUX.2-klein-4B","base_model:adapter:black-forest-labs/FLUX.2-klein-4B","license:apache-2.0","region:us"]
+- DeverStyle/Flux.2-Klein-Loras (Downloads: 1034)
+  Tags: ["diffusers","text-to-image","lora","template:diffusion-lora","base_model:black-forest-labs/FLUX.2-klein-9B","base_model:adapter:black-forest-labs/FLUX.2-klein-9B","license:apache-2.0","region:us"]

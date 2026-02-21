@@ -1,0 +1,40 @@
+[Header Test] black-forest-labs/FLUX.2-dev via fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev via replicate
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev via wavespeed
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev via together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev via auto
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev:fastest via fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev:fastest via replicate
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev:fastest via wavespeed
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev:fastest via together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Header Test] black-forest-labs/FLUX.2-dev:fastest via auto
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---

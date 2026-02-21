@@ -1,0 +1,15 @@
+[Test] Comfy-Org/flux2-dev
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Test] Comfy-Org/flux1-schnell
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Test] black-forest-labs/FLUX.1-schnell
+  -> Status: 200 OK
+---
+[Test] black-forest-labs/FLUX.1-dev
+  -> Status: 410 Gone
+  -> Error: {"error":"The requested model is deprecated and no longer supported by provider hf-inference"}
+---

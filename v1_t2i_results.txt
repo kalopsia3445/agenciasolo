@@ -1,0 +1,32 @@
+[V1 T2I Test] black-forest-labs/FLUX.1-schnell @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.1-schnell @ fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.1-schnell @ together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.1-schnell @ auto
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.2-dev @ hf-inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.2-dev @ fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.2-dev @ together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 T2I Test] black-forest-labs/FLUX.2-dev @ auto
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---

@@ -1,0 +1,40 @@
+[Suffix Test] URL: https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.2-dev:fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.2-dev:replicate
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.2-dev:together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.2-dev:wavespeed
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.2-dev:fastest
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/v1/models/black-forest-labs/FLUX.2-dev:fal-ai/text-to-image
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/v1/models/black-forest-labs/FLUX.2-dev:replicate/text-to-image
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/v1/models/black-forest-labs/FLUX.2-dev:together/text-to-image
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/v1/models/black-forest-labs/FLUX.2-dev:wavespeed/text-to-image
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Suffix Test] URL: https://router.huggingface.co/v1/models/black-forest-labs/FLUX.2-dev:fastest/text-to-image
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---

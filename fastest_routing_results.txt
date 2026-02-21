@@ -1,0 +1,12 @@
+[Fastest Test] black-forest-labs/FLUX.2-dev:fastest
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Fastest Test] black-forest-labs/FLUX.2-dev:cheapest
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Fastest Test] black-forest-labs/FLUX.2-dev
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---

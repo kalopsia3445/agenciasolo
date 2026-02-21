@@ -1,0 +1,16 @@
+[Info] Fetching AUTHENTICATED metadata for ideogram-ai/ideogram-3.0...
+  -> Failed: 404 Not Found
+  -> Response: {"error":"Repository not found"}
+----------------------------------------
+[Info] Fetching AUTHENTICATED metadata for recraft-ai/recraft-v3...
+  -> Failed: 404 Not Found
+  -> Response: {"error":"Repository not found"}
+----------------------------------------
+[Info] Fetching AUTHENTICATED metadata for black-forest-labs/FLUX.2-pro...
+  -> Failed: 404 Not Found
+  -> Response: {"error":"Repository not found"}
+----------------------------------------
+[Info] Fetching AUTHENTICATED metadata for black-forest-labs/FLUX.2-max...
+  -> Failed: 404 Not Found
+  -> Response: {"error":"Repository not found"}
+----------------------------------------

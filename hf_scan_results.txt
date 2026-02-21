@@ -1,0 +1,258 @@
+=== STARTING COMPREHENSIVE HF MODEL SCAN ===
+
+[Testing] Model: black-forest-labs/FLUX.1-schnell         | Endpoint: Router HF-Inference
+  -> Status: 200 OK
+  -> SUCCESS! Received 19664 bytes
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-schnell         | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-schnell         | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-dev             | Endpoint: Router HF-Inference
+  -> Status: 410 Gone
+  -> Error: The requested model is deprecated and no longer supported by provider hf-inference
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-dev             | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-dev             | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-pro             | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-pro             | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-pro             | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-dev             | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-dev             | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-dev             | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-9B        | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-9B        | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-9B        | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-4B        | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-4B        | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-4B        | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-9B   | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-9B   | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-9B   | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-4B   | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-4B   | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.2-klein-base-4B   | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4                    | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4                    | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4                    | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4-pro                | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4-pro                | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v4-pro                | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3-text-to-image      | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3-text-to-image      | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3-text-to-image      | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3                    | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3                    | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: recraft-ai/recraft-v3                    | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-3.0                 | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-3.0                 | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-3.0                 | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-2.0                 | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-2.0                 | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: ideogram-ai/ideogram-2.0                 | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large   | Endpoint: Router HF-Inference
+  -> Status: 400 Bad Request
+  -> Error: Bad Request: Your endpoint is in error, check its status on endpoints.huggingface.co
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large   | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large   | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large-turbo | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large-turbo | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-3.5-large-turbo | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-xl-base-1.0 | Endpoint: Router HF-Inference
+  -> Status: 200 OK
+  -> SUCCESS! Received 76889 bytes
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-xl-base-1.0 | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: stabilityai/stable-diffusion-xl-base-1.0 | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-pro-v1.1                     | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-pro-v1.1                     | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-pro-v1.1                     | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-dev                          | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-dev                          | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: fal-ai/flux-dev                          | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: togethercomputer/flux-pro                | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: togethercomputer/flux-pro                | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: togethercomputer/flux-pro                | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-schnell-diffusers | Endpoint: Router HF-Inference
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-schnell-diffusers | Endpoint: Router V1
+  -> Status: 404 Not Found
+  -> Error: Not Found
+--------------------------------------------------------------------------------
+[Testing] Model: black-forest-labs/FLUX.1-schnell-diffusers | Endpoint: Direct API (Internal)
+  -> Status: 410 Gone
+  -> Error: https://api-inference.huggingface.co is no longer supported. Please use https://router.huggingface.co instead.
+--------------------------------------------------------------------------------
+
+=== SCAN COMPLETE ===
+Total Successes: 2
+Time taken: 11.60s

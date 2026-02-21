@@ -1,0 +1,24 @@
+[Modern Router Test] text-to-image | black-forest-labs/FLUX.2-dev via fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Modern Router Test] images-generations | black-forest-labs/FLUX.2-dev via fal-ai
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Modern Router Test] text-to-image | black-forest-labs/FLUX.2-dev via together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Modern Router Test] images-generations | black-forest-labs/FLUX.2-dev via together
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Modern Router Test] text-to-image | black-forest-labs/FLUX.2-dev via replicate
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[Modern Router Test] images-generations | black-forest-labs/FLUX.2-dev via replicate
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---

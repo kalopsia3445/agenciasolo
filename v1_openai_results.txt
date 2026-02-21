@@ -1,0 +1,20 @@
+[V1 OpenAI Test] Model: black-forest-labs/FLUX.1-schnell
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 OpenAI Test] Model: black-forest-labs/FLUX.2-dev
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 OpenAI Test] Model: stabilityai/stable-diffusion-xl-base-1.0
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 OpenAI Test] Model: ideogram-ai/ideogram-3.0
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
+[V1 OpenAI Test] Model: recraft-ai/recraft-v3
+  -> Status: 404 Not Found
+  -> Error: Not Found
+---
