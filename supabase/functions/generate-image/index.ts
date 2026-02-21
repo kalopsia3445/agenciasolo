@@ -27,13 +27,13 @@ Deno.serve(async (req: Request) => {
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
-                pessoas: "black-forest-labs/FLUX.2-dev",           // 32B params, fotorealismo extremo
-                objetos: "black-forest-labs/FLUX.2-klein-4B",      // 4B params, rápido e eficiente via fal
-                abstrato: "black-forest-labs/FLUX.2-klein-base-9B",// 9B params, raw foundation p/ criatividade
-                texto: "black-forest-labs/FLUX.2-dev"              // 32B params, melhor aderência de texto
+                pessoas: "stabilityai/stable-diffusion-xl-base-1.0", // Fotorealismo SDXL estável
+                objetos: "black-forest-labs/FLUX.1-schnell",        // Velocidade e precisão
+                abstrato: "black-forest-labs/FLUX.1-schnell",       // Estilo moderno
+                texto: "black-forest-labs/FLUX.1-schnell"           // Texto legível (Schnell é capaz)
             };
 
-            let modelId = "black-forest-labs/FLUX.2-dev";  // Default
+            let modelId = "stabilityai/stable-diffusion-xl-base-1.0";  // Default
 
             if (visualSubject === 'texto') {
                 modelId = BEST_MODEL_BY_FOCUS["texto"];
