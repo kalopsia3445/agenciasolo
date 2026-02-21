@@ -37,40 +37,35 @@ export interface ImageGenOptions {
  * Carrega e VERIFICA se a fonte do Google Fonts está realmente disponível
  */
 export async function loadGoogleFont(fontName: string): Promise<void> {
+  console.log(`%c[v8.0 FontLoader] Requesting: ${fontName}`, "color: #007bff; font-weight: bold;");
   const family = fontName.replace(/ /g, "+");
   const id = `font-${family}`;
-  if (document.getElementById(id)) {
-    // Mesmo que já exista o link, garantimos que o browser a processou
-    await document.fonts.ready;
-    return;
+
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;900&display=swap`;
+    document.head.appendChild(link);
   }
 
-  const link = document.createElement("link");
-  link.id = id;
-  link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;900&display=swap`;
-  document.head.appendChild(link);
-
-  // Sistema de Verificação Hard (v7.0)
-  // Tentamos carregar por até 3 segundos
+  // v8.0 Strict verification loop
   const start = Date.now();
-  while (Date.now() - start < 3000) {
+  while (Date.now() - start < 5000) {
     try {
-      const isLoaded = await document.fonts.load(`900 10px "${fontName}"`);
+      await document.fonts.load(`900 10px "${fontName}"`);
       if (document.fonts.check(`900 10px "${fontName}"`)) {
-        console.log(`[FontLoader] ✅ Font ${fontName} verified and ready.`);
+        console.log(`%c[v8.0 FontLoader] ✅ SUCCESS: ${fontName} is ready for render.`, "color: #28a745; font-weight: bold;");
         return;
       }
-    } catch (e) {
-      // ignore and retry
-    }
+    } catch (e) { /* retry */ }
     await new Promise(r => setTimeout(r, 100));
   }
-  console.warn(`[FontLoader] ⚠️ Font ${fontName} load timeout. Using fallback.`);
+  console.error(`%c[v8.0 FontLoader] ❌ TIMEOUT for ${fontName}.`, "color: #dc3545; font-weight: bold;");
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // v4.0: Dynamic cleaner - removes HEX codes and redundant conjunctions
+  // v8.0: LOUD CONTEXT ENFORCEMENT
   const clean = (text: string) => {
     return text
       .replace(/#[a-fA-F0-9]{3,6}/g, '')
@@ -81,20 +76,21 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
       .trim();
   };
 
-  // v4.0: TRUST THE GROQ ANALYZED PROMPT COMPLETELY.
+  const niche = clean(opts.niche || '');
+  const style = clean(opts.visualStyle || '');
+  const colors = opts.colorPalette?.join(', ') || '';
+
+  // v8.0: Even if Groq gives a custom prompt, we PREPEND the niche and style context
+  // This prevents the AI from generating generic "clocks" or "cities" without branding.
+  const coreContext = `${niche} branding, ${style} style, ${colors}`.replace(/, ,/g, ',').trim();
+
   if (basePrompt && basePrompt.length > 5) {
-    return clean(basePrompt);
+    const customPrompt = clean(basePrompt);
+    return `${coreContext}: ${customPrompt}`;
   }
 
-  // Purely dynamic fallback using only brand kit fields (no hardcoded descriptors)
-  const style = clean(opts.visualStyle || '');
-  const colors = opts.colorPalette && opts.colorPalette.length > 0
-    ? `with colors ${opts.colorPalette.filter(c => c.length > 2).join(', ')}`
-    : '';
-  const niche = clean(opts.niche || '');
   const summary = clean(opts.inputSummary || '');
-
-  return `${summary}, ${niche}, ${style} style, ${colors}`.replace(/, ,/g, ',').trim();
+  return `${coreContext}: ${summary}`;
 }
 
 /**
@@ -244,20 +240,20 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
         startY += lineHeight;
       });
 
-      // BLOB FIX (v3.0): Convert to permanent dataURL to avoid garbage collection
+      // BLOB FIX (v8.0): Always convert to dataURL and log exhaustive metadata
       canvas.toBlob((blob) => {
         if (blob) {
           const reader = new FileReader();
           reader.onload = () => {
             const dataUrl = reader.result as string;
-            console.log(`[Canvas] UI Polish Render v5.0: Font=${selectedFont}, Format=dataURL`);
+            console.log(`%c[v8.0 RENDER] Finalizing slide with ${selectedFont}. Size: ${Math.round(dataUrl.length / 1024)}KB`, "background: #222; color: #bada55; padding: 4px;");
             resolve(dataUrl);
           };
           reader.readAsDataURL(blob);
         } else {
           reject(new Error("Canvas toBlob failed"));
         }
-      }, 'image/jpeg', 0.95);
+      }, 'image/jpeg', 0.9);
     };
 
     img.onerror = () => {

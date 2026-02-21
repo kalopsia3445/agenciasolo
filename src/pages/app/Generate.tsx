@@ -244,6 +244,11 @@ export default function Generate() {
               const suggestedFonts = (updatedScript.resultJson as any).suggestedFonts;
               let slideFont = slideDesign?.fontFamily || suggestedFonts?.display;
 
+              // v8.0: LOUD TELEMETRY
+              console.log(`%c[v8.0 PIPELINE] Processing Slide ${i}`, "background: #444; color: #fff; padding: 2px; font-weight: bold;");
+              console.log(`[v8.0] Base Prompt: ${slidePrompt.substring(0, 100)}...`);
+              console.log(`[v8.0] Selected Font Pre-Resolution: ${slideFont}`);
+
               // v6.0: CRITICAL FONT RESOLUTION LAYER
               // Resolves keywords 'display' | 'primary' | 'secondary' to actual Google Font names
               if (slideFont === 'display' && suggestedFonts?.display) slideFont = suggestedFonts.display;
@@ -251,6 +256,7 @@ export default function Generate() {
               else if (slideFont === 'secondary' && suggestedFonts?.secondary) slideFont = suggestedFonts.secondary;
 
               if (!slideFont || slideFont === 'display') slideFont = "Syne"; // Safety fallback
+              console.log(`%c[v8.0] Final Resolved Font: ${slideFont}`, "color: #ff9900; font-weight: bold;");
 
               const slideOpts: any = {
                 inputSummary: data.inputSummary,
