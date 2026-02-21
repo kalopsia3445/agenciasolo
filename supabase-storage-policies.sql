@@ -29,3 +29,7 @@ create policy "Users can upload own generated images"
 create policy "Users can delete own generated images"
   on storage.objects for delete
   using (bucket_id = 'generated_images' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can update own generated images"
+  on storage.objects for update
+  using (bucket_id = 'generated_images' and auth.uid()::text = (storage.foldername(name))[1]);
