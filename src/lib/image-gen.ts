@@ -34,12 +34,16 @@ export interface ImageGenOptions {
 }
 
 /**
- * Carrega fontes do Google Fonts dinamicamente
+ * Carrega e VERIFICA se a fonte do Google Fonts está realmente disponível
  */
 export async function loadGoogleFont(fontName: string): Promise<void> {
   const family = fontName.replace(/ /g, "+");
   const id = `font-${family}`;
-  if (document.getElementById(id)) return;
+  if (document.getElementById(id)) {
+    // Mesmo que já exista o link, garantimos que o browser a processou
+    await document.fonts.ready;
+    return;
+  }
 
   const link = document.createElement("link");
   link.id = id;
@@ -47,12 +51,22 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
   link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;900&display=swap`;
   document.head.appendChild(link);
 
-  try {
-    // Esperar um pouco para o browser registrar a fonte
-    await document.fonts.load(`bold 10px "${fontName}"`);
-  } catch (e) {
-    console.warn(`Could not load font ${fontName}, fallback to sans-serif`);
+  // Sistema de Verificação Hard (v7.0)
+  // Tentamos carregar por até 3 segundos
+  const start = Date.now();
+  while (Date.now() - start < 3000) {
+    try {
+      const isLoaded = await document.fonts.load(`900 10px "${fontName}"`);
+      if (document.fonts.check(`900 10px "${fontName}"`)) {
+        console.log(`[FontLoader] ✅ Font ${fontName} verified and ready.`);
+        return;
+      }
+    } catch (e) {
+      // ignore and retry
+    }
+    await new Promise(r => setTimeout(r, 100));
   }
+  console.warn(`[FontLoader] ⚠️ Font ${fontName} load timeout. Using fallback.`);
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
@@ -103,17 +117,9 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       // 1. Desenhar fundo
       ctx.drawImage(img, 0, 0);
 
-      // 2. Carregamento de Fonte e Configuração
+      // 2. Carregamento de Fonte e Configuração (v7.0)
       const selectedFont = opts.fontFamily || "Montserrat";
-
-      // Tentar garantir que a fonte está carregada (browser)
-      try {
-        await loadGoogleFont(selectedFont);
-        // CRITICAL FIX: Ensure font is REALLY loaded before drawing
-        await (document as any).fonts.load(`bold 64px "${selectedFont}"`);
-      } catch (e) {
-        console.warn("Font load timeout or failed, using fallback:", selectedFont);
-      }
+      await loadGoogleFont(selectedFont);
 
       const design = opts.overlayDesign || {
         fontSizeMultiplier: 1,
@@ -146,7 +152,8 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
 
       const setFont = (size: number) => {
-        ctx.font = `900 ${size}px "${selectedFont}", "Impact", sans-serif`;
+        // v7.0: REMOVED "Impact" fallback to prevent "Paint-style" look.
+        ctx.font = `900 ${size}px "${selectedFont}", "sans-serif"`;
         if ((ctx as any).letterSpacing !== undefined) {
           (ctx as any).letterSpacing = `${letterSpacing}px`;
         }

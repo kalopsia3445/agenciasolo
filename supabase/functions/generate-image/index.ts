@@ -32,9 +32,8 @@ Deno.serve(async (req: Request) => {
             const NEBIUS_API_KEY = Deno.env.get("NEBIUS_API_KEY");
             if (!NEBIUS_API_KEY) throw new Error("NEBIUS_API_KEY secret not found in Supabase");
 
-            const modelId = "black-forest-labs/flux-schnell";
-
-            console.log(`🚀 NEBIUS REQUEST v3.0.0 - Model: ${modelId}, Prompt: ${finalPrompt.substring(0, 50)}...`);
+            const modelId = "black-forest-labs/flux-dev";
+            console.log(`🚀 NEBIUS REQUEST v7.0.0 (Agency-Grade) - Model: ${modelId}, Prompt: ${finalPrompt.substring(0, 50)}...`);
 
             const response = await fetch("https://api.studio.nebius.ai/v1/images/generations", {
                 method: "POST",

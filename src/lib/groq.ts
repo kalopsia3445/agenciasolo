@@ -72,25 +72,23 @@ INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO CANVA PREMIUM):
    - strokeWidth: 0.5 a 1.5 (traço sutil para legibilidade).
    - opacity: 0.8 a 1.0.
 
-INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO CANVA PREMIUM):
-1. SELEÇÃO DE FONTES (MANDATÓRIO): Sugira 3 fontes Google Fonts EXTREMAMENTE PREMIUM.
-   - display: Fonte para Títulos/Hooks. Exemplos: 'Syne', 'Space Grotesk', 'Outfit', 'Bebas Neue', 'Playfair Display', 'Bungee'.
-   - primary: Fonte para legendas/corpo. Exemplos: 'Montserrat', 'Inter', 'Lora', 'Manrope'.
-   - secondary: Complementar. Exemplos: 'Libre Baskerville', 'Source Code Pro'.
-2. OVERLAY DESIGN (Personalizado por slide - CRIATIVIDADE MÁXIMA):
-   - fontFamily: Use o NOME REAL da fonte sugerida (Ex: "Syne"), NUNCA use as palavras "display" ou "primary".
-   - textEffect: "layered-shadow" (profundidade), "glow" (tecnologia), "outline" (minimalismo).
-   - letterSpacing: 0 a 5px (para display).
-   - fontSizeMultiplier: 0.8 a 1.2.
-   - textAlign: "left" | "center" | "right".
-   - yOffset: -0.4 (topo), 0 (meio), 0.4 (baixo).
+INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO AGÊNCIA ELITE):
+1. SELEÇÃO DE FONTES: Escolha fontes que transmitam autoridade e sofisticação.
+   - display: Títulos de alto impacto. (Syne, Space Grotesk, Bungee, Outfit).
+   - primary: Legibilidade perfeita. (Montserrat, Inter, Manrope).
+2. OVERLAY DESIGN (Personalizado por slide):
+   - fontFamily: NOME REAL da fonte (ex: "Syne").
+   - textEffect: "layered-shadow" para profundidade profissional.
+   - letterSpacing: 0 a 4px.
+   - yOffset: Varie o posicionamento para não cobrir o objeto principal da imagem.
 
-INSTRUÇÕES DE IMAGEM (V6.0 - CINEMATIC RICHNESS):
-Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'):
-1. ESCREVA EM INGLÊS.
-2. VARIEDADE TOTAL: Mude o ângulo da câmera (Extreme Close-up, Wide shot, Bird's eye view).
-3. CORES REAIS: Midnight Blue, Emerald Green, etc.
-4. ZERO PLACEHOLDERS.
+INSTRUÇÕES DE IMAGEM (V7.0 - AGENCY-GRADE QUALITY):
+Ao gerar 'imagePrompts', seja um diretor de arte:
+1. FOCO NO OBJETO: Descreva o objeto principal (ex: Máquina de cartão) como "Sleek, premium, high-tech hardware with matte finish".
+2. ILUMINAÇÃO: Use "Professional studio lighting, soft rim light, cinematic depth of field, 8k resolution".
+3. COMPOSIÇÃO: Varie entre "Macro close-up on keypad", "Commercial product photography", "Lifestyle action shot".
+4. CORES: Use nomes de cores de luxo (ex: Obsidian Black, Arctic White, Midnight Gold).
+5. ZERO DEFEITOS: Evite descrições genéricas. Seja específico sobre texturas e materiais.
 
 Gere EXATAMENTE ${numVariants} variação(ões).
 
