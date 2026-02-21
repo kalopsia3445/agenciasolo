@@ -14,13 +14,14 @@ export interface ImageGenOptions {
   visualSubject?: "pessoas" | "objetos" | "abstrato" | "texto"; // Updated type
   customVisualPrompt?: string;
   onProgress?: (index: number, progress: number) => void;
-  overlayDesign?: { // Added overlayDesign
+  overlayDesign?: {
     fontSizeMultiplier?: number;
     textAlign?: string;
     colorOverride?: string;
     yOffset?: number;
     styleType?: string;
   };
+  fontFamily?: string;
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
@@ -104,7 +105,7 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
     const img = new Image();
     const url = URL.createObjectURL(imageBlob);
 
-    img.onload = () => {
+    img.onload = async () => {
       URL.revokeObjectURL(url);
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -112,10 +113,19 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error("Could not get canvas context"));
 
-      // 1. Desenhar fundo (imagem IA)
+      // 1. Desenhar fundo
       ctx.drawImage(img, 0, 0);
 
-      // 2. Configurar estilo do texto e design
+      // 2. Carregamento de Fonte e Configuração
+      const selectedFont = opts.fontFamily || "Space Grotesk";
+
+      // Tentar garantir que a fonte está carregada (browser)
+      try {
+        await document.fonts.load(`bold 10px "${selectedFont}"`);
+      } catch (e) {
+        console.warn("Font load failed, using fallback:", selectedFont);
+      }
+
       const design = opts.overlayDesign || {
         fontSizeMultiplier: 1,
         textAlign: "center",
@@ -125,72 +135,75 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
 
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
 
-      // Shadow para garantir legibilidade extrema
-      ctx.shadowColor = "rgba(0,0,0,0.85)";
-      ctx.shadowBlur = 25;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
+      // Shadow Premium (Contraste Máximo)
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
 
-      // Estilo de Preenchimento
+      // Estilo de Preenchimento e Borda
       ctx.fillStyle = brandColor;
-
-      // Estilo de Borda (Universal High-Contrast)
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 6; // Borda mais grossa para "Premium Look"
       ctx.lineJoin = "round";
+      ctx.miterLimit = 2;
 
-      ctx.textAlign = design.textAlign as CanvasTextAlign;
+      ctx.textAlign = "center"; // Forçamos centralização horizontal por padrão para evitar overflow lateral
       ctx.textBaseline = "middle";
 
-      // Tamanho dinâmico e tipografia premium
-      const baseFontSize = Math.floor(canvas.width * 0.08);
-      const fontSize = Math.floor(baseFontSize * (design.fontSizeMultiplier || 1));
+      // 3. Sistema de Redimensionamento Automático (Auto-fit)
+      let fontSize = Math.floor(canvas.width * 0.085 * (design.fontSizeMultiplier || 1));
+      const maxWidth = canvas.width * 0.88;
+      const maxHeight = canvas.height * 0.7;
 
-      // Font Stack Premium (Prioriza Space Grotesk ou Montserrat se existirem, fallback p/ Impact/Inter)
-      ctx.font = `bold ${fontSize}px "Space Grotesk", "Montserrat", "Inter", "Impact", sans-serif`;
+      let lines: string[] = [];
+      const wrapText = (size: number) => {
+        ctx.font = `bold ${size}px "${selectedFont}", sans-serif`;
+        const words = text.split(" ");
+        const resLines = [];
+        let currentLine = "";
 
-      // 3. Quebra de linha inteligente
-      const words = text.split(" ");
-      const lines = [];
-      let currentLine = "";
-      const maxWidth = canvas.width * 0.85;
-
-      for (const word of words) {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && currentLine) {
-          lines.push(currentLine);
-          currentLine = word;
-        } else {
-          currentLine = testLine;
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && currentLine) {
+            resLines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
         }
-      }
-      lines.push(currentLine);
+        resLines.push(currentLine);
+        return resLines;
+      };
 
-      // 4. Desenhar linhas com posicionamento dinâmico (yOffset)
+      // Reduzir fonte se o bloco de texto ficar muito alto
+      lines = wrapText(fontSize);
+      while (lines.length * (fontSize * 1.2) > maxHeight && fontSize > 20) {
+        fontSize -= 5;
+        lines = wrapText(fontSize);
+      }
+
+      // 4. Desenhar com Centralização Matemática Absoluta
       const lineHeight = fontSize * 1.15;
       const totalHeight = lines.length * lineHeight;
 
-      // yOffset: -0.5 (topo) a 0.5 (base). 0 é o centro exato.
-      const verticalAdjustment = (design.yOffset || 0) * canvas.height;
+      // Centralização vertical + ajuste fino de yOffset
+      const verticalAdjustment = (design.yOffset || 0) * (canvas.height * 0.5);
       let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2) + verticalAdjustment;
 
-      // Ajuste de X baseado no Alinhamento
-      let x = canvas.width / 2;
-      if (design.textAlign === "left") x = canvas.width * 0.075;
-      if (design.textAlign === "right") x = canvas.width * 0.925;
+      const x = canvas.width / 2;
 
       lines.forEach(line => {
-        // Primeiro Stroke (Borda externa robusta)
+        // Renderização robusta (Borda -> Sombra -> Preenchimento)
         ctx.strokeText(line, x, startY);
-        // Depois o Fill (Cor vibrante da marca)
         ctx.fillText(line, x, startY);
         startY += lineHeight;
       });
 
       canvas.toBlob((blob) => {
         if (blob) {
-          console.log(`[Canvas] Premium Text Render: Style=${design.styleType}, Text=${text.substring(0, 20)}...`);
+          console.log(`[Canvas] Premium Render Successful: Font=${selectedFont}, Color=${brandColor}`);
           resolve(blob);
         } else {
           reject(new Error("Canvas toBlob failed"));

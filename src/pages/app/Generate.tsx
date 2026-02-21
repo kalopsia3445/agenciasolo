@@ -251,7 +251,8 @@ export default function Generate() {
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
-                overlayDesign: (variant as any).overlayDesigns?.[i] || (variant as any).overlayDesign
+                overlayDesign: (variant as any).overlayDesigns?.[i] || (variant as any).overlayDesign,
+                fontFamily: data.fontFamily
               }, i);
               urls.push(newImageUrl);
               errors.push(false);
@@ -289,7 +290,8 @@ export default function Generate() {
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
-                overlayDesign: (v as any).overlayDesign
+                overlayDesign: (v as any).overlayDesign,
+                fontFamily: data.fontFamily
               }, i);
               urls.push(newImageUrl);
               errors.push(false);
@@ -705,6 +707,31 @@ export default function Generate() {
               <FormMessage />
             </FormItem>
           )} />
+
+          {form.watch("visualSubject") === "texto" && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4">
+              <FormField control={form.control} name="fontFamily" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estilo da Fonte</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma fonte premium" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Space Grotesk">Space Grotesk (Moderna)</SelectItem>
+                      <SelectItem value="Montserrat">Montserrat (Geométrica)</SelectItem>
+                      <SelectItem value="Playfair Display">Playfair Display (Elegante)</SelectItem>
+                      <SelectItem value="Inter">Inter (Clean)</SelectItem>
+                      <SelectItem value="Bebas Neue">Bebas Neue (Impacto)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground italic">Dica: Use fontes de 'Impacto' ou 'Elegante' para destacar frases curtas.</p>
+                </FormItem>
+              )} />
+            </motion.div>
+          )}
 
           <FormField control={form.control} name="inputSummary" render={({ field }) => (
             <FormItem>
