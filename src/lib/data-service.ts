@@ -13,9 +13,17 @@ async function getUserId(): Promise<string | null> {
 export async function uploadImage(blob: Blob, path: string): Promise<string> {
   if (isDemoMode || !supabase) return URL.createObjectURL(blob);
 
+  const userId = await getUserId();
+  if (!userId) {
+    console.error("Upload error: User not authenticated");
+    return URL.createObjectURL(blob);
+  }
+
+  const finalPath = `${userId}/${path}`;
+
   const { data, error } = await supabase.storage
     .from("generated_images")
-    .upload(path, blob, {
+    .upload(finalPath, blob, {
       contentType: blob.type,
       upsert: true
     });

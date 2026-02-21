@@ -132,7 +132,7 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
     throw new Error(`HF Proxy Error (Non-Image): ${text}`);
   }
 
-  const path = `hf_${Date.now()}_${index}.png`;
+  const path = `hf_${Date.now()}_${index}.jpg`;
   const persistentUrl = await uploadImage(blob, path);
 
   onProgress?.(index, 100);
