@@ -119,10 +119,10 @@ ${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, conten
 
 13. hooks (APENAS PARA CARROSSEL): Array de 3 frases curtas e impactantes, uma para cada slide.
 
-13. selectedFonts (OBJETO GLOBAL): Sugira 3 fontes do Google Fonts que combinem perfeitamente com o estilo visual e tom da marca:
-    - display: Uma fonte impactante para títulos/hooks (ex: 'Norwester', 'Bebas Neue', 'Space Grotesk', 'Playfair Display').
-    - primary: Uma fonte legível para corpo de texto ou legendas (ex: 'Montserrat', 'Inter', 'Lora').
-    - secondary: Uma fonte complementar.
+13. selectedFonts (OBJETO GLOBAL): Sugira 3 fontes do Google Fonts EXTREMAMENTE PREMIUM que combinem perfeitamente com o estilo visual e tom da marca. EVITE fontes básicas como Roboto, Arial ou Open Sans.
+    - display: Uma fonte impactante e ÚNICA para títulos/hooks (ex: 'Norwester', 'Bebas Neue', 'Outfit', 'Syne', 'Playfair Display', 'Cormorant Garamond').
+    - primary: Uma fonte legível e moderna para legendas (ex: 'Montserrat', 'Inter', 'Lora', 'Manrope').
+    - secondary: Uma fonte complementar elegante (ex: 'Libre Baskerville', 'Source Code Pro').
 
 IMPORTANTE PARA VARIAÇÕES:
 Você deve gerar 3 variações que sejam VISUALMENTE E TEXTUALMENTE DIFERENTES. 

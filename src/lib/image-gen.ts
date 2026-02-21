@@ -78,12 +78,26 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   };
 
   if (opts.visualSubject === 'texto') {
-    const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'vibrant brand colors';
-    const styleContext = translate(opts.visualStyle || 'luxury minimalist');
-    const customPromptParam = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}` : '';
-    const hookContext = opts.hook ? translate(opts.hook.substring(0, 50)) : '';
+    // Brand Context (Crucial for non-hardcoded feel)
+    const brandStyle = opts.visualStyle || 'modern minimalist';
+    const brandColors = opts.colorPalette && opts.colorPalette.length > 0
+      ? `using a color palette of ${opts.colorPalette.join(', ')}`
+      : 'with vibrant professional colors';
 
-    return `Premium high-end marketing background, ultra-vibrant ${colorContext} palette, ${styleContext} aesthetic, abstract dynamic shapes, luxury lighting, cinematic bokeh, 8k resolution, artistic composition inspired by ${hookContext || 'modern graphics'}, no text, no words, clean background.`;
+    // Abstract variation based on index to avoid 3 identical images
+    const variations = [
+      "dynamic geometric composition",
+      "fluid organic shapes and gradients",
+      "minimalist glassmorphism and soft shadows"
+    ];
+    const variationIdx = (opts as any).index !== undefined ? (opts as any).index % variations.length : 0;
+    const styleVariation = variations[variationIdx];
+
+    const customPromptParam = opts.customVisualPrompt ? `, following this direction: ${translate(opts.customVisualPrompt)}` : '';
+    const hookContext = opts.hook ? `, inspired by the theme: "${translate(opts.hook.substring(0, 100))}"` : '';
+
+    // BUILD DYNAMIC PROMPT (No hardcodes!)
+    return `Clean professional high-end background, ${translate(brandStyle)} style, ${styleVariation}, ${brandColors}, luxury cinematic lighting, 8k resolution, artistic composition${hookContext}${customPromptParam}, absolute clean background, no text, no words, no characters.`;
   }
 
   const niche = translate(opts.niche);
@@ -327,7 +341,7 @@ export async function generateImagePipeline(
   };
 
   // Garantir prompt em Inglês e PERSONALIZADO com o roteiro
-  const prompt = buildImagePrompt(safeKit, _originalPrompt);
+  const prompt = buildImagePrompt({ ...safeKit, index } as any, _originalPrompt);
 
   // Pipeline Exclusiva: Inteligência de Modelos via Nebius AI Studio
   return await generateWithNebius(prompt, index, safeKit);

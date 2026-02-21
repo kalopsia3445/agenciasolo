@@ -11,7 +11,7 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { prompt: rawPrompt, provider, visualSubject, seed, colorPalette, visualStyle } = await req.json();
+        const { prompt: rawPrompt, provider, visualSubject, seed } = await req.json();
 
         if (!rawPrompt) {
             return new Response(JSON.stringify({ error: "Prompt is required" }), {
@@ -23,9 +23,10 @@ Deno.serve(async (req: Request) => {
         // --- BACKGROUND PROMPT ENGINE ---
         let finalPrompt = rawPrompt;
         if (visualSubject === 'texto') {
-            // Restore PREMIUM QUALITY prompt for Schnell
-            finalPrompt = `${rawPrompt}. Professional premium marketing background, ultra-high definition, 8k, cinematic lighting, vibrant artistic composition, abstract luxury shapes, bokeh depth of field, no text, no characters, no words, clean high-end backdrop.`;
-            console.log(`[Nebius] Background Engine: Premium Prompt for ${visualSubject}`);
+            // TRUST THE FRONTEND. The frontend now builds high-quality, brand-aligned prompts.
+            // We only add negative weights and technical quality markers here to ensure professional results.
+            finalPrompt = `${rawPrompt}, professional studio lighting, 8k resolution, clean backdrop, no text, no characters, no words, no signs.`;
+            console.log(`[Nebius] Background Engine: Preserved Brand-Kit Prompt for ${visualSubject}`);
         }
 
         // --- NEBIUS AI INTEGRATION ---
@@ -37,7 +38,7 @@ Deno.serve(async (req: Request) => {
                 pessoas: "black-forest-labs/flux-dev",
                 abstrato: "black-forest-labs/flux-dev",
                 objetos: "black-forest-labs/flux-schnell",
-                texto: "black-forest-labs/flux-schnell" // Reverted to Schnell for cost
+                texto: "black-forest-labs/flux-schnell"
             };
 
             const modelId = (visualSubject && NEBIUS_MODELS[visualSubject])
@@ -90,12 +91,10 @@ Deno.serve(async (req: Request) => {
                 },
             });
         }
-        // --- END NEBIUS AI INTEGRATION ---
 
         if (provider === "pollinations") {
-            console.log(`[Proxy] Chamando Pollinations...`);
             const pollSeed = Math.floor(Math.random() * 1000000);
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=800&height=1200&model=flux&seed=${pollSeed}&nologo=true`;
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=1024&model=flux&seed=${pollSeed}&nologo=true`;
 
             const response = await fetch(url);
             if (!response.ok) {
@@ -104,8 +103,6 @@ Deno.serve(async (req: Request) => {
             }
 
             const buffer = await response.arrayBuffer();
-            console.log(`[Proxy] Sucesso Pollinations! Buffer size: ${buffer.byteLength} bytes`);
-
             return new Response(buffer, {
                 headers: {
                     ...corsHeaders,
