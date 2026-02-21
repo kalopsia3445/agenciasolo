@@ -46,6 +46,11 @@ export const overlayDesignSchema = z.object({
   yOffset: z.number().optional().default(0), // -0.5 is top, 0.5 is bottom
   styleType: z.enum(["modern", "classic", "bold", "clean"]).optional().default("modern"),
   fontFamily: z.string().optional(),
+  shadowBlur: z.number().optional().default(8),
+  shadowOffsetX: z.number().optional().default(1),
+  shadowOffsetY: z.number().optional().default(1),
+  strokeWidth: z.number().optional().default(1.2),
+  opacity: z.number().optional().default(1),
 });
 export type OverlayDesign = z.infer<typeof overlayDesignSchema>;
 

@@ -40,8 +40,8 @@ Toda a autoridade e branding devem ser da Agência Solo e SoloReels.` : "";
 ${demoInstruction}
 
 IDIOMA OBRIGATÓRIO:
-Todo o texto retornado (títulos, roteiros, legendas, texto no vídeo, teleprompter) DEVE SER ESTRITAMENTE EM PORTUGUÊS BRASILEIRO (PT-BR). Nenhuma palavra em inglês nos textos voltados ao público.
-Apenas os campos de 'imagePrompt'/'imagePrompts' devem ser escritos em INGLÊS.
+Todo o texto retornado (títulos, roteiros, legendas, texto no vídeo, teleprompter) DEVE SER ESTRITAMENTE EM PORTUGUÊS BRASILEIRO (PT-BR).
+Apenas os campos de 'imagePrompt'/'imagePrompts' DEVEM ser escritos em INGLÊS.
 
 MARCA (PERSONALIZAÇÃO OBRIGATÓRIA):
 - Negócio: ${brandKit.businessName}
@@ -57,63 +57,45 @@ OBJETIVO: ${form.objective}
 RESUMO DO CONTEÚDO: ${form.inputSummary}
 
 INSTRUÇÕES DE ROTEIRO (ANTI-GENÉRICO):
-1. O conteúdo deve ser ESPECÍFICO para o Nicho "${brandKit.niche}". Evite dicas genéricas que servem para qualquer um.
-2. NUNCA inicie o roteiro com "Olá, eu sou [nome]" de forma genérica.
-3. Use a identidade "${brandKit.businessName}" e o nicho "${brandKit.niche}" de forma natural. Se o nicho for uma profissão (ex: Engenheira Florestal), fale diretamente como essa pessoa, sem se apresentar como "especialista" robótico.
-4. Mencione ou conecte com a Oferta "${brandKit.offer}" sutilmente se fizer sentido.
-5. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
+1. O conteúdo deve ser ESPECÍFICO para o Nicho "${brandKit.niche}".
+2. NUNCA inicie o roteiro com "Olá, eu sou [nome]".
+3. Use a identidade "${brandKit.businessName}" de forma natural.
 
-INSTRUÇÕES DE IMAGEM (V4.2 - CONCEPTUAL BRANDING):
+INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO CANVA PREMIUM):
+1. SELEÇÃO DE FONTES: Você DEVE sugerir 3 fontes Google Fonts EXTREMAMENTE PREMIUM (Display, Primary, Secondary). 
+   - Exemplos: 'Syne', 'Space Grotesk', 'Outfit', 'Bebas Neue', 'Playfair Display', 'Cormorant Garamond', 'Montserrat', 'Inter', 'Lora', 'Manrope'.
+2. OVERLAY DESIGN (Personalizado por slide):
+   - fontSizeMultiplier: 0.8 a 1.2
+   - textAlign: "left" | "center" | "right"
+   - yOffset: -0.4 (topo), 0 (meio), 0.4 (baixo).
+   - shadowBlur: 5 a 15 (sombra suave e profunda).
+   - strokeWidth: 0.5 a 1.5 (traço sutil para legibilidade).
+   - opacity: 0.8 a 1.0.
+
+INSTRUÇÕES DE IMAGEM (V5.0 - VISUAL RICHNESS):
 Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'):
 1. ESCREVA EM INGLÊS.
-2. TRADUÇÃO CONCEITUAL: Você DEVE traduzir termos técnicos ou regionais brasileiros baseando-se no NICHO e DETALHES DA MARCA. 
-   - Ex (Nicho Finanças): "Máquininha" -> "Sleek modern credit card payment terminal".
-   - Ex (Nicho Costura): "Máquininha" -> "vintage sewing machine".
-   NUNCA use termos em português ou nomes de marcas específicas no prompt. Descreva o OBJETO.
-3. USE NOMES DE CORES REAIS: (Ex: "Midnight Blue", "Emerald Green"). NÃO use códigos HEX. 
-4. DESCRIÇÃO NATURAL: Crie um parágrafo fluido e descritivo. Evite "High quality image of [scene]". Vá direto ao ponto de forma cinematográfica.
-5. ZERO PLACEHOLDERS: Se você não tiver uma cor ou detalhe, simplesmente não mencione. NUNCA deixe espaços vazios ou "and and" no prompt.
+2. VARIEDADE TOTAL: Cada imagem de um carrossel DEVE descrever uma cena, composição ou ângulo COMPLETAMENTE diferente (Ex: Slide 1: Close-up extremo, Slide 2: Cena de ação no escritório, Slide 3: Mockup 3D minimalista).
+3. CORES REAIS: Converta os HEX da marca para nomes de cores (ex: "Midnight Blue").
+4. ZERO PLACEHOLDERS: Descrição fluida e cinematográfica. NUNCA use templates rígidos.
 
 Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo.
 
 ${imageInstruction}
 
 CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
-1. title: Título da variação.
-2. hook: Gancho de impacto específico para ${brandKit.targetAudience}.
-3. script: Roteiro completo.
-4. teleprompterText: Texto limpo para leitura.
-5. shotList: ARRAY DE STRINGS com instruções de filmagem.
-6. cta: Chamada para ação forte e direta.
-7. captionShort: Legenda curta.
-8. captionLong: Legenda completa com quebras de linha.
-9. hashtags: ARRAY DE STRINGS com 5-10 hashtags.
-10. disclaimer: String de aviso ou vazia "".
-11. ${isCarousel ? "imagePrompts: ARRAY DE 3 STRINGS (prompts em INGLÊS descritivo, contendo as cores e estilo visual da marca)." : "imagePrompt: Prompt em INGLÊS descritivo, contendo as cores e estilo visual da marca."}
-12. overlayDesign: Objeto JSON com:
-    - fontSizeMultiplier: número (0.8 a 1.2)
-    - textAlign: "left" | "center" | "right"
-    - colorOverride: string (hexadecimal de uma das cores da marca, opcional)
-    - yOffset: número (-0.4 sugerido para topo, 0 para meio, 0.4 para baixo)
-    - fontFamily: Nome de uma das fontes sugeridas abaixo (ex: o valor de selectedFonts.display)
-    - colorOverride: String hex opcional
-
-13. hooks (APENAS PARA CARROSSEL): Array de 3 frases curtas e impactantes, uma para cada slide.
-
-13. selectedFonts (OBJETO GLOBAL): Sugira 3 fontes do Google Fonts EXTREMAMENTE PREMIUM que combinem perfeitamente com o estilo visual e tom da marca. EVITE fontes básicas como Roboto, Arial ou Open Sans.
-    - display: Uma fonte impactante e ÚNICA para títulos/hooks (ex: 'Norwester', 'Bebas Neue', 'Outfit', 'Syne', 'Playfair Display', 'Cormorant Garamond').
-    - primary: Uma fonte legível e moderna para legendas (ex: 'Montserrat', 'Inter', 'Lora', 'Manrope').
-    - secondary: Uma fonte complementar elegante (ex: 'Libre Baskerville', 'Source Code Pro').
+1. title, hook, script, teleprompterText, shotList, cta, captionShort, captionLong, hashtags, disclaimer.
+2. ${isCarousel ? "imagePrompts: ARRAY DE 3 STRINGS (Prompts COMPLETAMENTE DIFERENTES entre si, em INGLÊS descritivo)." : "imagePrompt: Prompt em INGLÊS descritivo."}
+3. ${isCarousel ? "overlayDesigns: ARRAY DE 3 OBJETOS JSON (com shadowBlur, strokeWidth, yOffset, fontFamily dinâmico)." : "overlayDesign: Objeto JSON único."}
+4. hooks (APENAS CARROSSEL): Array de 3 frases curtas e impactantes.
+5. selectedFonts (OBJETO GLOBAL): display, primary, secondary.
 
 IMPORTANTE PARA VARIAÇÕES:
-Você deve gerar 3 variações que sejam VISUALMENTE E TEXTUALMENTE DIFERENTES. 
-- Cada 'hook' deve abordar um ângulo diferente do problema.
-- Cada 'imagePrompt' deve descrever um cenário ou composição diferente, mantendo o estilo da marca.
-- Varie os valores de 'overlayDesign' para que nem todas as imagens tenham o texto no mesmo lugar.
-- O 'fontFamily' em 'overlayDesign' deve ser dinâmico! Use a fonte 'display' para hooks curtos e 'primary' para frases mais longas.
+- O 'fontFamily' em 'overlayDesign' DEVE variar entre 'display' e 'primary' conforme a força do texto.
+- Varie os valores de design (yOffset, textAlign) em cada slide para evitar monotonia.
 
-Responda APENAS com JSON válido no formato:
-{"variants": [{ "title": "...", "hook": "...", "hooks": ["...", "...", "..."], ... }, { ... }, { ... }], "suggestedFonts": { "display": "...", "primary": "...", "secondary": "..." }}`;
+Responda APENAS com JSON válido:
+{"variants": [{ ... }], "suggestedFonts": { ... }}`;
 }
 
 // Chamada via Supabase Edge Function (produção)

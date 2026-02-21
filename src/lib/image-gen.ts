@@ -19,6 +19,11 @@ export interface ImageGenOptions {
     textAlign?: string;
     colorOverride?: string;
     yOffset?: number;
+    shadowBlur?: number;
+    shadowOffsetX?: number;
+    shadowOffsetY?: number;
+    strokeWidth?: number;
+    opacity?: number;
   };
   fontFamily?: string;
   baseBlob?: Blob;
@@ -113,32 +118,43 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
         textAlign: "center",
       };
 
-      // Shadow Polish (V3.0: Sharper and Cleaner)
-      ctx.shadowColor = "rgba(0,0,0,0.85)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
+      // 2. Configurações Estéticas AI-Driven (v5.0)
+      const shadowBlur = design.shadowBlur ?? 8;
+      const shadowColor = "rgba(0,0,0,0.8)";
+      const shadowOffsetX = design.shadowOffsetX ?? 1;
+      const shadowOffsetY = design.shadowOffsetY ?? 1;
+      const strokeWidth = design.strokeWidth ?? 1.2;
+      const opacity = design.opacity ?? 1;
+
+      ctx.shadowColor = shadowColor;
+      ctx.shadowBlur = shadowBlur;
+      ctx.shadowOffsetX = shadowOffsetX;
+      ctx.shadowOffsetY = shadowOffsetY;
 
       // Estilo de Preenchimento e Borda
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
+      ctx.globalAlpha = opacity;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.2; // Sharper white border
+      ctx.lineWidth = strokeWidth;
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 
-      ctx.textAlign = "center";
+      ctx.textAlign = (design.textAlign as CanvasTextAlign) || "center";
       ctx.textBaseline = "middle";
-      ctx.font = `bold ${Math.floor(canvas.width * 0.08)}px "${selectedFont}", "Inter", sans-serif`;
+
+      // Tipografia Dinâmica
+      const fontSizeBase = Math.floor(canvas.width * 0.08);
+      let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
+      ctx.font = `900 ${fontSize}px "${selectedFont}", "Helvetica", sans-serif`;
 
       // 3. Sistema de Redimensionamento Automático (Auto-fit)
-      let fontSize = Math.floor(canvas.width * 0.08 * (design.fontSizeMultiplier || 1));
       const maxWidth = canvas.width * 0.9;
       const maxHeight = canvas.height * 0.7;
 
       let lines: string[] = [];
       const wrapText = (size: number) => {
-        ctx.font = `bold ${size}px "${selectedFont}", "Inter", sans-serif`;
+        ctx.font = `900 ${size}px "${selectedFont}", "Helvetica", sans-serif`;
         const words = text.split(" ");
         const resLines = [];
         let currentLine = "";
@@ -163,18 +179,21 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
         lines = wrapText(fontSize);
       }
 
-      // 4. Desenhar com Centralização Absoluta
-      const lineHeight = fontSize * 1.15;
+      // 4. Desenhar com Posicionamento Dinâmico
+      const lineHeight = fontSize * 1.1;
       const totalHeight = lines.length * lineHeight;
 
-      // Centralização vertical + ajuste fino de yOffset
-      const verticalAdjustment = (design.yOffset || 0) * (canvas.height * 0.4);
-      let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2) + verticalAdjustment;
+      // Vertical offset: design.yOffset varies from -0.5 (top) to 0.5 (bottom)
+      const yOffsetValue = (design.yOffset || 0) * (canvas.height * 0.8);
+      let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2) + yOffsetValue;
 
-      const x = canvas.width / 2;
+      // Horizontal position based on textAlign
+      let x = canvas.width / 2;
+      if (design.textAlign === "left") x = canvas.width * 0.05;
+      else if (design.textAlign === "right") x = canvas.width * 0.95;
 
       lines.forEach(line => {
-        // Renderização robusta (Borda -> Sombra -> Preenchimento)
+        // Renderização Premium: Stroke sutil -> Sombra -> Fill
         ctx.strokeText(line, x, startY);
         ctx.fillText(line, x, startY);
         startY += lineHeight;

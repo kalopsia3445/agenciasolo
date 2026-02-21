@@ -232,57 +232,44 @@ export default function Generate() {
           const variant = updatedScript.resultJson.variants[0];
           const prompts = variant.imagePrompts || [variant.imagePrompt || ""];
           const urls: string[] = [];
-          const errors: boolean[] = [];
 
-          try {
-            // v3.0 OPTIMIZATION: Generate 1 background for all slides
-            const firstPrompt = prompts[0];
-            const baseGenOpts: any = {
-              inputSummary: data.inputSummary,
-              niche: brandKit.niche,
-              format: data.format,
-              objective: data.objective,
-              businessName: brandKit.businessName,
-              visualStyle: brandKit.visualStyleDescription,
-              targetAudience: brandKit.targetAudience,
-              colorPalette: brandKit.colorPalette,
-              toneAdjectives: brandKit.toneAdjectives,
-              visualSubject: data.visualSubject,
-              customVisualPrompt: data.customVisualPrompt,
-              skipOverlay: true, // Clean background
-              skipUpload: true,  // Temporary
-            };
-
-            const backgroundResult = await generateImage(firstPrompt, undefined, baseGenOpts, 0);
-            const backgroundBlob = backgroundResult as Blob;
-
-            for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < 3; i++) {
+            try {
+              if (i > 0) await new Promise(r => setTimeout(r, 2000));
               setImageProgress(prev => { const n = [...prev]; n[i] = 10; return n; });
+
+              const slidePrompt = prompts[i] || prompts[0];
               const slideHook = variant.hooks?.[i] || variant.hook;
               const slideDesign = variant.overlayDesigns?.[i] || variant.overlayDesign;
-              const slideFont = data.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display;
+              const slideFont = slideDesign?.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display;
 
               const slideOpts: any = {
-                ...baseGenOpts,
+                inputSummary: data.inputSummary,
+                niche: brandKit.niche,
+                format: data.format,
+                objective: data.objective,
+                businessName: brandKit.businessName,
+                visualStyle: brandKit.visualStyleDescription,
+                targetAudience: brandKit.targetAudience,
+                colorPalette: brandKit.colorPalette,
+                toneAdjectives: brandKit.toneAdjectives,
+                visualSubject: data.visualSubject,
+                customVisualPrompt: data.customVisualPrompt,
                 hook: slideHook,
                 overlayDesign: slideDesign,
                 fontFamily: slideFont,
-                skipOverlay: false,
-                skipUpload: false,
               };
 
-              // Re-run the pipeline with the existing background
-              const res = await applyTextOverlay(backgroundBlob, slideHook, slideOpts);
+              const res = await generateImage(slidePrompt, undefined, slideOpts, i);
               const path = `carousel_${Date.now()}_${i}.jpg`;
               const finalUrl = await uploadImage(res as Blob, path);
 
               urls.push(finalUrl);
-              errors.push(false);
-              setImageProgress(prev => { const n = [...prev]; n[i] = 100; return n; });
               setImageUrls([...urls]);
+              setImageProgress(prev => { const n = [...prev]; n[i] = 100; return n; });
+            } catch (err) {
+              console.error(`Slide ${i} generation failed:`, err);
             }
-          } catch (err) {
-            console.error(`Carousel generation v3.0 failed:`, err);
           }
           variant.imageUrls = urls;
           variant.imageUrl = urls[0];
