@@ -22,7 +22,9 @@ export interface ImageGenOptions {
     styleType?: string;
   };
   fontFamily?: string;
-  baseBlob?: Blob; // New: To reuse an existing background
+  baseBlob?: Blob;
+  skipUpload?: boolean; // New: To return the blob instead of uploading
+  skipOverlay?: boolean; // New: To bypass text overlay
 }
 
 /**
@@ -152,21 +154,19 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       const design = opts.overlayDesign || {
         fontSizeMultiplier: 1,
         textAlign: "center",
-        yOffset: 0,
-        styleType: "modern"
       };
+      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
 
       // Shadow Sutil conforme pedido (contrastante mas não pesada)
-      ctx.shadowColor = "rgba(0,0,0,0.6)";
-      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 8;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
       // Estilo de Preenchimento e Borda
-      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.8; // Borda sutil de destaque
+      ctx.lineWidth = 1.5; // Borda sutil de destaque
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 
@@ -241,8 +241,8 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
 }
 
 // 1. NEBIUS AI STUDIO (Proxy via Supabase)
-async function generateWithNebius(prompt: string, index: number, opts: ImageGenOptions): Promise<string> {
-  const { visualSubject, onProgress } = opts;
+async function generateWithNebius(prompt: string, index: number, opts: ImageGenOptions): Promise<string | Blob> {
+  const { visualSubject, onProgress, skipUpload, skipOverlay } = opts;
   console.log(`🚀 NEBIUS REQUEST ${index} (Proxy):`, prompt);
 
   if (!import.meta.env.VITE_SUPABASE_URL) {
@@ -283,18 +283,8 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
     usedModel = response.headers.get("X-Used-Model") || usedModel;
   }
 
-  console.log(`
-  =========================================
-  🎨 GERADORA DE IMAGEM INICIADA (NEBIUS)
-  👉 Model Usado: ${usedModel}
-  👉 Foco Visual: ${visualSubject || "Não especificado (Genérico)"}
-  =========================================
-  `);
-
-  console.log(`[Frontend] Nebius Studio Success:`, blob.type, blob.size, "bytes");
-
-  // APLICAR OVERLAY SE FOR FOCO EM TEXTO
-  if (visualSubject === 'texto') {
+  // APLICAR OVERLAY SE FOR FOCO EM TEXTO (E NÃO SKIPPADO)
+  if (visualSubject === 'texto' && !skipOverlay) {
     try {
       const textToShow = opts.hook || 'Solo Reels';
       console.log(`[Frontend] Applying text overlay: "${textToShow}"`);
@@ -303,6 +293,11 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
     } catch (e) {
       console.warn("Falha ao aplicar overlay de texto:", e);
     }
+  }
+
+  if (skipUpload) {
+    console.log(`[ImageGen] skipUpload is true, returning blob.`);
+    return blob;
   }
 
   if (!blob.type.startsWith('image/')) {
@@ -317,12 +312,11 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
   return persistentUrl;
 }
 
-
 export async function generateImagePipeline(
   _originalPrompt: string,
   kit: ImageGenOptions | undefined,
   index: number = 0
-): Promise<string> {
+): Promise<string | Blob> {
   const safeKit = kit || {
     niche: 'business',
     visualStyle: 'professional',
@@ -346,14 +340,14 @@ export async function generateImage(
   _apiKey?: string,
   opts?: ImageGenOptions,
   index: number = 0
-): Promise<string> {
+): Promise<string | Blob> {
   return generateImagePipeline(prompt, opts, index);
 }
 
 export async function regenerateImage(
   prompt: string,
   apiKey: string
-): Promise<string> {
+): Promise<string | Blob> {
   const variedPrompt = `${prompt} variation ${Math.floor(Math.random() * 1000)}`;
   return generateImage(variedPrompt, apiKey);
 }

@@ -227,23 +227,35 @@ export default function Generate() {
         updatedScript.resultJson = { ...updatedScript.resultJson, variants: [...updatedScript.resultJson.variants] };
 
         let baseBlob: Blob | undefined = undefined;
+        const isTexto = data.visualSubject === "texto";
 
         if (data.format === "carousel") {
-          // Processamento para Carrossel (1 variant, 3 images)
           const variant = updatedScript.resultJson.variants[0];
           const prompts = variant.imagePrompts || [variant.imagePrompt || ""];
           const urls: string[] = [];
           const errors: boolean[] = [];
 
+          // 1. Gerar FUNDO LIMPO se for texto
+          if (isTexto) {
+            try {
+              console.log("[Orchestration] Generating clean background for Carousel...");
+              const raw = await generateImage(prompts[0], undefined, {
+                ...brandKit,
+                visualSubject: data.visualSubject,
+                skipOverlay: true,
+                skipUpload: true
+              });
+              baseBlob = raw as Blob;
+            } catch (e) {
+              console.error("Failed to generate base background:", e);
+            }
+          }
+
           for (let i = 0; i < 3; i++) {
             try {
-              if (i > 0) await new Promise(r => setTimeout(r, 2000));
+              if (i > 0 && !baseBlob) await new Promise(r => setTimeout(r, 2000));
               const prompt = prompts[i] || prompts[0];
 
-              // Se for texto, tentamos reusar o fundo da primeira geração
-              const isTexto = data.visualSubject === "texto";
-
-              // Helper para pegar o blob se estivermos em 'texto' e for a primeira vez
               const genOpts: any = {
                 hook: variant.hook,
                 inputSummary: data.inputSummary,
@@ -260,18 +272,11 @@ export default function Generate() {
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: variant.overlayDesigns?.[i] || variant.overlayDesign,
                 fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
-                baseBlob: (i > 0 && isTexto) ? baseBlob : undefined
+                baseBlob: isTexto ? baseBlob : undefined
               };
 
-              const newImageUrl = await generateImage(prompt, undefined, genOpts, i);
-
-              // Se for a primeira imagem e for texto, vamos baixar esse fundo para as próximas se o Nebius gerou um
-              // NOTE: generateImage retorna URL. Para reusar o BLOB sem baixar de novo, precisariamos que ela retornasse o blob.
-              // Otimização rápida: Se i=0 e isTexto, fazemos um fetch rápido do que acabamos de subir.
-              if (i === 0 && isTexto && !baseBlob) {
-                const res = await fetch(newImageUrl);
-                baseBlob = await res.blob();
-              }
+              const res = await generateImage(prompt, undefined, genOpts, i);
+              const newImageUrl = typeof res === 'string' ? res : URL.createObjectURL(res);
 
               urls.push(newImageUrl);
               errors.push(false);
@@ -288,15 +293,31 @@ export default function Generate() {
           setResult(updatedScript);
           await saveScript(updatedScript);
         } else {
-          // Processamento para Stories (3 variants, 1 image each)
+          // STORIES (3 variants)
+          // 1. Gerar FUNDO LIMPO se for texto
+          if (isTexto) {
+            try {
+              console.log("[Orchestration] Generating clean background for Stories...");
+              const firstPrompt = aiResponse.variants[0].imagePrompt || "";
+              const raw = await generateImage(firstPrompt, undefined, {
+                ...brandKit,
+                visualSubject: data.visualSubject,
+                skipOverlay: true,
+                skipUpload: true
+              });
+              baseBlob = raw as Blob;
+            } catch (e) {
+              console.error("Failed to generate base background:", e);
+            }
+          }
+
           const urls: string[] = [];
           const errors: boolean[] = [];
           for (let i = 0; i < aiResponse.variants.length; i++) {
             const v = aiResponse.variants[i];
             try {
-              if (i > 0) await new Promise(r => setTimeout(r, 2000));
+              if (i > 0 && !baseBlob) await new Promise(r => setTimeout(r, 2000));
 
-              const isTexto = data.visualSubject === "texto";
               const genOpts: any = {
                 hook: v.hook,
                 inputSummary: data.inputSummary,
@@ -313,15 +334,11 @@ export default function Generate() {
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: (v as any).overlayDesign,
                 fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
-                baseBlob: (i > 0 && isTexto) ? baseBlob : undefined
+                baseBlob: isTexto ? baseBlob : undefined
               };
 
-              const newImageUrl = await generateImage(v.imagePrompt, undefined, genOpts, i);
-
-              if (i === 0 && isTexto && !baseBlob) {
-                const res = await fetch(newImageUrl);
-                baseBlob = await res.blob();
-              }
+              const res = await generateImage(v.imagePrompt || "", undefined, genOpts, i);
+              const newImageUrl = typeof res === 'string' ? res : URL.createObjectURL(res);
 
               urls.push(newImageUrl);
               errors.push(false);
@@ -739,30 +756,6 @@ export default function Generate() {
             </FormItem>
           )} />
 
-          {form.watch("visualSubject") === "texto" && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4">
-              <FormField control={form.control} name="fontFamily" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estilo da Fonte</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma fonte premium" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Space Grotesk">Space Grotesk (Moderna)</SelectItem>
-                      <SelectItem value="Montserrat">Montserrat (Geométrica)</SelectItem>
-                      <SelectItem value="Playfair Display">Playfair Display (Elegante)</SelectItem>
-                      <SelectItem value="Inter">Inter (Clean)</SelectItem>
-                      <SelectItem value="Bebas Neue">Bebas Neue (Impacto)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-muted-foreground italic">Dica: Use fontes de 'Impacto' ou 'Elegante' para destacar frases curtas.</p>
-                </FormItem>
-              )} />
-            </motion.div>
-          )}
 
           <FormField control={form.control} name="inputSummary" render={({ field }) => (
             <FormItem>
