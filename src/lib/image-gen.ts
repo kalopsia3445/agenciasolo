@@ -109,14 +109,22 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       ctx.drawImage(img, 0, 0);
 
       // 2. Configurar estilo do texto
-      const color = opts.colorPalette?.[0] || "#ffffff";
-      // Shadow para garantir legibilidade
-      ctx.shadowColor = "rgba(0,0,0,0.7)";
-      ctx.shadowBlur = 15;
-      ctx.shadowOffsetX = 5;
-      ctx.shadowOffsetY = 5;
+      const brandColor = opts.colorPalette?.[0] || "#ffffff";
 
-      ctx.fillStyle = color;
+      // Shadow para garantir legibilidade extrema
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+
+      // Estilo de Preenchimento (Cor do Cliente)
+      ctx.fillStyle = brandColor;
+
+      // Estilo de Borda (Branco Universal para contraste)
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
@@ -148,6 +156,9 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2);
 
       lines.forEach(line => {
+        // Primeiro o Stroke para criar a borda externa
+        ctx.strokeText(line, canvas.width / 2, startY);
+        // Depois o Fill para preencher com a cor do cliente
         ctx.fillText(line, canvas.width / 2, startY);
         startY += lineHeight;
       });
@@ -184,7 +195,14 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ prompt, provider: "nebius", visualSubject, seed: Date.now() + index }),
+    body: JSON.stringify({
+      prompt,
+      provider: "nebius",
+      visualSubject,
+      seed: Date.now() + index,
+      colorPalette: opts.colorPalette,
+      visualStyle: opts.visualStyle
+    }),
   });
 
   if (!response.ok) {

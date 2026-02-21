@@ -11,18 +11,30 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { prompt, provider, visualSubject, seed } = await req.json();
+        const { prompt: rawPrompt, provider, visualSubject, seed, colorPalette, visualStyle } = await req.json();
 
-        if (!prompt) {
+        if (!rawPrompt) {
             return new Response(JSON.stringify({ error: "Prompt is required" }), {
                 status: 400,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
+        // --- BACKGROUND PROMPT ENGINE ---
+        let finalPrompt = rawPrompt;
+        if (visualSubject === 'texto') {
+            const colors = colorPalette && Array.isArray(colorPalette) ? colorPalette.join(" and ") : "modern professional colors";
+            const style = visualStyle || "minimalist clean aesthetic";
+
+            // Build a strict background-only prompt. 
+            // We ignore the rawPrompt (which might contain the hook/text) to avoid AI artifacts.
+            finalPrompt = `High-end professional marketing background, clean minimalist aesthetic, perfect for text overlay, high contrast, colors: ${colors}, style: ${style}, atmospheric lighting, 1024x1024, highly detailed, cinematic texture, no text, no letters, no words, clean background.`;
+            console.log(`[Nebius] Background Engine Active! Override Prompt for ${visualSubject}`);
+        }
+
         // --- NEBIUS AI INTEGRATION ---
         if (provider === "nebius") {
-            console.log(`[Nebius] Request - Focus: ${visualSubject || 'generic'}, Prompt: ${prompt.substring(0, 50)}...`);
+            console.log(`[Nebius] Request - Focus: ${visualSubject || 'generic'}, Prompt: ${finalPrompt.substring(0, 50)}...`);
 
             const NEBIUS_API_KEY = Deno.env.get("NEBIUS_API_KEY");
             if (!NEBIUS_API_KEY) throw new Error("NEBIUS_API_KEY secret not found in Supabase");
@@ -49,7 +61,7 @@ Deno.serve(async (req: Request) => {
                 },
                 body: JSON.stringify({
                     model: modelId,
-                    prompt: prompt,
+                    prompt: finalPrompt,
                     n: 1,
                     size: "1024x1024",
                     response_format: "b64_json",
@@ -89,8 +101,8 @@ Deno.serve(async (req: Request) => {
 
         if (provider === "pollinations") {
             console.log(`[Proxy] Chamando Pollinations...`);
-            const seed = Math.floor(Math.random() * 1000000);
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
+            const pollSeed = Math.floor(Math.random() * 1000000);
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=800&height=1200&model=flux&seed=${pollSeed}&nologo=true`;
 
             const response = await fetch(url);
             if (!response.ok) {
