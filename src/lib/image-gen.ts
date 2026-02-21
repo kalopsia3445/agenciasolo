@@ -40,7 +40,7 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
   const family = fontName.replace(/ /g, "+");
   const id = `font-${family}`;
 
-  console.log(`%c[v10.0 FontManager] 🚀 Initiating Elite Load: ${fontName}`, "color: #ff00ff; font-weight: bold; text-transform: uppercase;");
+  console.log(`%c[v10.1 FontManager] 🚀 Universal Agency Load: ${fontName}`, "color: #00bcd4; font-weight: bold;");
 
   if (!document.getElementById(id)) {
     const link = document.createElement("link");
@@ -50,18 +50,18 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
     document.head.appendChild(link);
   }
 
-  // v10.0: HIDDEN FORCE-RENDER (Ensures the browser paints the glyphs before Canvas)
+  // v10.1: HIDDEN FORCE-RENDER (Ensures the browser paints the glyphs before Canvas)
   let forceDiv = document.getElementById('font-force-paint');
   if (!forceDiv) {
     forceDiv = document.createElement('div');
     forceDiv.id = 'font-force-paint';
     forceDiv.style.position = 'absolute';
     forceDiv.style.left = '-9999px';
-    forceDiv.style.top = '-9999px';
+    forceDiv.style.top = '-1999px';
     forceDiv.style.visibility = 'hidden';
     document.body.appendChild(forceDiv);
   }
-  forceDiv.innerHTML += `<span style="font-family: '${fontName}'; font-weight: 900;">FORCE</span>`;
+  forceDiv.innerHTML += `<span style="font-family: '${fontName}'; font-weight: 900;">PAINT</span>`;
 
   const start = Date.now();
   const weights = ["900", "800", "700"];
@@ -71,7 +71,7 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
       try {
         await document.fonts.load(`${w} 10px "${fontName}"`);
         if (document.fonts.check(`${w} 10px "${fontName}"`)) {
-          console.log(`%c[v10.0 FontManager] ✅ ELITE READY: ${fontName} (${w})`, "color: #00ff00; font-weight: bold;");
+          console.log(`%c[v10.1 FontManager] ✅ AGENCY READY: ${fontName} (${w})`, "color: #4caf50; font-weight: bold;");
           return;
         }
       } catch (e) { /* retry */ }
@@ -79,45 +79,13 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
     await new Promise(r => setTimeout(r, 200));
   }
 
-  console.error(`%c[v10.0 FontManager] ❌ FONT FAIL: ${fontName}`, "color: #ff0000; font-weight: bold;");
+  console.error(`%c[v10.1 FontManager] ❌ FONT FAIL: ${fontName}`, "color: #f44336; font-weight: bold;");
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // v10.0: ELITE AGENCY TRANSLATOR V2 (Descending-length matching)
-  const translationMap: Record<string, string> = {
-    // Specific Fintech Branding
-    "maquininha da ton": "emerald-green premium fintech payment terminal, obsidian matte texture, professional studio lighting",
-    "maquininha stone": "vibrant lime-green professional card terminal, high-end metallic finish",
-    "maquininha pagseguro": "sleek yellow and black fintech hardware, modern design",
-    "maquininha": "sleek minimalist credit card terminal, brushed-metal hardware, high-end commercial style",
-    "maquina": "professional electronic payment hardware, high-fidelity render",
-
-    // Abstract Subjects
-    "pagamentos": "luxury corporate finance environment, wealth management aesthetic, high-end office",
-    "finanças": "high-end financial growth, clean corporate ecosystem, abstract success",
-    "cartão": "premium graphite credit card, minimalist matte finish, luxury texture",
-    "dinheiro": "elegant symbols of abundance, minimalist prosperity, high-end wealth",
-
-    // Style & Quality
-    "vibrant": "cinematic high-saturation, commercial product vibrance, sharp colors",
-    "modern": "award-winning contemporary design, sleek minimalism, ultra-modern",
-    "limpo": "minimalist professional white space, gallery lighting, sharp focus",
-    "luxuoso": "ultra-premium luxury aesthetic, expensive textures, sophisticated lighting",
-  };
-
+  // v10.1: BRAND-AGNOSTIC ELITE TRANSLATOR (Universal Art Direction)
   const clean = (text: string) => {
-    let t = text.toLowerCase();
-
-    // v10.0 Sort keys by length DESC to ensure longest match first (e.g. 'maquininha da ton' before 'maquininha')
-    const sortedKeys = Object.keys(translationMap).sort((a, b) => b.length - a.length);
-
-    sortedKeys.forEach(pt => {
-      const en = translationMap[pt];
-      const regex = new RegExp(`\\b${pt}\\b`, 'gi');
-      t = t.replace(regex, en);
-    });
-
-    return t
+    return text.toLowerCase()
       .replace(/#[a-fA-F0-9]{3,6}/g, '')
       .replace(/#/g, '')
       .replace(/\band\s+and\b/gi, 'and')
@@ -126,20 +94,27 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
       .trim();
   };
 
-  const niche = clean(opts.niche || '');
-  const style = clean(opts.visualStyle || '');
-  const colors = opts.colorPalette?.join(', ') || '';
+  const niche = clean(opts.niche || 'commercial');
+  const style = clean(opts.visualStyle || 'modern');
+  const colors = opts.colorPalette?.join(', ') || 'neutral tones';
+  const subjectType = opts.visualSubject || 'objetos';
 
-  // v10.0: Agency-Grade Prompt Structure
-  const coreContext = `[v10.0 Elite Art Direction] ${niche}, ${style}, with color harmony of ${colors}. Professional commercial photography, sharp detail, 8k resolution, cinematic lighting, shot on 85mm macro lens.`;
+  // v10.1: Universal High-Fidelity Artist Structure
+  // We use the niche and style provided by the brand kit to build an objective scene.
+  let artDescriptor = "";
+  if (subjectType === "pessoas") artDescriptor = "Editorial lifestyle portrait, natural lighting, high-end fashion aesthetic";
+  else if (subjectType === "objetos") artDescriptor = "Professional commercial product photography, minimalist studio lighting, high-fidelity textures";
+  else artDescriptor = "Cinematic abstract environment, ethereal lighting, award-winning visual design";
+
+  const coreContext = `[v10.1 REBOOT] A high-end ${style} scene for the ${niche} niche. ${artDescriptor}. Palette: ${colors}. Captured with 8k resolution, cinematic atmosphere, 85mm lens.`;
 
   if (basePrompt && basePrompt.length > 5) {
     const customPrompt = clean(basePrompt);
-    return `${coreContext}. Environment: ${customPrompt}`;
+    return `${coreContext}. Scene details: ${customPrompt}`;
   }
 
   const summary = clean(opts.inputSummary || '');
-  return `${coreContext}. Main Subject: ${summary}`;
+  return `${coreContext}. Subject focused on: ${summary}`;
 }
 
 /**
@@ -199,12 +174,11 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
 
       const setFont = (size: number) => {
-        // v10.0: ULTRA-LURID FONT LOGGING
-        const weight = 900;
-        const fontStr = `${weight} ${size}px "${selectedFont}", sans-serif`;
+        // v10.1: BRAND-AGNOSTIC AGENCY FONT
+        const fontStr = `900 ${size}px "${selectedFont}", sans-serif`;
         ctx.font = fontStr;
 
-        console.log(`%c[v10.0 RenderEngine] Applying Font: ${fontStr}`, "font-weight: bold; color: #ff00ff; background: #000; padding: 2px;");
+        console.log(`%c[v10.1 RenderEngine] Applying Font: ${fontStr}`, "font-weight: bold; color: #00bcd4; background: #222; padding: 2px;");
 
         if ((ctx as any).letterSpacing !== undefined) {
           (ctx as any).letterSpacing = `${letterSpacing}px`;
