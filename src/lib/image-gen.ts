@@ -166,10 +166,10 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
   });
 }
 
-// 1. HUGGING FACE (Proxy via Supabase)
-async function generateWithHF(prompt: string, index: number, opts: ImageGenOptions): Promise<string> {
+// 1. NEBIUS AI STUDIO (Proxy via Supabase)
+async function generateWithNebius(prompt: string, index: number, opts: ImageGenOptions): Promise<string> {
   const { visualSubject, onProgress } = opts;
-  console.log(`🚀 HF REQUEST ${index} (Proxy):`, prompt);
+  console.log(`🚀 NEBIUS REQUEST ${index} (Proxy):`, prompt);
   onProgress?.(index, 20);
 
   if (!import.meta.env.VITE_SUPABASE_URL) {
@@ -203,7 +203,7 @@ async function generateWithHF(prompt: string, index: number, opts: ImageGenOptio
   `);
 
   let blob = await response.blob();
-  console.log(`[Frontend] HF Proxy Success:`, blob.type, blob.size, "bytes");
+  console.log(`[Frontend] Nebius Studio Success:`, blob.type, blob.size, "bytes");
 
   // APLICAR OVERLAY SE FOR FOCO EM TEXTO
   if (visualSubject === 'texto') {
@@ -219,10 +219,10 @@ async function generateWithHF(prompt: string, index: number, opts: ImageGenOptio
 
   if (!blob.type.startsWith('image/')) {
     const text = await blob.text();
-    throw new Error(`HF Proxy Error (Non-Image): ${text}`);
+    throw new Error(`Nebius Studio Error (Non-Image): ${text}`);
   }
 
-  const path = `hf_${Date.now()}_${index}.jpg`;
+  const path = `nebius_${Date.now()}_${index}.jpg`;
   const persistentUrl = await uploadImage(blob, path);
 
   onProgress?.(index, 100);
@@ -248,8 +248,8 @@ export async function generateImagePipeline(
   // Garantir prompt em Inglês e PERSONALIZADO com o roteiro
   const prompt = buildImagePrompt(safeKit, _originalPrompt);
 
-  // Pipeline Exclusiva: Inteligência de Modelos via Hugging Face
-  return await generateWithHF(prompt, index, safeKit);
+  // Pipeline Exclusiva: Inteligência de Modelos via Nebius AI Studio
+  return await generateWithNebius(prompt, index, safeKit);
 }
 
 // Mantendo compatibilidade com Generate.tsx

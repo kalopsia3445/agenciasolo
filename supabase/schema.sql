@@ -67,17 +67,24 @@ create table style_packs (
   created_at timestamptz default now()
 );
 
--- 3. STORAGE (Cria o bucket e as políticas via SQL)
--- Insere o bucket se não existir
+-- 3. STORAGE (Cria os buckets e as políticas via SQL)
+-- Insere os buckets se não existirem
 insert into storage.buckets (id, name, public)
-values ('brand-assets', 'brand-assets', true)
+values 
+  ('brand-assets', 'brand-assets', true),
+  ('generated_images', 'generated_images', true)
 on conflict (id) do nothing;
 
 -- Políticas de Storage (Permite tudo para usuários logados para simplificar o dev)
-create policy "Public Access" on storage.objects for select using ( bucket_id = 'brand-assets' );
-create policy "Authenticated Upload" on storage.objects for insert with check ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
-create policy "Authenticated Update" on storage.objects for update using ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
-create policy "Authenticated Delete" on storage.objects for delete using ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
+create policy "Public Access Assets" on storage.objects for select using ( bucket_id = 'brand-assets' );
+create policy "Authenticated Upload Assets" on storage.objects for insert with check ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
+create policy "Authenticated Update Assets" on storage.objects for update using ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
+create policy "Authenticated Delete Assets" on storage.objects for delete using ( bucket_id = 'brand-assets' and auth.role() = 'authenticated' );
+
+create policy "Public Access Generated" on storage.objects for select using ( bucket_id = 'generated_images' );
+create policy "Authenticated Upload Generated" on storage.objects for insert with check ( bucket_id = 'generated_images' and auth.role() = 'authenticated' );
+create policy "Authenticated Update Generated" on storage.objects for update using ( bucket_id = 'generated_images' and auth.role() = 'authenticated' );
+create policy "Authenticated Delete Generated" on storage.objects for delete using ( bucket_id = 'generated_images' and auth.role() = 'authenticated' );
 
 -- 4. RLS (Políticas das Tabelas)
 alter table brand_kits enable row level security;
