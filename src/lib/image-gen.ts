@@ -78,10 +78,15 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   };
 
   if (opts.visualSubject === 'texto') {
+    // Detect if we are already receiving a built prompt to avoid double-processing
+    if (basePrompt && (basePrompt.includes('background') || basePrompt.includes('aesthetic'))) {
+      return basePrompt;
+    }
+
     // Brand Context (Crucial for non-hardcoded feel)
     const brandStyle = opts.visualStyle || 'modern minimalist';
     const brandColors = opts.colorPalette && opts.colorPalette.length > 0
-      ? `using a color palette of ${opts.colorPalette.join(', ')}`
+      ? `using a color palette of ${opts.colorPalette.filter(c => c && c.length > 2).join(', ')}`
       : 'with vibrant professional colors';
 
     // Abstract variation based on index to avoid 3 identical images
@@ -90,14 +95,17 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
       "fluid organic shapes and gradients",
       "minimalist glassmorphism and soft shadows"
     ];
-    const variationIdx = (opts as any).index !== undefined ? (opts as any).index % variations.length : 0;
+    // Property access fix: check both index and 'i' (common in my gen loops)
+    const idx = (opts as any).index !== undefined ? (opts as any).index : (opts as any).i;
+    const variationIdx = idx !== undefined ? idx % variations.length : 0;
     const styleVariation = variations[variationIdx];
 
     const customPromptParam = opts.customVisualPrompt ? `, following this direction: ${translate(opts.customVisualPrompt)}` : '';
     const hookContext = opts.hook ? `, inspired by the theme: "${translate(opts.hook.substring(0, 100))}"` : '';
 
     // BUILD DYNAMIC PROMPT (No hardcodes!)
-    return `Clean professional high-end background, ${translate(brandStyle)} style, ${styleVariation}, ${brandColors}, luxury cinematic lighting, 8k resolution, artistic composition${hookContext}${customPromptParam}, absolute clean background, no text, no words, no characters.`;
+    const result = `Clean professional high-end background, ${translate(brandStyle)} style, ${styleVariation}, ${brandColors}, luxury cinematic lighting, 8k resolution, artistic composition${hookContext}${customPromptParam}, absolute clean background, no text, no characters, no words, no signs.`;
+    return result;
   }
 
   const niche = translate(opts.niche);
