@@ -23,13 +23,10 @@ Deno.serve(async (req: Request) => {
         // --- BACKGROUND PROMPT ENGINE ---
         let finalPrompt = rawPrompt;
         if (visualSubject === 'texto') {
-            const colors = colorPalette && Array.isArray(colorPalette) ? colorPalette.join(" and ") : "modern professional colors";
-            const style = visualStyle || "minimalist clean aesthetic";
-
-            // Build a strict background-only prompt. 
-            // We ignore the rawPrompt (which might contain the hook/text) to avoid AI artifacts.
-            finalPrompt = `High-end professional marketing background, clean minimalist aesthetic, perfect for text overlay, high contrast, colors: ${colors}, style: ${style}, atmospheric lighting, 1024x1024, highly detailed, cinematic texture, no text, no letters, no words, clean background.`;
-            console.log(`[Nebius] Background Engine Active! Override Prompt for ${visualSubject}`);
+            // Append background-only hints to the already localized frontend prompt
+            // instead of replacing it entirely. This keeps the specific brand/niche context.
+            finalPrompt = `${rawPrompt}. Professional high-quality background, clean minimalist aesthetic, perfect for text overlay, vived color balance, no text, no characters, no words, solid clean backdrop, cinematic composition.`;
+            console.log(`[Nebius] Background Engine: Enhanced Prompt for ${visualSubject}`);
         }
 
         // --- NEBIUS AI INTEGRATION ---
@@ -43,8 +40,8 @@ Deno.serve(async (req: Request) => {
             const NEBIUS_MODELS: Record<string, string> = {
                 pessoas: "black-forest-labs/flux-dev",
                 abstrato: "black-forest-labs/flux-dev",
-                objetos: "black-forest-labs/flux-schnell",
-                texto: "black-forest-labs/flux-schnell"
+                objetos: "black-forest-labs/flux-dev", // Switched to dev for quality
+                texto: "black-forest-labs/flux-dev" // Schnell was producing black images
             };
 
             const modelId = (visualSubject && NEBIUS_MODELS[visualSubject])

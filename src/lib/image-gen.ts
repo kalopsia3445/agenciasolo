@@ -155,18 +155,17 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
         fontSizeMultiplier: 1,
         textAlign: "center",
       };
-      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
-
-      // Shadow Sutil conforme pedido (contrastante mas não pesada)
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
+      // Shadow Premium (Contrastante mas elegante)
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
 
       // Estilo de Preenchimento e Borda
+      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.5; // Borda sutil de destaque
+      ctx.lineWidth = 2; // Levemente mais visível
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 
