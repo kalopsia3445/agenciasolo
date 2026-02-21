@@ -20,95 +20,72 @@ Deno.serve(async (req: Request) => {
             });
         }
 
-        console.log(`[Proxy] Provider: ${provider}, Prompt: ${prompt.substring(0, 30)}...`);
+        // --- NEBIUS AI INTEGRATION ---
+        if (provider === "nebius") {
+            console.log(`[Nebius] Request - Focus: ${visualSubject || 'generic'}, Prompt: ${prompt.substring(0, 50)}...`);
 
-        if (provider === "hf") {
-            const HF_TOKEN = Deno.env.get("HF_TOKEN");
-            if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
+            const NEBIUS_API_KEY = Deno.env.get("NEBIUS_API_KEY");
+            if (!NEBIUS_API_KEY) throw new Error("NEBIUS_API_KEY secret not found in Supabase");
 
-            const BEST_MODEL_BY_FOCUS: Record<string, string> = {
-                pessoas: "Kwai-Kolors/Kolors",
-                objetos: "black-forest-labs/FLUX.1-dev",
-                abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "black-forest-labs/FLUX.1-dev"
+            // Model Mapping
+            const NEBIUS_MODELS: Record<string, string> = {
+                pessoas: "black-forest-labs/flux-dev",
+                abstrato: "black-forest-labs/flux-dev",
+                objetos: "black-forest-labs/flux-schnell",
+                texto: "black-forest-labs/flux-schnell"
             };
 
-            let modelId = "black-forest-labs/FLUX.1-dev";
-            let providerNode = "fal-ai";
+            const modelId = (visualSubject && NEBIUS_MODELS[visualSubject])
+                ? NEBIUS_MODELS[visualSubject]
+                : "black-forest-labs/flux-dev";
 
-            if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
-                modelId = BEST_MODEL_BY_FOCUS[visualSubject];
-                console.log(`💎 PRO ROUTE: Target model -> ${modelId} (${visualSubject})`);
+            console.log(`🚀 NEBIUS ROUTE: Using ${modelId}`);
 
-                // Switch provider based on model
-                if (modelId.includes("Kolors")) providerNode = "hf-inference";
+            const response = await fetch("https://api.studio.nebius.ai/v1/images/generations", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${NEBIUS_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: modelId,
+                    prompt: prompt,
+                    n: 1,
+                    size: "1024x1024",
+                    response_format: "b64_json",
+                    seed: seed || Math.floor(Math.random() * 1000000)
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error(`[Nebius Error] ${response.status}: ${errText}`);
+                throw new Error(`Nebius API Error (${response.status}): ${errText}`);
             }
 
-            // 1. PRE-FLIGHT CHECK (Direct API to check status)
-            try {
-                const statusUrl = `https://huggingface.co/api/models/${modelId}?expand[]=inference`;
-                const statusRes = await fetch(statusUrl, {
-                    headers: { "Authorization": `Bearer ${HF_TOKEN}` }
-                });
+            const data = await response.json();
+            const b64Data = data.data?.[0]?.b64_json;
 
-                if (statusRes.ok) {
-                    const info = await statusRes.json();
-                    const isLive = info.inference === "warm" || info.inference === "live" || info.inference?.status === "live";
-                    console.log(`[Status] ${modelId} is ${isLive ? "LIVE/WARM" : "NOT LIVE (Status: " + JSON.stringify(info.inference) + ")"}`);
-                }
-            } catch (e: any) {
-                console.warn(`[Status Check Failed] Could not verify ${modelId} status:`, e.message);
+            if (!b64Data) {
+                throw new Error("No image data received from Nebius");
             }
 
-            console.log(`[Proxy] Final Pro Routed Model: ${modelId} via ${providerNode}`);
-
-            // Using the official Provider Routing URL: https://router.huggingface.co/{provider}/models/{modelId}
-            const URL = `https://router.huggingface.co/${providerNode}/models/${modelId}`;
-
-            try {
-                const response = await fetch(URL, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${HF_TOKEN}`,
-                        "Content-Type": "application/json",
-                        "x-use-cache": "false",
-                        "x-wait-for-model": "true"
-                    },
-                    body: JSON.stringify({
-                        inputs: prompt,
-                        parameters: {
-                            guidance_scale: 7.5,
-                            num_inference_steps: 35,
-                            seed: seed || Math.floor(Math.random() * 1000000)
-                        }
-                    })
-                });
-
-                if (response.ok) {
-                    const buffer = await response.arrayBuffer();
-                    if (buffer.byteLength > 1000) {
-                        console.log(`[Proxy] Success Pro HF (${modelId})! Buffer size: ${buffer.byteLength} bytes`);
-                        return new Response(buffer, {
-                            headers: {
-                                ...corsHeaders,
-                                "Content-Type": "image/jpeg",
-                                "Cache-Control": "public, max-age=31536000",
-                                "X-Used-Model": modelId
-                            },
-                        });
-                    }
-                }
-
-                const err = await response.text();
-                console.error(`[Error Details] Status: ${response.status}, Content: ${err}`);
-                throw new Error(`HF Pro Error (${modelId}): ${err}`);
-
-            } catch (e: unknown) {
-                const errorMessage = e instanceof Error ? e.message : String(e);
-                console.error(`[Proxy] Fatal error in ${modelId}:`, errorMessage);
-                throw new Error(`HF Pro Request failed: ${errorMessage}`);
+            // Convert base64 to binary
+            const binaryString = atob(b64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
             }
+
+            return new Response(bytes, {
+                headers: {
+                    ...corsHeaders,
+                    "Content-Type": "image/jpeg",
+                    "X-Used-Model": modelId
+                },
+            });
         }
+        // --- END NEBIUS AI INTEGRATION ---
 
         if (provider === "pollinations") {
             console.log(`[Proxy] Chamando Pollinations...`);

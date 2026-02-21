@@ -184,19 +184,19 @@ async function generateWithHF(prompt: string, index: number, opts: ImageGenOptio
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ prompt, provider: "hf", visualSubject, seed: Date.now() + index }),
+    body: JSON.stringify({ prompt, provider: "nebius", visualSubject, seed: Date.now() + index }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`HF Proxy error (${response.status}): ${errText}`);
+    throw new Error(`Nebius API error (${response.status}): ${errText}`);
   }
 
-  const usedModel = response.headers.get("X-Used-Model") || "black-forest-labs/FLUX.1-dev (default/fallback)";
+  const usedModel = response.headers.get("X-Used-Model") || "black-forest-labs/flux-dev (default)";
 
   console.log(`
   =========================================
-  🎨 GERADORA DE IMAGEM INICIADA
+  🎨 GERADORA DE IMAGEM INICIADA (NEBIUS)
   👉 Model Usado: ${usedModel}
   👉 Foco Visual: ${visualSubject || "Não especificado (Genérico)"}
   =========================================
