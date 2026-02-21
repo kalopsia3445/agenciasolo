@@ -37,31 +37,39 @@ export interface ImageGenOptions {
  * Carrega e VERIFICA se a fonte do Google Fonts está realmente disponível
  */
 export async function loadGoogleFont(fontName: string): Promise<void> {
-  console.log(`%c[v8.0 FontLoader] Requesting: ${fontName}`, "color: #007bff; font-weight: bold;");
   const family = fontName.replace(/ /g, "+");
   const id = `font-${family}`;
+
+  console.log(`%c[v9.0 FontManager] 🔍 Starting load for: ${fontName}`, "color: #3498db; font-weight: bold;");
 
   if (!document.getElementById(id)) {
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;900&display=swap`;
+    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700;800;900&display=swap`;
     document.head.appendChild(link);
+    console.log(`[v9.0 FontManager] Link created: ${link.href}`);
   }
 
-  // v8.0 Strict verification loop
   const start = Date.now();
-  while (Date.now() - start < 5000) {
-    try {
-      await document.fonts.load(`900 10px "${fontName}"`);
-      if (document.fonts.check(`900 10px "${fontName}"`)) {
-        console.log(`%c[v8.0 FontLoader] ✅ SUCCESS: ${fontName} is ready for render.`, "color: #28a745; font-weight: bold;");
-        return;
-      }
-    } catch (e) { /* retry */ }
-    await new Promise(r => setTimeout(r, 100));
+  // We check for 900 OR 800 OR 700 because not all fonts have 900
+  const weights = ["900", "800", "700"];
+
+  while (Date.now() - start < 6000) {
+    for (const w of weights) {
+      try {
+        await document.fonts.load(`${w} 10px "${fontName}"`);
+        if (document.fonts.check(`${w} 10px "${fontName}"`)) {
+          console.log(`%c[v9.0 FontManager] ✅ VERIFIED: ${fontName} (Weight ${w}) is fully active.`, "color: #2ecc71; font-weight: bold;");
+          return;
+        }
+      } catch (e) { /* retry */ }
+    }
+    await new Promise(r => setTimeout(r, 200));
   }
-  console.error(`%c[v8.0 FontLoader] ❌ TIMEOUT for ${fontName}.`, "color: #dc3545; font-weight: bold;");
+
+  console.error(`%c[v9.0 FontManager] ❌ CRITICAL: ${fontName} FAILED TO LOAD after 6s.`, "color: #e74c3c; font-weight: bold;");
+  console.log(`[v9.0 FontManager] Current Font Face Set size: ${document.fonts.size}`);
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
@@ -176,8 +184,14 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
 
       const setFont = (size: number) => {
-        // v7.0: REMOVED "Impact" fallback to prevent "Paint-style" look.
-        ctx.font = `900 ${size}px "${selectedFont}", "sans-serif"`;
+        // v9.0: ULTRA-LURID FONT LOGGING
+        // Try 900, if not available 700
+        const weight = 900;
+        const fontStr = `${weight} ${size}px "${selectedFont}", sans-serif`;
+        ctx.font = fontStr;
+
+        console.log(`[v9.0 RenderEngine] Applying Font: %c${fontStr}`, "font-weight: bold; color: #f39c12;");
+
         if ((ctx as any).letterSpacing !== undefined) {
           (ctx as any).letterSpacing = `${letterSpacing}px`;
         }
