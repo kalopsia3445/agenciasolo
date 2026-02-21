@@ -19,7 +19,6 @@ export interface ImageGenOptions {
     textAlign?: string;
     colorOverride?: string;
     yOffset?: number;
-    styleType?: string;
   };
   fontFamily?: string;
   baseBlob?: Blob;

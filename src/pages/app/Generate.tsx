@@ -109,13 +109,15 @@ export default function Generate() {
     setImageProgress((prev) => { const next = [...prev]; next[idx] = 0; return next; });
 
     try {
-      const newUrl = await regenerateImage(prompt, geminiKey);
+      const res = await regenerateImage(prompt, geminiKey);
+      const newUrl = typeof res === 'string' ? res : URL.createObjectURL(res);
       const updatedResult = { ...result };
 
       if (isCarousel) {
-        const newUrls = [...(updatedResult.resultJson.variants[0].imageUrls || [])];
+        const variant = updatedResult.resultJson.variants[0];
+        const newUrls = [...(variant.imageUrls || [])];
         newUrls[idx] = newUrl;
-        updatedResult.resultJson.variants[0].imageUrls = newUrls;
+        variant.imageUrls = newUrls;
       } else {
         updatedResult.resultJson = {
           ...updatedResult.resultJson,
@@ -238,7 +240,7 @@ export default function Generate() {
               const prompt = prompts[i] || prompts[0];
 
               const genOpts: any = {
-                hook: variant.hook,
+                hook: variant.hooks?.[i] || variant.hook,
                 inputSummary: data.inputSummary,
                 niche: brandKit.niche,
                 format: data.format,
@@ -252,7 +254,7 @@ export default function Generate() {
                 customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: variant.overlayDesigns?.[i] || variant.overlayDesign,
-                fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
+                fontFamily: data.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display,
               };
 
               const res = await generateImage(prompt, undefined, genOpts, i);
@@ -296,7 +298,7 @@ export default function Generate() {
                 customVisualPrompt: data.customVisualPrompt,
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: (v as any).overlayDesign,
-                fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
+                fontFamily: data.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display,
               };
 
               const res = await generateImage(v.imagePrompt || "", undefined, genOpts, i);

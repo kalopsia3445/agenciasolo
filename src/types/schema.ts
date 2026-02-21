@@ -53,6 +53,7 @@ export type OverlayDesign = z.infer<typeof overlayDesignSchema>;
 export const scriptVariantSchema = z.object({
   title: z.string(),
   hook: z.string(),
+  hooks: z.array(z.string()).optional(), // Unique text per image (carousels)
   script: z.string(),
   teleprompterText: z.string(),
   shotList: z.array(z.string()),

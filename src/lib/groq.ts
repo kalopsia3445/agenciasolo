@@ -114,11 +114,13 @@ ${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, conten
     - textAlign: "left" | "center" | "right"
     - colorOverride: string (hexadecimal de uma das cores da marca, opcional)
     - yOffset: número (-0.4 sugerido para topo, 0 para meio, 0.4 para baixo)
-    - styleType: "modern" | "classic" | "bold" | "clean"
     - fontFamily: Nome de uma das fontes sugeridas abaixo (ex: o valor de selectedFonts.display)
+    - colorOverride: String hex opcional
+
+13. hooks (APENAS PARA CARROSSEL): Array de 3 frases curtas e impactantes, uma para cada slide.
 
 13. selectedFonts (OBJETO GLOBAL): Sugira 3 fontes do Google Fonts que combinem perfeitamente com o estilo visual e tom da marca:
-    - display: Uma fonte impactante para títulos/hooks (ex: 'Bebas Neue', 'Space Grotesk', 'Playfair Display').
+    - display: Uma fonte impactante para títulos/hooks (ex: 'Norwester', 'Bebas Neue', 'Space Grotesk', 'Playfair Display').
     - primary: Uma fonte legível para corpo de texto ou legendas (ex: 'Montserrat', 'Inter', 'Lora').
     - secondary: Uma fonte complementar.
 
@@ -130,7 +132,7 @@ Você deve gerar 3 variações que sejam VISUALMENTE E TEXTUALMENTE DIFERENTES.
 - O 'fontFamily' em 'overlayDesign' deve ser dinâmico! Use a fonte 'display' para hooks curtos e 'primary' para frases mais longas.
 
 Responda APENAS com JSON válido no formato:
-{"variants": [{ ... }, { ... }, { ... }], "suggestedFonts": { "display": "...", "primary": "...", "secondary": "..." }}`;
+{"variants": [{ "title": "...", "hook": "...", "hooks": ["...", "...", "..."], ... }, { ... }, { ... }], "suggestedFonts": { "display": "...", "primary": "...", "secondary": "..." }}`;
 }
 
 // Chamada via Supabase Edge Function (produção)
