@@ -33,6 +33,16 @@ export const stylePackSchema = z.object({
 });
 export type StylePack = z.infer<typeof stylePackSchema>;
 
+// ── Overlay Design ──
+export const overlayDesignSchema = z.object({
+  fontSizeMultiplier: z.number().optional().default(1),
+  textAlign: z.enum(["left", "center", "right"]).optional().default("center"),
+  colorOverride: z.string().optional(),
+  yOffset: z.number().optional().default(0), // -0.5 is top, 0.5 is bottom
+  styleType: z.enum(["modern", "classic", "bold", "clean"]).optional().default("modern"),
+});
+export type OverlayDesign = z.infer<typeof overlayDesignSchema>;
+
 // ── Script Variant ──
 export const scriptVariantSchema = z.object({
   title: z.string(),
@@ -50,6 +60,8 @@ export const scriptVariantSchema = z.object({
   imageUrls: z.array(z.string()).optional(),
   imagePrompts: z.array(z.string()).optional(),
   detailedContent: z.string().optional(),
+  overlayDesign: overlayDesignSchema.optional(),
+  overlayDesigns: z.array(overlayDesignSchema).optional(), // For carousels
 });
 export type ScriptVariant = z.infer<typeof scriptVariantSchema>;
 

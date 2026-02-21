@@ -108,10 +108,22 @@ CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
 8. captionLong: Legenda completa com quebras de linha.
 9. hashtags: ARRAY DE STRINGS com 5-10 hashtags.
 10. disclaimer: String de aviso ou vazia "".
-${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, contendo OBRIGATORIAMENTE as cores e estilo visual da marca)." : "11. imagePrompt: Prompt em INGLÊS, contendo OBRIGATORIAMENTE as cores e estilo visual da marca (ex: 'neon blue lighting', 'minimalist beige')."}
+${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, contendo OBRIGATORIAMENTE as cores e estilo visual da marca). Procure variar o cenário entre as variações." : "11. imagePrompt: Prompt em INGLÊS, contendo OBRIGATORIAMENTE as cores e estilo visual da marca (ex: 'neon blue lighting', 'minimalist beige'). Procure variar o cenário entre as variações."}
+12. overlayDesign: Objeto JSON com:
+    - fontSizeMultiplier: número (0.8 a 1.2)
+    - textAlign: "left" | "center" | "right"
+    - colorOverride: string (hexadecimal de uma das cores da marca, opcional)
+    - yOffset: número (-0.4 sugerido para topo, 0 para meio, 0.4 para baixo)
+    - styleType: "modern" | "classic" | "bold" | "clean"
+
+IMPORTANTE PARA VARIAÇÕES:
+Você deve gerar 3 variações que sejam VISUALMENTE E TEXTUALMENTE DIFERENTES. 
+- Cada 'hook' deve abordar um ângulo diferente do problema.
+- Cada 'imagePrompt' deve descrever um cenário ou composição diferente, mantendo o estilo da marca.
+- Varie os valores de 'overlayDesign' para que nem todas as imagens tenham o texto no mesmo lugar.
 
 Responda APENAS com JSON válido no formato:
-{"variants": [{ ... }${numVariants > 1 ? ", { ... }, { ... }" : ""}]}`;
+{"variants": [{ ... }, { ... }, { ... }]}`;
 }
 
 // Chamada via Supabase Edge Function (produção)

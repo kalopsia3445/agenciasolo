@@ -1,7 +1,7 @@
 import { uploadImage } from "./data-service";
 
 export interface ImageGenOptions {
-  hook: string;
+  hook?: string; // Changed to optional
   inputSummary: string;
   niche: string;
   format: "reels" | "stories" | "carousel";
@@ -11,9 +11,16 @@ export interface ImageGenOptions {
   targetAudience?: string;
   colorPalette?: string[];
   toneAdjectives?: string[];
-  visualSubject?: string;
+  visualSubject?: "pessoas" | "objetos" | "abstrato" | "texto"; // Updated type
   customVisualPrompt?: string;
   onProgress?: (index: number, progress: number) => void;
+  overlayDesign?: { // Added overlayDesign
+    fontSizeMultiplier?: number;
+    textAlign?: string;
+    colorOverride?: string;
+    yOffset?: number;
+    styleType?: string;
+  };
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
@@ -108,35 +115,45 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       // 1. Desenhar fundo (imagem IA)
       ctx.drawImage(img, 0, 0);
 
-      // 2. Configurar estilo do texto
-      const brandColor = opts.colorPalette?.[0] || "#ffffff";
+      // 2. Configurar estilo do texto e design
+      const design = opts.overlayDesign || {
+        fontSizeMultiplier: 1,
+        textAlign: "center",
+        yOffset: 0,
+        styleType: "modern"
+      };
+
+      const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
 
       // Shadow para garantir legibilidade extrema
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 20;
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
+      ctx.shadowBlur = 25;
       ctx.shadowOffsetX = 2;
       ctx.shadowOffsetY = 2;
 
-      // Estilo de Preenchimento (Cor do Cliente)
+      // Estilo de Preenchimento
       ctx.fillStyle = brandColor;
 
-      // Estilo de Borda (Branco Universal para contraste)
+      // Estilo de Borda (Universal High-Contrast)
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
       ctx.lineJoin = "round";
 
-      ctx.textAlign = "center";
+      ctx.textAlign = design.textAlign as CanvasTextAlign;
       ctx.textBaseline = "middle";
 
-      // Tamanho dinâmico baseado no tamanho da imagem (1024)
-      const fontSize = Math.floor(canvas.width * 0.08);
-      ctx.font = `bold ${fontSize}px sans-serif`;
+      // Tamanho dinâmico e tipografia premium
+      const baseFontSize = Math.floor(canvas.width * 0.08);
+      const fontSize = Math.floor(baseFontSize * (design.fontSizeMultiplier || 1));
+
+      // Font Stack Premium (Prioriza Space Grotesk ou Montserrat se existirem, fallback p/ Impact/Inter)
+      ctx.font = `bold ${fontSize}px "Space Grotesk", "Montserrat", "Inter", "Impact", sans-serif`;
 
       // 3. Quebra de linha inteligente
       const words = text.split(" ");
       const lines = [];
       let currentLine = "";
-      const maxWidth = canvas.width * 0.8;
+      const maxWidth = canvas.width * 0.85;
 
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
@@ -150,23 +167,35 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
       }
       lines.push(currentLine);
 
-      // 4. Desenhar linhas centralizadas
-      const lineHeight = fontSize * 1.2;
+      // 4. Desenhar linhas com posicionamento dinâmico (yOffset)
+      const lineHeight = fontSize * 1.15;
       const totalHeight = lines.length * lineHeight;
-      let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2);
+
+      // yOffset: -0.5 (topo) a 0.5 (base). 0 é o centro exato.
+      const verticalAdjustment = (design.yOffset || 0) * canvas.height;
+      let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2) + verticalAdjustment;
+
+      // Ajuste de X baseado no Alinhamento
+      let x = canvas.width / 2;
+      if (design.textAlign === "left") x = canvas.width * 0.075;
+      if (design.textAlign === "right") x = canvas.width * 0.925;
 
       lines.forEach(line => {
-        // Primeiro o Stroke para criar a borda externa
-        ctx.strokeText(line, canvas.width / 2, startY);
-        // Depois o Fill para preencher com a cor do cliente
-        ctx.fillText(line, canvas.width / 2, startY);
+        // Primeiro Stroke (Borda externa robusta)
+        ctx.strokeText(line, x, startY);
+        // Depois o Fill (Cor vibrante da marca)
+        ctx.fillText(line, x, startY);
         startY += lineHeight;
       });
 
       canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Canvas toBlob failed"));
-      }, 'image/jpeg', 0.95);
+        if (blob) {
+          console.log(`[Canvas] Premium Text Render: Style=${design.styleType}, Text=${text.substring(0, 20)}...`);
+          resolve(blob);
+        } else {
+          reject(new Error("Canvas toBlob failed"));
+        }
+      }, 'image/jpeg', 0.98);
     };
 
     img.onerror = () => {
@@ -199,7 +228,7 @@ async function generateWithNebius(prompt: string, index: number, opts: ImageGenO
       prompt,
       provider: "nebius",
       visualSubject,
-      seed: Date.now() + index,
+      seed: Math.floor(Math.random() * 999999999), // Changed seed to a random number
       colorPalette: opts.colorPalette,
       visualStyle: opts.visualStyle
     }),

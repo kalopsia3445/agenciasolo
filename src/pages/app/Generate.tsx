@@ -250,7 +250,8 @@ export default function Generate() {
                 toneAdjectives: brandKit.toneAdjectives,
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
-                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
+                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
+                overlayDesign: (variant as any).overlayDesigns?.[i] || (variant as any).overlayDesign
               }, i);
               urls.push(newImageUrl);
               errors.push(false);
@@ -287,7 +288,8 @@ export default function Generate() {
                 toneAdjectives: brandKit.toneAdjectives,
                 visualSubject: data.visualSubject,
                 customVisualPrompt: data.customVisualPrompt,
-                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; })
+                onProgress: (idx, p) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
+                overlayDesign: (v as any).overlayDesign
               }, i);
               urls.push(newImageUrl);
               errors.push(false);
