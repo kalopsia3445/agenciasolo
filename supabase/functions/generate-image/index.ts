@@ -27,13 +27,13 @@ Deno.serve(async (req: Request) => {
             if (!HF_TOKEN) throw new Error("HF_TOKEN secret not found in Supabase");
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
-                pessoas: "stabilityai/stable-diffusion-3.5-large",
-                objetos: "recraft-ai/recraft-v4-pro",
+                pessoas: "Kwai-Kolors/Kolors",
+                objetos: "black-forest-labs/FLUX.1-dev",
                 abstrato: "black-forest-labs/FLUX.1-dev",
-                texto: "stabilityai/stable-diffusion-3.5-large"
+                texto: "black-forest-labs/FLUX.1-dev"
             };
 
-            let modelId = "stabilityai/stable-diffusion-3.5-large"; // Default Pro Model
+            let modelId = "black-forest-labs/FLUX.1-dev"; // Default Pro Model
 
             if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
                 modelId = BEST_MODEL_BY_FOCUS[visualSubject];

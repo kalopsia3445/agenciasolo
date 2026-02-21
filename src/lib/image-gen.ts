@@ -46,12 +46,11 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   };
 
   if (opts.visualSubject === 'texto') {
-    const textToShow = opts.hook ? opts.hook : 'Solo Reels';
     const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'dark navy';
     const styleContext = translate(opts.visualStyle || 'simple minimalist');
     const customPromptParam = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}` : '';
 
-    return `Typography masterpiece, perfectly legible bold text "${textToShow}", exact PORTUGUESE (PT-BR) spelling, integrated design, ${colorContext}, ${styleContext}, professional marketing banner, clean minimalist background, high contrast glow, 1024x1024${customPromptParam ? `: ${customPromptParam}` : ''}`;
+    return `High-end professional marketing background, clean minimalist aesthetic, perfect for text overlay, high contrast, ${colorContext}, ${styleContext}, atmospheric lighting, 1024x1024, highly detailed, cinematic texture${customPromptParam ? `: ${customPromptParam}` : ''}`;
   }
 
   const niche = translate(opts.niche);
@@ -89,8 +88,87 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   return `professional photography, ${style}, ${niche}, ${summary}, realistic, 8k, highly detailed`;
 }
 
+/**
+ * Sobrepõe texto em um blob de imagem usando Canvas API.
+ * Garante perfeição ortográfica e alinhamento com branding.
+ */
+async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOptions): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(imageBlob);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error("Could not get canvas context"));
+
+      // 1. Desenhar fundo (imagem IA)
+      ctx.drawImage(img, 0, 0);
+
+      // 2. Configurar estilo do texto
+      const color = opts.colorPalette?.[0] || "#ffffff";
+      // Shadow para garantir legibilidade
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 5;
+      ctx.shadowOffsetY = 5;
+
+      ctx.fillStyle = color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // Tamanho dinâmico baseado no tamanho da imagem (1024)
+      const fontSize = Math.floor(canvas.width * 0.08);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+
+      // 3. Quebra de linha inteligente
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = "";
+      const maxWidth = canvas.width * 0.8;
+
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      lines.push(currentLine);
+
+      // 4. Desenhar linhas centralizadas
+      const lineHeight = fontSize * 1.2;
+      const totalHeight = lines.length * lineHeight;
+      let startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2);
+
+      lines.forEach(line => {
+        ctx.fillText(line, canvas.width / 2, startY);
+        startY += lineHeight;
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Canvas toBlob failed"));
+      }, 'image/jpeg', 0.95);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image for overlay"));
+    };
+    img.src = url;
+  });
+}
+
 // 1. HUGGING FACE (Proxy via Supabase)
-async function generateWithHF(prompt: string, index: number, visualSubject?: string, onProgress?: (idx: number, p: number) => void): Promise<string> {
+async function generateWithHF(prompt: string, index: number, opts: ImageGenOptions): Promise<string> {
+  const { visualSubject, onProgress } = opts;
   console.log(`🚀 HF REQUEST ${index} (Proxy):`, prompt);
   onProgress?.(index, 20);
 
@@ -124,8 +202,20 @@ async function generateWithHF(prompt: string, index: number, visualSubject?: str
   =========================================
   `);
 
-  const blob = await response.blob();
+  let blob = await response.blob();
   console.log(`[Frontend] HF Proxy Success:`, blob.type, blob.size, "bytes");
+
+  // APLICAR OVERLAY SE FOR FOCO EM TEXTO
+  if (visualSubject === 'texto') {
+    try {
+      const textToShow = opts.hook || 'Solo Reels';
+      console.log(`[Frontend] Applying text overlay: "${textToShow}"`);
+      blob = await applyTextOverlay(blob, textToShow, opts);
+      console.log(`[Frontend] Text overlay applied successfully. New size: ${blob.size} bytes`);
+    } catch (e) {
+      console.warn("Falha ao aplicar overlay de texto:", e);
+    }
+  }
 
   if (!blob.type.startsWith('image/')) {
     const text = await blob.text();
@@ -159,7 +249,7 @@ export async function generateImagePipeline(
   const prompt = buildImagePrompt(safeKit, _originalPrompt);
 
   // Pipeline Exclusiva: Inteligência de Modelos via Hugging Face
-  return await generateWithHF(prompt, index, safeKit.visualSubject, safeKit.onProgress);
+  return await generateWithHF(prompt, index, safeKit);
 }
 
 // Mantendo compatibilidade com Generate.tsx
