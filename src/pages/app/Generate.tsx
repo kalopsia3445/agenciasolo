@@ -244,10 +244,10 @@ export default function Generate() {
               const suggestedFonts = (updatedScript.resultJson as any).suggestedFonts;
               let slideFont = slideDesign?.fontFamily || suggestedFonts?.display;
 
-              // v10.1: ELITE TELEMETRY
-              console.log(`%c[v10.1 REBOOT PIPELINE] Processing Slide ${i}`, "background: #00796B; color: #fff; padding: 2px; font-weight: bold;");
-              console.log(`[v10.1] Base Prompt: ${slidePrompt.substring(0, 80)}...`);
-              console.log(`[v10.1] Final Resolved Font: ${slideFont}`);
+              // v10.2: ELITE TELEMETRY
+              console.log(`%c[v10.2 DYNAMIC PIPELINE] Processing Slide ${i}`, "background: #00796B; color: #fff; padding: 2px; font-weight: bold;");
+              console.log(`[v10.2] Base Prompt: ${slidePrompt.substring(0, 80)}...`);
+              console.log(`[v10.2] Final Resolved Font: ${slideFont}`);
 
               // v6.0: CRITICAL FONT RESOLUTION LAYER
               // Resolves keywords 'display' | 'primary' | 'secondary' to actual Google Font names

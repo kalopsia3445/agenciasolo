@@ -40,7 +40,7 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
   const family = fontName.replace(/ /g, "+");
   const id = `font-${family}`;
 
-  console.log(`%c[v10.1 FontManager] 🚀 Universal Agency Load: ${fontName}`, "color: #00bcd4; font-weight: bold;");
+  console.log(`%c[v10.2 FontManager] 🚀 Truly Dynamic Load: ${fontName}`, "color: #00bcd4; font-weight: bold; padding: 2px;");
 
   if (!document.getElementById(id)) {
     const link = document.createElement("link");
@@ -50,7 +50,7 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
     document.head.appendChild(link);
   }
 
-  // v10.1: HIDDEN FORCE-RENDER (Ensures the browser paints the glyphs before Canvas)
+  // v10.2: HIDDEN FORCE-RENDER (Standardized across all niches)
   let forceDiv = document.getElementById('font-force-paint');
   if (!forceDiv) {
     forceDiv = document.createElement('div');
@@ -61,60 +61,62 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
     forceDiv.style.visibility = 'hidden';
     document.body.appendChild(forceDiv);
   }
-  forceDiv.innerHTML += `<span style="font-family: '${fontName}'; font-weight: 900;">PAINT</span>`;
+  forceDiv.innerHTML += `<span style="font-family: '${fontName}'; font-weight: 900;">AGENCY_PAINT</span>`;
 
   const start = Date.now();
   const weights = ["900", "800", "700"];
 
-  while (Date.now() - start < 8000) {
+  while (Date.now() - start < 10000) {
     for (const w of weights) {
       try {
         await document.fonts.load(`${w} 10px "${fontName}"`);
         if (document.fonts.check(`${w} 10px "${fontName}"`)) {
-          console.log(`%c[v10.1 FontManager] ✅ AGENCY READY: ${fontName} (${w})`, "color: #4caf50; font-weight: bold;");
+          console.log(`%c[v10.2 FontManager] ✅ UNIVERSAL READY: ${fontName} (${w})`, "color: #4caf50; font-weight: bold;");
           return;
         }
       } catch (e) { /* retry */ }
     }
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 250));
   }
 
-  console.error(`%c[v10.1 FontManager] ❌ FONT FAIL: ${fontName}`, "color: #f44336; font-weight: bold;");
+  console.error(`%c[v10.2 FontManager] ❌ FONT LOAD ERROR: ${fontName}`, "color: #f44336; font-weight: bold;");
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // v10.1: BRAND-AGNOSTIC ELITE TRANSLATOR (Universal Art Direction)
+  // v10.2: DYNAMIC AGENCY PROMPTER (Truly Brand-Agnostic)
   const clean = (text: string) => {
     return text.toLowerCase()
       .replace(/#[a-fA-F0-9]{3,6}/g, '')
       .replace(/#/g, '')
-      .replace(/\band\s+and\b/gi, 'and')
-      .replace(/,\s*,/g, ',')
       .replace(/\s+/g, ' ')
       .trim();
   };
 
   const niche = clean(opts.niche || 'commercial');
-  const style = clean(opts.visualStyle || 'modern');
-  const colors = opts.colorPalette?.join(', ') || 'neutral tones';
+  const style = clean(opts.visualStyle || 'professional');
+  const colors = opts.colorPalette?.join(', ') || 'elegant colors';
   const subjectType = opts.visualSubject || 'objetos';
 
-  // v10.1: Universal High-Fidelity Artist Structure
-  // We use the niche and style provided by the brand kit to build an objective scene.
+  // v10.2: Dynamic Art Direction (Objective enhancements only)
   let artDescriptor = "";
-  if (subjectType === "pessoas") artDescriptor = "Editorial lifestyle portrait, natural lighting, high-end fashion aesthetic";
-  else if (subjectType === "objetos") artDescriptor = "Professional commercial product photography, minimalist studio lighting, high-fidelity textures";
-  else artDescriptor = "Cinematic abstract environment, ethereal lighting, award-winning visual design";
+  if (subjectType === "pessoas") {
+    artDescriptor = "High-end editorial lifestyle photography, magazine aesthetic, natural lighting, sharp focus on subject";
+  } else if (subjectType === "objetos") {
+    artDescriptor = "Ultra-premium commercial product photography, minimalist studio lighting, high-fidelity textures, shot on Hasselblad medium format";
+  } else {
+    artDescriptor = "Cinematic abstract environment, ethereal moody lighting, award-winning visual art design, depth and atmosphere";
+  }
 
-  const coreContext = `[v10.1 REBOOT] A high-end ${style} scene for the ${niche} niche. ${artDescriptor}. Palette: ${colors}. Captured with 8k resolution, cinematic atmosphere, 85mm lens.`;
+  // Purely dynamic structure: [STYLE] + [NICHE] + [SUBJECT_ART] + [COLORS]
+  const coreContext = `[v10.2 DYNAMIC] A masterpiece ${style} production for ${niche}. ${artDescriptor}. Color Palette: ${colors}. 8k resolution, cinematic lighting, professional 85mm lens render.`;
 
   if (basePrompt && basePrompt.length > 5) {
     const customPrompt = clean(basePrompt);
-    return `${coreContext}. Scene details: ${customPrompt}`;
+    return `${coreContext}. Scene: ${customPrompt}`;
   }
 
   const summary = clean(opts.inputSummary || '');
-  return `${coreContext}. Subject focused on: ${summary}`;
+  return `${coreContext}. Main theme: ${summary}`;
 }
 
 /**
@@ -174,11 +176,11 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
 
       const setFont = (size: number) => {
-        // v10.1: BRAND-AGNOSTIC AGENCY FONT
+        // v10.2: UNIVERSAL AGENCY FONT ENGINE
         const fontStr = `900 ${size}px "${selectedFont}", sans-serif`;
         ctx.font = fontStr;
 
-        console.log(`%c[v10.1 RenderEngine] Applying Font: ${fontStr}`, "font-weight: bold; color: #00bcd4; background: #222; padding: 2px;");
+        console.log(`%c[v10.2 RenderEngine] Force Applying: ${fontStr}`, "font-weight: bold; color: #00bcd4; background: #222; padding: 2px; border-radius: 4px;");
 
         if ((ctx as any).letterSpacing !== undefined) {
           (ctx as any).letterSpacing = `${letterSpacing}px`;
@@ -231,30 +233,30 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       else if (design.textAlign === "right") x = canvas.width * 0.95;
 
       lines.forEach(line => {
-        // v10.0 SUPER-LUX STACKED SHADOWS (Magazine-Grade Depth)
+        // v10.2 PREMIUM STACKED SHADOWS (Truly Dynamic Depth)
         ctx.save();
 
         if (textEffect === "layered-shadow" || textEffect === undefined) {
-          // Layer 1: The Glow (Legibility Aura)
-          ctx.shadowColor = "rgba(255,255,255,0.2)";
-          ctx.shadowBlur = 5;
+          // 1. LEGIBILITY RIM (Subtle outline for high contrast on light areas)
+          ctx.shadowColor = "rgba(255,255,255,0.15)";
+          ctx.shadowBlur = 4;
           ctx.strokeText(line, x, startY);
 
-          // Layer 2: The Core (Sharp Depth)
-          ctx.shadowColor = "rgba(0,0,0,0.8)";
-          ctx.shadowBlur = 10;
-          ctx.shadowOffsetX = 3;
-          ctx.shadowOffsetY = 3;
+          // 2. CORE DEPTH (Magazine-grade sharp shadow)
+          ctx.shadowColor = "rgba(0,0,0,0.85)";
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetX = 4;
+          ctx.shadowOffsetY = 4;
           ctx.strokeText(line, x, startY);
 
-          // Layer 3: The Float (Ultra-Soft Depth)
-          ctx.shadowColor = "rgba(0,0,0,0.5)";
-          ctx.shadowBlur = 40;
+          // 3. AMBIENT DEPTH (Floating luxurious effect)
+          ctx.shadowColor = "rgba(0,0,0,0.45)";
+          ctx.shadowBlur = 35;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 15;
         } else if (textEffect === "glow") {
           ctx.shadowColor = brandColor;
-          ctx.shadowBlur = 35;
+          ctx.shadowBlur = 40;
         } else if (textEffect === "outline") {
           ctx.shadowBlur = 0;
           ctx.strokeStyle = brandColor;
@@ -265,7 +267,7 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
           return;
         }
 
-        // v10.0 CLEAN FILL (No stroke artifact unless outline)
+        // Clean final render
         ctx.fillText(line, x, startY);
 
         ctx.restore();
