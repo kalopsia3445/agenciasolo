@@ -8,32 +8,6 @@ function translate(text: string): string {
   return text;
 }
 
-function buildImagePrompt(opts: {
-  businessName: string;
-  niche: string;
-  visualStyleDescription: string;
-  colorPalette: string[];
-  targetAudience: string;
-  inputSummary: string;
-  visualSubject?: string;
-  customVisualPrompt?: string;
-}): string {
-  const style = opts.visualStyleDescription || 'modern design';
-  const niche = opts.niche;
-  const summary = translate(opts.inputSummary || 'scene');
-
-  // Format visual subject instruction
-  let subjectInstruction = '';
-  if (opts.visualSubject === 'pessoas') subjectInstruction = 'featuring clearly visible people and faces';
-  else if (opts.visualSubject === 'objetos') subjectInstruction = 'focusing strictly on objects and products, NO people, NO faces, NO humans';
-  else if (opts.visualSubject === 'abstrato') subjectInstruction = 'abstract art and conceptual composition, NO people, NO recognizable faces, NO literal objects';
-  else if (opts.visualSubject === 'texto') subjectInstruction = 'minimalist background layout designed primarily for overlaying text, simple background, NO people, NO distractions';
-
-  // Include user's custom instructions if provided
-  const customVisual = opts.customVisualPrompt ? `Specific user request: ${translate(opts.customVisualPrompt)}. ` : '';
-
-  return `${customVisual}High quality image, ${style}, ${niche}, ${summary}, ${subjectInstruction}, exceptionally detailed`.trim();
-}
 function buildPrompt(brandKit: BrandKit, pack: StylePack, form: GenerateFormData, isDemo: boolean): string {
   const isCarousel = form.format === "carousel";
   const numVariants = isCarousel ? 1 : 3;
@@ -75,7 +49,7 @@ MARCA (PERSONALIZAÇÃO OBRIGATÓRIA):
 - Oferta: ${brandKit.offer}
 - Público: ${brandKit.targetAudience}
 - Estilo Visual: ${brandKit.visualStyleDescription}
-- Paleta de Cores: ${brandKit.colorPalette.join(", ")}
+- Paleta de Cores (HEX): ${brandKit.colorPalette.join(", ")}
 - Tom de Voz: ${brandKit.toneAdjectives.join(", ")}
 
 FORMATO: ${form.format}
@@ -89,9 +63,16 @@ INSTRUÇÕES DE ROTEIRO (ANTI-GENÉRICO):
 4. Mencione ou conecte com a Oferta "${brandKit.offer}" sutilmente se fizer sentido.
 5. Use o Tom de Voz "${brandKit.toneAdjectives.join(", ")}" em cada linha.
 
-INSTRUÇÕES DE IMAGEM (BRANDING VISUAL):
-Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'), você DEVE incluir explicitamente as cores e o estilo da marca, além de focar no foco principal.
-Exemplo: "High quality image of [scene], ${brandKit.visualStyleDescription} aesthetic, dominant colors ${brandKit.colorPalette.join(" and ")}, highly detailed".
+INSTRUÇÕES DE IMAGEM (V4.2 - CONCEPTUAL BRANDING):
+Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'):
+1. ESCREVA EM INGLÊS.
+2. TRADUÇÃO CONCEITUAL: Você DEVE traduzir termos técnicos ou regionais brasileiros baseando-se no NICHO e DETALHES DA MARCA. 
+   - Ex (Nicho Finanças): "Máquininha" -> "Sleek modern credit card payment terminal".
+   - Ex (Nicho Costura): "Máquininha" -> "vintage sewing machine".
+   NUNCA use termos em português ou nomes de marcas específicas no prompt. Descreva o OBJETO.
+3. USE NOMES DE CORES REAIS: (Ex: "Midnight Blue", "Emerald Green"). NÃO use códigos HEX. 
+4. DESCRIÇÃO NATURAL: Crie um parágrafo fluido e descritivo. Evite "High quality image of [scene]". Vá direto ao ponto de forma cinematográfica.
+5. ZERO PLACEHOLDERS: Se você não tiver uma cor ou detalhe, simplesmente não mencione. NUNCA deixe espaços vazios ou "and and" no prompt.
 
 Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo.
 
@@ -108,7 +89,7 @@ CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
 8. captionLong: Legenda completa com quebras de linha.
 9. hashtags: ARRAY DE STRINGS com 5-10 hashtags.
 10. disclaimer: String de aviso ou vazia "".
-${isCarousel ? "11. imagePrompts: ARRAY DE 3 STRINGS (prompts em inglês, contendo OBRIGATORIAMENTE as cores e estilo visual da marca). Procure variar o cenário entre as variações." : "11. imagePrompt: Prompt em INGLÊS, contendo OBRIGATORIAMENTE as cores e estilo visual da marca (ex: 'neon blue lighting', 'minimalist beige'). Procure variar o cenário entre as variações."}
+11. ${isCarousel ? "imagePrompts: ARRAY DE 3 STRINGS (prompts em INGLÊS descritivo, contendo as cores e estilo visual da marca)." : "imagePrompt: Prompt em INGLÊS descritivo, contendo as cores e estilo visual da marca."}
 12. overlayDesign: Objeto JSON com:
     - fontSizeMultiplier: número (0.8 a 1.2)
     - textAlign: "left" | "center" | "right"

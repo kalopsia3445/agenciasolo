@@ -49,11 +49,14 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // v4.0: Dynamic cleaner - only remove HEX codes that break APIs
+  // v4.0: Dynamic cleaner - removes HEX codes and redundant conjunctions
   const clean = (text: string) => {
     return text
       .replace(/#[a-fA-F0-9]{3,6}/g, '')
       .replace(/#/g, '')
+      .replace(/\band\s+and\b/gi, 'and')
+      .replace(/,\s*,/g, ',')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
