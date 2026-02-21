@@ -28,23 +28,23 @@ Deno.serve(async (req: Request) => {
 
             const BEST_MODEL_BY_FOCUS: Record<string, string> = {
                 pessoas: "Kwai-Kolors/Kolors",
-                objetos: "black-forest-labs/FLUX.1-Krea-dev",
-                abstrato: "black-forest-labs/FLUX.1-Krea-dev",
-                texto: "black-forest-labs/FLUX.1-Krea-dev"
+                objetos: "black-forest-labs/FLUX.1-dev",
+                abstrato: "black-forest-labs/FLUX.1-dev",
+                texto: "black-forest-labs/FLUX.1-dev"
             };
 
-            let modelId = "black-forest-labs/FLUX.1-Krea-dev"; // Modern Krea-dev Model
-            let providerNode = "fal-ai"; // Target provider for stability
+            let modelId = "black-forest-labs/FLUX.1-dev";
+            let providerNode = "fal-ai";
 
             if (visualSubject && BEST_MODEL_BY_FOCUS[visualSubject]) {
                 modelId = BEST_MODEL_BY_FOCUS[visualSubject];
                 console.log(`💎 PRO ROUTE: Target model -> ${modelId} (${visualSubject})`);
 
-                // Kolors might need hf-inference or another provider if fal-ai doesn't host it
+                // Switch provider based on model
                 if (modelId.includes("Kolors")) providerNode = "hf-inference";
             }
 
-            // 1. PRE-FLIGHT CHECK: Verify if model is warm/available
+            // 1. PRE-FLIGHT CHECK (Direct API to check status)
             try {
                 const statusUrl = `https://huggingface.co/api/models/${modelId}?expand[]=inference`;
                 const statusRes = await fetch(statusUrl, {
@@ -55,7 +55,6 @@ Deno.serve(async (req: Request) => {
                     const info = await statusRes.json();
                     const isLive = info.inference === "warm" || info.inference === "live" || info.inference?.status === "live";
                     console.log(`[Status] ${modelId} is ${isLive ? "LIVE/WARM" : "NOT LIVE (Status: " + JSON.stringify(info.inference) + ")"}`);
-                    // We proceed anyway as Inference API handles cold starts, but logging helps debug
                 }
             } catch (e: any) {
                 console.warn(`[Status Check Failed] Could not verify ${modelId} status:`, e.message);
@@ -63,8 +62,8 @@ Deno.serve(async (req: Request) => {
 
             console.log(`[Proxy] Final Pro Routed Model: ${modelId} via ${providerNode}`);
 
-            // Using the modern Router URL
-            const URL = `https://router.huggingface.co/v1/models/${modelId}/text-to-image`;
+            // Using the official Provider Routing URL: https://router.huggingface.co/{provider}/models/{modelId}
+            const URL = `https://router.huggingface.co/${providerNode}/models/${modelId}`;
 
             try {
                 const response = await fetch(URL, {
@@ -72,19 +71,17 @@ Deno.serve(async (req: Request) => {
                     headers: {
                         "Authorization": `Bearer ${HF_TOKEN}`,
                         "Content-Type": "application/json",
-                        "X-Inference-Provider": providerNode,
-                        "x-use-cache": "false" // Avoid stale generated images
+                        "x-use-cache": "false",
+                        "x-wait-for-model": "true"
                     },
                     body: JSON.stringify({
                         inputs: prompt,
                         parameters: {
-                            num_inference_steps: 35, // High quality steps for Pro models
-                            guidance_scale: 8.0,
-                            seed: seed || Math.floor(Math.random() * 1e9),
-                            width: 1024,
-                            height: 1024
+                            guidance_scale: 7.5,
+                            num_inference_steps: 35,
+                            seed: seed || Math.floor(Math.random() * 1000000)
                         }
-                    }),
+                    })
                 });
 
                 if (response.ok) {
