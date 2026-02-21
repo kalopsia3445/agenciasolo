@@ -23,8 +23,8 @@ export interface ImageGenOptions {
   };
   fontFamily?: string;
   baseBlob?: Blob;
-  skipUpload?: boolean; // New: To return the blob instead of uploading
-  skipOverlay?: boolean; // New: To bypass text overlay
+  skipUpload?: boolean;
+  skipOverlay?: boolean;
 }
 
 /**
@@ -79,11 +79,12 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   };
 
   if (opts.visualSubject === 'texto') {
-    const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'dark navy';
-    const styleContext = translate(opts.visualStyle || 'simple minimalist');
+    const colorContext = opts.colorPalette && opts.colorPalette.length > 0 ? translate(opts.colorPalette.join(' and ')) : 'vibrant brand colors';
+    const styleContext = translate(opts.visualStyle || 'luxury minimalist');
     const customPromptParam = opts.customVisualPrompt ? `${translate(opts.customVisualPrompt)}` : '';
+    const hookContext = opts.hook ? translate(opts.hook.substring(0, 50)) : '';
 
-    return `High-end professional marketing background, clean minimalist aesthetic, perfect for text overlay, high contrast, ${colorContext}, ${styleContext}, atmospheric lighting, 1024x1024, highly detailed, cinematic texture${customPromptParam ? `: ${customPromptParam}` : ''}`;
+    return `Premium high-end marketing background, ultra-vibrant ${colorContext} palette, ${styleContext} aesthetic, abstract dynamic shapes, luxury lighting, cinematic bokeh, 8k resolution, artistic composition inspired by ${hookContext || 'modern graphics'}, no text, no words, clean background.`;
   }
 
   const niche = translate(opts.niche);
@@ -155,17 +156,17 @@ async function applyTextOverlay(imageBlob: Blob, text: string, opts: ImageGenOpt
         fontSizeMultiplier: 1,
         textAlign: "center",
       };
-      // Shadow Premium (Contrastante mas elegante)
-      ctx.shadowColor = "rgba(0,0,0,0.85)";
-      ctx.shadowBlur = 12;
+      // Shadow Premium (Contraste Máximo para não ficar "feio")
+      ctx.shadowColor = "rgba(0,0,0,0.95)";
+      ctx.shadowBlur = 15;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 2;
+      ctx.shadowOffsetY = 4;
 
       // Estilo de Preenchimento e Borda
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2; // Levemente mais visível
+      ctx.lineWidth = 2.5; // Borda mais nítida
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
 

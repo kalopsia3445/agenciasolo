@@ -23,32 +23,28 @@ Deno.serve(async (req: Request) => {
         // --- BACKGROUND PROMPT ENGINE ---
         let finalPrompt = rawPrompt;
         if (visualSubject === 'texto') {
-            // Append background-only hints to the already localized frontend prompt
-            // instead of replacing it entirely. This keeps the specific brand/niche context.
-            finalPrompt = `${rawPrompt}. Professional high-quality background, clean minimalist aesthetic, perfect for text overlay, vived color balance, no text, no characters, no words, solid clean backdrop, cinematic composition.`;
-            console.log(`[Nebius] Background Engine: Enhanced Prompt for ${visualSubject}`);
+            // Restore PREMIUM QUALITY prompt for Schnell
+            finalPrompt = `${rawPrompt}. Professional premium marketing background, ultra-high definition, 8k, cinematic lighting, vibrant artistic composition, abstract luxury shapes, bokeh depth of field, no text, no characters, no words, clean high-end backdrop.`;
+            console.log(`[Nebius] Background Engine: Premium Prompt for ${visualSubject}`);
         }
 
         // --- NEBIUS AI INTEGRATION ---
         if (provider === "nebius") {
-            console.log(`[Nebius] Request - Focus: ${visualSubject || 'generic'}, Prompt: ${finalPrompt.substring(0, 50)}...`);
-
             const NEBIUS_API_KEY = Deno.env.get("NEBIUS_API_KEY");
             if (!NEBIUS_API_KEY) throw new Error("NEBIUS_API_KEY secret not found in Supabase");
 
-            // Model Mapping
             const NEBIUS_MODELS: Record<string, string> = {
                 pessoas: "black-forest-labs/flux-dev",
                 abstrato: "black-forest-labs/flux-dev",
-                objetos: "black-forest-labs/flux-dev", // Switched to dev for quality
-                texto: "black-forest-labs/flux-dev" // Schnell was producing black images
+                objetos: "black-forest-labs/flux-schnell",
+                texto: "black-forest-labs/flux-schnell" // Reverted to Schnell for cost
             };
 
             const modelId = (visualSubject && NEBIUS_MODELS[visualSubject])
                 ? NEBIUS_MODELS[visualSubject]
                 : "black-forest-labs/flux-dev";
 
-            console.log(`🚀 NEBIUS ROUTE: Using ${modelId}`);
+            console.log(`🚀 NEBIUS REQUEST - Focus: ${visualSubject}, Model: ${modelId}, Prompt: ${finalPrompt.substring(0, 50)}...`);
 
             const response = await fetch("https://api.studio.nebius.ai/v1/images/generations", {
                 method: "POST",

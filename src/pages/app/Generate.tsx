@@ -221,13 +221,10 @@ export default function Generate() {
       toast({ title: data.format === "reels" ? "Roteiro gerado! ✨" : "Roteiro gerado! Gerando imagens... 🎨" });
       setLoading(false);
 
-      // Gerar imagens em série com delay para evitar Rate Limit (429) ou REUSAR FUNDO se for texto
+      // Gerar imagens em série com delay para evitar Rate Limit (429)
       if (geminiKey && data.format !== "reels") {
         const updatedScript = { ...script };
         updatedScript.resultJson = { ...updatedScript.resultJson, variants: [...updatedScript.resultJson.variants] };
-
-        let baseBlob: Blob | undefined = undefined;
-        const isTexto = data.visualSubject === "texto";
 
         if (data.format === "carousel") {
           const variant = updatedScript.resultJson.variants[0];
@@ -235,25 +232,9 @@ export default function Generate() {
           const urls: string[] = [];
           const errors: boolean[] = [];
 
-          // 1. Gerar FUNDO LIMPO se for texto
-          if (isTexto) {
-            try {
-              console.log("[Orchestration] Generating clean background for Carousel...");
-              const raw = await generateImage(prompts[0], undefined, {
-                ...brandKit,
-                visualSubject: data.visualSubject,
-                skipOverlay: true,
-                skipUpload: true
-              });
-              baseBlob = raw as Blob;
-            } catch (e) {
-              console.error("Failed to generate base background:", e);
-            }
-          }
-
           for (let i = 0; i < 3; i++) {
             try {
-              if (i > 0 && !baseBlob) await new Promise(r => setTimeout(r, 2000));
+              if (i > 0) await new Promise(r => setTimeout(r, 2000));
               const prompt = prompts[i] || prompts[0];
 
               const genOpts: any = {
@@ -272,7 +253,6 @@ export default function Generate() {
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: variant.overlayDesigns?.[i] || variant.overlayDesign,
                 fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
-                baseBlob: isTexto ? baseBlob : undefined
               };
 
               const res = await generateImage(prompt, undefined, genOpts, i);
@@ -294,29 +274,12 @@ export default function Generate() {
           await saveScript(updatedScript);
         } else {
           // STORIES (3 variants)
-          // 1. Gerar FUNDO LIMPO se for texto
-          if (isTexto) {
-            try {
-              console.log("[Orchestration] Generating clean background for Stories...");
-              const firstPrompt = aiResponse.variants[0].imagePrompt || "";
-              const raw = await generateImage(firstPrompt, undefined, {
-                ...brandKit,
-                visualSubject: data.visualSubject,
-                skipOverlay: true,
-                skipUpload: true
-              });
-              baseBlob = raw as Blob;
-            } catch (e) {
-              console.error("Failed to generate base background:", e);
-            }
-          }
-
           const urls: string[] = [];
           const errors: boolean[] = [];
           for (let i = 0; i < aiResponse.variants.length; i++) {
             const v = aiResponse.variants[i];
             try {
-              if (i > 0 && !baseBlob) await new Promise(r => setTimeout(r, 2000));
+              if (i > 0) await new Promise(r => setTimeout(r, 2000));
 
               const genOpts: any = {
                 hook: v.hook,
@@ -334,7 +297,6 @@ export default function Generate() {
                 onProgress: (idx: number, p: number) => setImageProgress(prev => { const n = [...prev]; n[i] = p; return n; }),
                 overlayDesign: (v as any).overlayDesign,
                 fontFamily: data.fontFamily || (aiResponse.suggestedFonts as any)?.display,
-                baseBlob: isTexto ? baseBlob : undefined
               };
 
               const res = await generateImage(v.imagePrompt || "", undefined, genOpts, i);
