@@ -51,6 +51,8 @@ export const overlayDesignSchema = z.object({
   shadowOffsetY: z.number().optional().default(1),
   strokeWidth: z.number().optional().default(1.2),
   opacity: z.number().optional().default(1),
+  letterSpacing: z.number().optional().default(0),
+  textEffect: z.enum(["none", "layered-shadow", "glow", "outline"]).optional().default("layered-shadow"),
 });
 export type OverlayDesign = z.infer<typeof overlayDesignSchema>;
 

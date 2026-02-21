@@ -241,7 +241,16 @@ export default function Generate() {
               const slidePrompt = prompts[i] || prompts[0];
               const slideHook = variant.hooks?.[i] || variant.hook;
               const slideDesign = variant.overlayDesigns?.[i] || variant.overlayDesign;
-              const slideFont = slideDesign?.fontFamily || (updatedScript.resultJson as any).suggestedFonts?.display;
+              const suggestedFonts = (updatedScript.resultJson as any).suggestedFonts;
+              let slideFont = slideDesign?.fontFamily || suggestedFonts?.display;
+
+              // v6.0: CRITICAL FONT RESOLUTION LAYER
+              // Resolves keywords 'display' | 'primary' | 'secondary' to actual Google Font names
+              if (slideFont === 'display' && suggestedFonts?.display) slideFont = suggestedFonts.display;
+              else if (slideFont === 'primary' && suggestedFonts?.primary) slideFont = suggestedFonts.primary;
+              else if (slideFont === 'secondary' && suggestedFonts?.secondary) slideFont = suggestedFonts.secondary;
+
+              if (!slideFont || slideFont === 'display') slideFont = "Syne"; // Safety fallback
 
               const slideOpts: any = {
                 inputSummary: data.inputSummary,

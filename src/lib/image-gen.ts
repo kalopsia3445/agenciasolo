@@ -24,6 +24,8 @@ export interface ImageGenOptions {
     shadowOffsetY?: number;
     strokeWidth?: number;
     opacity?: number;
+    letterSpacing?: number;
+    textEffect?: "none" | "layered-shadow" | "glow" | "outline";
   };
   fontFamily?: string;
   baseBlob?: Blob;
@@ -118,18 +120,14 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
         textAlign: "center",
       };
 
-      // 2. Configurações Estéticas AI-Driven (v5.0)
-      const shadowBlur = design.shadowBlur ?? 8;
-      const shadowColor = "rgba(0,0,0,0.8)";
-      const shadowOffsetX = design.shadowOffsetX ?? 1;
-      const shadowOffsetY = design.shadowOffsetY ?? 1;
-      const strokeWidth = design.strokeWidth ?? 1.2;
+      // 2. Configurações Estéticas AI-Driven (v6.0 - Hyper-Premium)
+      const shadowBlur = design.shadowBlur ?? 12;
+      const shadowOffsetX = design.shadowOffsetX ?? 2;
+      const shadowOffsetY = design.shadowOffsetY ?? 2;
+      const strokeWidth = design.strokeWidth ?? 1.5;
       const opacity = design.opacity ?? 1;
-
-      ctx.shadowColor = shadowColor;
-      ctx.shadowBlur = shadowBlur;
-      ctx.shadowOffsetX = shadowOffsetX;
-      ctx.shadowOffsetY = shadowOffsetY;
+      const letterSpacing = design.letterSpacing ?? 0;
+      const textEffect = design.textEffect ?? "layered-shadow";
 
       // Estilo de Preenchimento e Borda
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
@@ -146,7 +144,13 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       // Tipografia Dinâmica
       const fontSizeBase = Math.floor(canvas.width * 0.08);
       let fontSize = Math.floor(fontSizeBase * (design.fontSizeMultiplier || 1));
-      ctx.font = `900 ${fontSize}px "${selectedFont}", "Helvetica", sans-serif`;
+
+      const setFont = (size: number) => {
+        ctx.font = `900 ${size}px "${selectedFont}", "Impact", sans-serif`;
+        if ((ctx as any).letterSpacing !== undefined) {
+          (ctx as any).letterSpacing = `${letterSpacing}px`;
+        }
+      };
 
       // 3. Sistema de Redimensionamento Automático (Auto-fit)
       const maxWidth = canvas.width * 0.9;
@@ -154,7 +158,7 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
 
       let lines: string[] = [];
       const wrapText = (size: number) => {
-        ctx.font = `900 ${size}px "${selectedFont}", "Helvetica", sans-serif`;
+        setFont(size);
         const words = text.split(" ");
         const resLines = [];
         let currentLine = "";
@@ -178,6 +182,7 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
         fontSize -= 4;
         lines = wrapText(fontSize);
       }
+      setFont(fontSize);
 
       // 4. Desenhar com Posicionamento Dinâmico
       const lineHeight = fontSize * 1.1;
@@ -193,9 +198,42 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       else if (design.textAlign === "right") x = canvas.width * 0.95;
 
       lines.forEach(line => {
-        // Renderização Premium: Stroke sutil -> Sombra -> Fill
-        ctx.strokeText(line, x, startY);
-        ctx.fillText(line, x, startY);
+        // v6.0 PREMIUM RENDERING PIPELINE
+        ctx.save();
+
+        // EFEITO 1: Layered Shadow (Depth)
+        if (textEffect === "layered-shadow") {
+          ctx.shadowColor = "rgba(0,0,0,0.4)";
+          ctx.shadowBlur = shadowBlur * 1.5;
+          ctx.shadowOffsetX = shadowOffsetX * 2;
+          ctx.shadowOffsetY = shadowOffsetY * 2;
+          ctx.strokeText(line, x, startY); // Initial depth stroke
+        }
+
+        // EFEITO 2: Hard Contrast Shadow (Legibility)
+        ctx.shadowColor = "rgba(0,0,0,1)";
+        ctx.shadowBlur = shadowBlur / 3;
+        ctx.shadowOffsetX = shadowOffsetX;
+        ctx.shadowOffsetY = shadowOffsetY;
+
+        if (textEffect === "glow") {
+          ctx.shadowColor = brandColor;
+          ctx.shadowBlur = shadowBlur * 2;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        }
+
+        // Renderização Final: Stroke -> Fill
+        if (textEffect === "outline") {
+          // Hollow text effect - No fill, just stroke
+          ctx.shadowBlur = 0;
+          ctx.strokeText(line, x, startY);
+        } else {
+          ctx.strokeText(line, x, startY);
+          ctx.fillText(line, x, startY);
+        }
+
+        ctx.restore();
         startY += lineHeight;
       });
 

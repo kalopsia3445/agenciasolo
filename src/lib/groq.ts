@@ -72,27 +72,40 @@ INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO CANVA PREMIUM):
    - strokeWidth: 0.5 a 1.5 (traço sutil para legibilidade).
    - opacity: 0.8 a 1.0.
 
-INSTRUÇÕES DE IMAGEM (V5.0 - VISUAL RICHNESS):
+INSTRUÇÕES DE DESIGN E TIPOGRAFIA (ESTILO CANVA PREMIUM):
+1. SELEÇÃO DE FONTES (MANDATÓRIO): Sugira 3 fontes Google Fonts EXTREMAMENTE PREMIUM.
+   - display: Fonte para Títulos/Hooks. Exemplos: 'Syne', 'Space Grotesk', 'Outfit', 'Bebas Neue', 'Playfair Display', 'Bungee'.
+   - primary: Fonte para legendas/corpo. Exemplos: 'Montserrat', 'Inter', 'Lora', 'Manrope'.
+   - secondary: Complementar. Exemplos: 'Libre Baskerville', 'Source Code Pro'.
+2. OVERLAY DESIGN (Personalizado por slide - CRIATIVIDADE MÁXIMA):
+   - fontFamily: Use o NOME REAL da fonte sugerida (Ex: "Syne"), NUNCA use as palavras "display" ou "primary".
+   - textEffect: "layered-shadow" (profundidade), "glow" (tecnologia), "outline" (minimalismo).
+   - letterSpacing: 0 a 5px (para display).
+   - fontSizeMultiplier: 0.8 a 1.2.
+   - textAlign: "left" | "center" | "right".
+   - yOffset: -0.4 (topo), 0 (meio), 0.4 (baixo).
+
+INSTRUÇÕES DE IMAGEM (V6.0 - CINEMATIC RICHNESS):
 Ao gerar o campo 'imagePrompt' (ou 'imagePrompts'):
 1. ESCREVA EM INGLÊS.
-2. VARIEDADE TOTAL: Cada imagem de um carrossel DEVE descrever uma cena, composição ou ângulo COMPLETAMENTE diferente (Ex: Slide 1: Close-up extremo, Slide 2: Cena de ação no escritório, Slide 3: Mockup 3D minimalista).
-3. CORES REAIS: Converta os HEX da marca para nomes de cores (ex: "Midnight Blue").
-4. ZERO PLACEHOLDERS: Descrição fluida e cinematográfica. NUNCA use templates rígidos.
+2. VARIEDADE TOTAL: Mude o ângulo da câmera (Extreme Close-up, Wide shot, Bird's eye view).
+3. CORES REAIS: Midnight Blue, Emerald Green, etc.
+4. ZERO PLACEHOLDERS.
 
-Gere EXATAMENTE ${numVariants} variação(ões) seguindo o schema JSON abaixo.
+Gere EXATAMENTE ${numVariants} variação(ões).
 
 ${imageInstruction}
 
-CAMPOS OBRIGATÓRIOS PARA CADA VARIAÇÃO:
+CAMPOS OBRIGATÓRIOS:
 1. title, hook, script, teleprompterText, shotList, cta, captionShort, captionLong, hashtags, disclaimer.
-2. ${isCarousel ? "imagePrompts: ARRAY DE 3 STRINGS (Prompts COMPLETAMENTE DIFERENTES entre si, em INGLÊS descritivo)." : "imagePrompt: Prompt em INGLÊS descritivo."}
-3. ${isCarousel ? "overlayDesigns: ARRAY DE 3 OBJETOS JSON (com shadowBlur, strokeWidth, yOffset, fontFamily dinâmico)." : "overlayDesign: Objeto JSON único."}
-4. hooks (APENAS CARROSSEL): Array de 3 frases curtas e impactantes.
+2. ${isCarousel ? "imagePrompts: ARRAY DE 3 STRINGS (Prompts COMPLETAMENTE DIFERENTES)." : "imagePrompt: Prompt ÚNICO."}
+3. ${isCarousel ? "overlayDesigns: ARRAY DE 3 OBJETOS JSON (com fontFamily=NOME_REAL, textEffect, shadowBlur, letterSpacing, yOffset)." : "overlayDesign: Objeto JSON único (com fontFamily=NOME_REAL, textEffect, letterSpacing)."}
+4. hooks (APENAS CARROSSEL): Array de 3 frases curtas.
 5. selectedFonts (OBJETO GLOBAL): display, primary, secondary.
 
 IMPORTANTE PARA VARIAÇÕES:
-- O 'fontFamily' em 'overlayDesign' DEVE variar entre 'display' e 'primary' conforme a força do texto.
-- Varie os valores de design (yOffset, textAlign) em cada slide para evitar monotonia.
+- O 'fontFamily' em 'overlayDesign' DEVE ser o NOME REAL da fonte (ex: "Syne").
+- Cada slide do carrossel DEVE ter um design diferente (mude textAlign e yOffset).
 
 Responda APENAS com JSON válido:
 {"variants": [{ ... }], "suggestedFonts": { ... }}`;
