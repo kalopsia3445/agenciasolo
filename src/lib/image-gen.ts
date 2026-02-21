@@ -65,9 +65,36 @@ export async function loadGoogleFont(fontName: string): Promise<void> {
 }
 
 export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): string {
-  // v8.0: LOUD CONTEXT ENFORCEMENT
+  // v9.0: ELITE AGENCY TRANSLATOR (Portuguese -> High-end English Art Direction)
+  const translationMap: Record<string, string> = {
+    // Subjects
+    "maquininha": "sleek minimalist credit card terminal, brushed metal hardware",
+    "maquininha da ton": "modern green fintech payment terminal, premium texture",
+    "maquina": "professional payment hardware",
+    "pagamentos": "luxury corporate finance aesthetic, wealth management style",
+    "finanças": "high-end financial growth, clean corporate environment",
+    "cartão": "premium graphite credit card, matte finish",
+    "dinheiro": "elegant wealth symbols, minimalist financial success",
+
+    // Styles/Colors
+    "vibrant": "cinematic high-saturation, commercial studio vibrance",
+    "modern": "award-winning contemporary design, ultra-modern aesthetic",
+    "ton": "emerald and forest green tones, high-end fintech branding",
+    "verde": "depth of emerald green and obsidian black contrast",
+    "azul": "deep navy blue and silver accents",
+    "escuro": "obsidian black, low-key lighting, moody minimalist",
+    "limpo": "clean minimalist white space, museum lighting",
+  };
+
   const clean = (text: string) => {
-    return text
+    let t = text.toLowerCase();
+    // Apply internal dictionary translation
+    Object.entries(translationMap).forEach(([pt, en]) => {
+      const regex = new RegExp(`\\b${pt}\\b`, 'gi');
+      t = t.replace(regex, en);
+    });
+
+    return t
       .replace(/#[a-fA-F0-9]{3,6}/g, '')
       .replace(/#/g, '')
       .replace(/\band\s+and\b/gi, 'and')
@@ -80,17 +107,16 @@ export function buildImagePrompt(opts: ImageGenOptions, basePrompt?: string): st
   const style = clean(opts.visualStyle || '');
   const colors = opts.colorPalette?.join(', ') || '';
 
-  // v8.0: Even if Groq gives a custom prompt, we PREPEND the niche and style context
-  // This prevents the AI from generating generic "clocks" or "cities" without branding.
-  const coreContext = `${niche} branding, ${style} style, ${colors}`.replace(/, ,/g, ',').trim();
+  // v9.0: STRICT Elite Context Prepending
+  const coreContext = `[v9.0 Art Direction] ${niche}, ${style}, palette of ${colors}. Professional product photography, 8k resolution, cinematic lighting, shot on 85mm lens.`;
 
   if (basePrompt && basePrompt.length > 5) {
     const customPrompt = clean(basePrompt);
-    return `${coreContext}: ${customPrompt}`;
+    return `${coreContext}. Background: ${customPrompt}`;
   }
 
   const summary = clean(opts.inputSummary || '');
-  return `${coreContext}: ${summary}`;
+  return `${coreContext}. Subject: ${summary}`;
 }
 
 /**
@@ -131,11 +157,13 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       const letterSpacing = design.letterSpacing ?? 0;
       const textEffect = design.textEffect ?? "layered-shadow";
 
-      // Estilo de Preenchimento e Borda
+      // v9.0 Agency-Lux default settings (removing outer strokes for elegance)
       const brandColor = design.colorOverride || opts.colorPalette?.[0] || "#ffffff";
       ctx.fillStyle = brandColor;
       ctx.globalAlpha = opacity;
-      ctx.strokeStyle = "#FFFFFF";
+
+      // We ONLY use stroke for specific edge cases or explicitly if outline is selected
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = strokeWidth;
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
@@ -201,40 +229,30 @@ export async function applyTextOverlay(imageBlob: Blob | string, text: string, o
       else if (design.textAlign === "right") x = canvas.width * 0.95;
 
       lines.forEach(line => {
-        // v6.0 PREMIUM RENDERING PIPELINE
+        // v9.0 AGENCY-LUX RENDERING (Minimalist & Deep)
         ctx.save();
 
-        // EFEITO 1: Layered Shadow (Depth)
-        if (textEffect === "layered-shadow") {
-          ctx.shadowColor = "rgba(0,0,0,0.4)";
-          ctx.shadowBlur = shadowBlur * 1.5;
-          ctx.shadowOffsetX = shadowOffsetX * 2;
-          ctx.shadowOffsetY = shadowOffsetY * 2;
-          ctx.strokeText(line, x, startY); // Initial depth stroke
-        }
-
-        // EFEITO 2: Hard Contrast Shadow (Legibility)
-        ctx.shadowColor = "rgba(0,0,0,1)";
-        ctx.shadowBlur = shadowBlur / 3;
-        ctx.shadowOffsetX = shadowOffsetX;
-        ctx.shadowOffsetY = shadowOffsetY;
-
-        if (textEffect === "glow") {
+        if (textEffect === "layered-shadow" || textEffect === undefined) {
+          // v9.0 Soft Deep Agency Shadow (Lux look)
+          ctx.shadowColor = "rgba(0,0,0,0.7)";
+          ctx.shadowBlur = 25;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 10;
+        } else if (textEffect === "glow") {
           ctx.shadowColor = brandColor;
           ctx.shadowBlur = shadowBlur * 2;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
+        } else if (textEffect === "outline") {
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = brandColor;
+          ctx.lineWidth = strokeWidth * 2;
+          ctx.strokeText(line, x, startY);
+          ctx.restore();
+          startY += lineHeight;
+          return;
         }
 
-        // Renderização Final: Stroke -> Fill
-        if (textEffect === "outline") {
-          // Hollow text effect - No fill, just stroke
-          ctx.shadowBlur = 0;
-          ctx.strokeText(line, x, startY);
-        } else {
-          ctx.strokeText(line, x, startY);
-          ctx.fillText(line, x, startY);
-        }
+        // Clean Render: No stroke unless requested
+        ctx.fillText(line, x, startY);
 
         ctx.restore();
         startY += lineHeight;
